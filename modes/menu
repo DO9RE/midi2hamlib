@@ -1,0 +1,5 @@
+#!/bin/bash
+echo -e "Mode selection:\n
+1. Announce current mode\n
+2. Set Mode to LSB\n
+3. Set Mode to USB\n"

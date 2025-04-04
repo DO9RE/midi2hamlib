@@ -1,0 +1,25 @@
+#!/bin/bash
+source ./settings.conf
+echo $model $port $basedir $midi_device
+ source $basedir/midi/reader &
+rigctld -m $model -t $port &
+echo -e "Hello DO9RE.\n
+Use 0 to return."
+source menu
+while true
+do
+read -p 'and now?: ' selection
+clear
+if [[ $selection -eq 0 ]] then
+if [[ "$PWD" = $basedir ]] then
+echo "Already at top level."
+else
+cd ..
+source menu
+fi
+else
+source $selection
+fi
+done
+echo "Exitted"
+
