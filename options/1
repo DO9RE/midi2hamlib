@@ -1,0 +1,2 @@
+#!/bin/bash
+source $basedir/midi/midi_mapper

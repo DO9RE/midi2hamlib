@@ -1,0 +1,8 @@
+#!/bin/bash
+cat $basedir/midi/comlink | while read line; do
+echo $line
+if [[ $line ]] then
+break
+fi
+done
+

@@ -2,7 +2,7 @@
 aseqdump -p 28:0 | while read line; do
 # echo $line
     if [[ "$line" == *"note"* ]]; then
-        echo "Ereignis ausgelöst! Zeichenkette gefunden: $line"
+        echo "Ereignis ausgelöst! Zeichenkette gefunden: $line" > comlink
         # Hier deine Aktion, z. B. ein weiteres Skript starten
     fi
 done
