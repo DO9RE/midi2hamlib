@@ -1,11 +1,5 @@
 #!/bin/bash
-# Check, if the named pipe exists and if not, create it
-if [ ! -p "$basedir/midi/comlink" ]; then
-    mkfifo "$basedir/midi/comlink"
-fi
-aseqdump -p $midi_device | while read line; do
-# echo $line
-    if [[ "$line" == *"note"* ]]; then
-        echo "Ereignis ausgelöst! Zeichenkette gefunden: $line" # > comlink
-    fi
+
+stdbuf -oL aseqdump -p $midi_device | while read line; do
+echo "incoming: $line" 
 done

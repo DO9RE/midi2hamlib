@@ -1,8 +1,11 @@
 #!/bin/bash
-cat $basedir/midi/comlink | while read line; do
-echo $line
-if [[ $line ]] then
-break
-fi
-done
 
+stdbuf -oL aseqdump -p $midi_device | while read line; do
+  if [[ "$line" == *"Note"* ]]; then
+    echo "note: $line"
+    break
+  elif [[ "$line" == *"Control change"* ]]; then
+    echo "Control change: $line"
+    break
+  fi
+done
