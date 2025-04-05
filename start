@@ -1,6 +1,6 @@
 #!/bin/bash
 source ./settings.conf
-echo $model $port $basedir $midi_device
+# echo $model $port $basedir $midi_device
  source $basedir/midi/reader &
 rigctld -m $model -t $port &
 echo -e "Hello DO9RE.\n
@@ -21,5 +21,4 @@ else
 source $selection
 fi
 done
-echo "Exitted"
 
