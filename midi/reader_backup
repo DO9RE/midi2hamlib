@@ -1,0 +1,5 @@
+#!/bin/bash
+
+stdbuf -oL aseqdump -p $midi_device | while read line; do
+echo "incoming: $line" 
+done
