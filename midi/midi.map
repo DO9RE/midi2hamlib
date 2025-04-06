@@ -1,4 +1,4 @@
-note_on 0 44 64 ./test.sh
+note_on 0 44 64 $modeldir/modes/1
 note_on 0 36 64 ./toast.sh
 note_off 0 38 64 ./toast.sh
 Controler 0 10 n ./toasttest.sh
