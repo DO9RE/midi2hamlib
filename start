@@ -12,8 +12,10 @@ while true; do
   clear
   if [[ $selection -eq "0" ]]; then
     if [[ $(pwd) == "$menudir" ]]; then
-echo $(pwd) $menudir $selection
       echo "Already at top level."
+    elif [[ $(pwd) == "$basedir/menus/options" ]]; then
+      cd $menudir
+      source menu
     else
       cd ..
       source menu
