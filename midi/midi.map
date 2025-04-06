@@ -1,6 +1,8 @@
-note_on 0 44 64 $modeldir/modes/1
-note_on 0 36 64 ./toast.sh
-note_off 0 38 64 ./toast.sh
-Controler 0 10 n ./toasttest.sh
-Controler 0 114 n ./testtoast.sh
+# device type channel number value script
+0 note_on 0 44 64 $menudir/modes/1
+0 note_on 0 36 64 ./toast.sh
+0 note_off 0 38 64 ./toast.sh
+0 Controler 0 10 n ./toasttest.sh
+0 Controler 0 114 n ./testtoast.sh
+1 note_on 0 60 n ./middle_c.sh
 
