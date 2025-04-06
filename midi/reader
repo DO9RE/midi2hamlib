@@ -5,20 +5,23 @@ stdbuf -oL aseqdump -p $midi_device | while read -r line; do
   line=$(echo $line | sed 's/,//g')
 # Is it a control change event?
   if [[ $line == *"Control change"* ]]; then
-# Extract data into variables
-  channel=$(echo $line | awk '{print $4}')
-  controller=$(echo $line | awk '{print $6}')
-  value=$(echo $line | awk '{print $8}')
-        
-  echo "Control Change - Channel: $channel, Controller: $controller, Value: $value"
+#   Extract data into variables
+    type=$(echo $line | awk '{print $2}')
+    channel=$(echo $line | awk '{print $4}')
+    controller=$(echo $line | awk '{print $6}')
+    value=$(echo $line | awk '{print $8}')
+    echo "Control Change - Type: $type, Channel: $channel, Controller: $controller, Value: $value"
     
 # Is it a note event?
   elif [[ $line == *"Note on"* || $line == *"Note off"* ]]; then
 #   Extract data into variables
+    type=$(echo $line | awk '{print $2}')
     on_off=$(echo $line | awk '{print $3}')
     channel=$(echo $line | awk '{print $4}')
     note=$(echo $line | awk '{print $6}')
     velocity=$(echo $line | awk '{print $8}')
-    echo "note - Status: $on_off, channel: $channel, Note: $note, Velocity: $velocity"
+    echo "note - type: $type, Status: $on_off, channel: $channel, Note: $note, Velocity: $velocity"
   fi
+# Search MIDI map for the event definition
+  awk -v note=$note '$4 == note {print}' $midi_mapping_file
 done
