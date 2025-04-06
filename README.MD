@@ -22,7 +22,7 @@ The primary aim of this project is to provide an accessible control interface fo
 - A connected MIDI controller, keyboard or numpad
 - `aseqdump` from the ALSA utilities
 - `hamlib` and its utilities
-- A screen reader in the console (tested with [Fenrir](https://github.com/chrys87/fenrir) for blind users
+- A screen reader in the console (tested with [Fenrir](https://github.com/chrys87/fenrir) for blind users)
 
 ## Accessibility
 
