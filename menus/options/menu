@@ -1,4 +1,0 @@
-#!/bin/bash
-echo -e "Options Menu:\n
-1. Start MIDI Mapper\n"
-

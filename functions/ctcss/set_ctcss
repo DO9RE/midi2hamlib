@@ -4,7 +4,7 @@ ctcss_range=(67.0 69.3 71.9 74.4 77.0 79.7 82.5 85.4 88.5 91.5 94.8 97.4 100.0 1
 # Important! Not every transceiver supports querying.
 if [[ $1 ]]; then # Its been invoced by a MIDI action:
   rigctl -m 2 -r localhost:$port C ${ctcss_range[$1]}
-  rigctl -m 2 -r localhost:$port c
+  echo -e "\n$(rigctl -m 2 -r localhost:$port c)"
 else # Triggered from keyboard
 read -p 'Enter CTCSS-Tone: ' ctcss
   rigctl -m 2 -r localhost:$port C $ctcss

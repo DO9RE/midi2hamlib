@@ -3,26 +3,39 @@ source ./settings/settings.conf
 # echo $model $port $basedir $midi_device
 source $basedir/midi/reader &
 rigctld -m $model -t $port &
+declare -A menu_options
+
 clear
 echo -e "Hello DO9RE.\n
-Use 0 to return."
+Use 0 to return from a menu."
 cd $menudir
-source menu
+
+# Function for Reading Folder Scripts and building Menu 
+function show_menu {
+  cat $(pwd)/name
+  for file in *; do
+    if [[ -f $file && ! $file == "name" ]]; then
+      menu_number=$(sed -n '2p' "$file" | sed 's/#//')
+      menu_name=$(sed -n '3p' "$file" | sed 's/#//')
+      echo "$menu_number: $menu_name"
+      menu_options["$menu_number"]="$file"
+    fi
+  done
+}
+
 while true; do
+  show_menu
   read -p 'and now?: ' selection
-  clear
   if [[ $selection -eq "0" ]]; then
     if [[ $(pwd) == "$menudir" ]]; then
       echo "Already at top level."
     elif [[ $(pwd) == "$basedir/menus/options" ]]; then
       cd $menudir
-      source menu
     else
       cd ..
-      source menu
     fi
   else
-    source $selection
+    source ${menu_options[$selection]}
   fi
 done
 

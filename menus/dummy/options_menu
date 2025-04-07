@@ -1,4 +1,5 @@
 #!/bin/bash
+#4
+# Options menu
 cd $basedir/menus/options
-source menu
 

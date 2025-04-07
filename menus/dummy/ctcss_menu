@@ -1,3 +1,4 @@
 #!/bin/bash
+#2
+# Sub-Tones Menu
 cd subtones
-source menu
