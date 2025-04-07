@@ -39,11 +39,10 @@ device=""
   fi
 # Search MIDI map for the event definition
   if [[ $type == "Note" && $on_off == "on" ]]; then
-    awk -v device=$device -v note=$note '$1 == device && $4 == note && $2 == "note_on" {print $6}' $midi_mapping_file
+    source $funcdir/$(awk -v device=$device -v note=$note '$1 == device && $4 == note && $2 == "note_on" {print $6}' $midi_mapping_file)
   elif [[ $type == "Note" && $on_off == "off" ]]; then
     awk -v device=$device -v note=$note '$1 == device && $4 == note && $2 == "note_off" {print $6}' $midi_mapping_file
   elif [[ $type == "Control" ]]; then
-    awk -v device=$device -v controller=$controller '$1 == device && $4 == controller {print $6}' $midi_mapping_file
+    source $funcdir/$(awk -v device=$device -v controller=$controller '$1 == device && $4 == controller {print $6}' $midi_mapping_file) $value
   fi
-  echo $device $note 
 done

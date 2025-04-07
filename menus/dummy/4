@@ -1,0 +1,4 @@
+#!/bin/bash
+cd $basedir/menus/options
+source menu
+

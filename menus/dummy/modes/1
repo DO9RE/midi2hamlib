@@ -1,3 +1,2 @@
 #!/bin/bash
-rigctl -m 2 -r localhost:4500 m
-
+source $funcdir/modes/get_mode

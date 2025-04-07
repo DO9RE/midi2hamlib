@@ -1,8 +1,5 @@
 # device type channel number value script
-0 note_on 0 44 64 $menudir/modes/1
-0 note_on 0 36 64 ./toast.sh
-0 note_off 0 38 64 ./toast.sh
-0 Controler 0 10 n ./toasttest.sh
-0 Controler 0 114 n ./testtoast.sh
+0 note_on 0 44 64 modes/get_mode
+0 Controler 0 10 n ctcss/set_ctcss
 1 note_on 0 60 n ./middle_c.sh
 

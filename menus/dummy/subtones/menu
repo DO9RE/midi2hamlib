@@ -1,0 +1,4 @@
+#!/bin/bash
+echo -e "Sub-Tones Menu:\n
+1. get CTCSS tone\n
+2. Set CTCSS tone\n"

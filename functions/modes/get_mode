@@ -1,0 +1,3 @@
+#!/bin/bash
+rigctl -m 2 -r localhost:$port m
+

@@ -1,5 +1,6 @@
 #!/bin/bash
 echo -e "Main Menu:\n
-1. Mode Selection Menu\n
-2. Shutdown System\n
-3. Options\n"
+1. Modes\n
+2. Sub-Tones\n
+3. Shutdown\n
+4. Options\n"
