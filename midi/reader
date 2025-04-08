@@ -1,6 +1,9 @@
 #!/bin/bash
 # extract midi ports from settings array into comma separated list, so ASEQDUMP can handle multiple devices
 ports=$(IFS=,; echo "${midi_ports[*]}")
+# Read Midi mapping from file into memory
+midi_mapping=$(cat $midi_mapping_file)
+echo $midi_mapping
 stdbuf -oL aseqdump -p $ports | while read -r line; do
 # Clean values:
 source=""
@@ -39,10 +42,10 @@ device=""
   fi
 # Search MIDI map for the event definition
   if [[ $type == "Note" && $on_off == "on" ]]; then
-    source $funcdir/$(awk -v device=$device -v note=$note '$1 == device && $4 == note && $2 == "note_on" {print $6}' $midi_mapping_file)
+    source $funcdir/$(echo "$midi_mapping" | awk -v device=$device -v note=$note '$1 == device && $4 == note && $2 == "note_on" {print $6}')
   elif [[ $type == "Note" && $on_off == "off" ]]; then
-    awk -v device=$device -v note=$note '$1 == device && $4 == note && $2 == "note_off" {print $6}' $midi_mapping_file
+    source $funcdir/$(echo "$midi_mapping" |  awk -v device=$device -v note=$note '$1 == device && $4 == note && $2 == "note_off" {print $6}')
   elif [[ $type == "Control" ]]; then
-    source $funcdir/$(awk -v device=$device -v controller=$controller '$1 == device && $4 == controller {print $6}' $midi_mapping_file) $value
+    source $funcdir/$(echo "$midi_mapping" | awk -v device=$device -v controller=$controller '$1 == device && $4 == controller {print $6}') $value
   fi
 done
