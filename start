@@ -4,6 +4,7 @@ source ./settings/settings.conf
 source $basedir/midi/reader &
 rigctld -m $model -t $port &
 declare -A menu_options
+declare -A menu_numbers
 
 clear
 echo -e "Hello DO9RE.\n
@@ -12,15 +13,27 @@ cd $menudir
 
 # Function for Reading Folder Scripts and building Menu 
 function show_menu {
+# Resetting the menu arrays with every new menu to display
+  unset menu_options
+  unset menu_numbers
+# Display the Menu Name from its name file
   cat $(pwd)/name
+# Walk through the menu folder and build the menu from line 2 and 3 of each file
   for file in *; do
     if [[ -f $file && ! $file == "name" ]]; then
       menu_number=$(sed -n '2p' "$file" | sed 's/#//')
       menu_name=$(sed -n '3p' "$file" | sed 's/#//')
-      echo "$menu_number: $menu_name"
+      menu_numbers["$menu_number"]="$menu_name"
+#     echo "$menu_number: $menu_name"
       menu_options["$menu_number"]="$file"
     fi
   done
+
+# Sort the Array menu_numbers with the corresponding names to display it in ascending order
+  for key in $(printf "%s\n" "${!menu_numbers[@]}" | sort -n); do
+    echo "$key: ${menu_numbers[$key]}"
+  done
+
 }
 
 while true; do
@@ -34,8 +47,10 @@ while true; do
     else
       cd ..
     fi
-  else
+  elif [[ ${menu_options[$selection]} ]]; then
     source ${menu_options[$selection]}
+  else
+    echo "Not a valid option"
   fi
 done
 
