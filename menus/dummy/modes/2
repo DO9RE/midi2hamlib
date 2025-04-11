@@ -1,4 +1,4 @@
 #!/bin/bash
 #2
-# Set Mode LSB
-source $funcdir/modes/set_mode_lsb
+# Set Mode
+source $funcdir/modes/mode_toggle

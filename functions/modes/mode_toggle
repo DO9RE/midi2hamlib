@@ -1,0 +1,18 @@
+#!/bin/bash
+# Build an array from the transceiver models supported modes, using the --dump-caps flag.
+modes=($(rigctl -m $model --dump-caps | grep "Mode list:" | head -n 1 | sed 's/Mode list://g'))
+if [[ $1 ]]; then #Triggered with parameter
+# echo ${modes[$1]} 
+# echo $(rigctl -m 2 -r localhost:$port m | tail -n 1)
+# Tell the Transceiver to switch to the given mode, determining the current passband setting and passing it as second parameter.
+  rigctl -m 2 -r localhost:$port M ${modes[$1]} $(rigctl -m 2 -r localhost:$port m | tail -n 1)
+else #Called from keyboard, show modes list and ask for selection.
+  for index in "${!modes[@]}"; do
+  echo "$index: ${modes[$index]}"
+done
+read -p 'Mode?: ' selection
+# Switch transceiver to selected mode, preserving current bandwidth and passing it as second parameter
+  rigctl -m 2 -r localhost:$port M ${modes[$selection]} $(rigctl -m 2 -r localhost:$port m | tail -n 1)
+fi
+rigctl -m 2 -r localhost:$port m
+

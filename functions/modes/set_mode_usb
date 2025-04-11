@@ -1,4 +1,0 @@
-#!/bin/bash
-rigctl -m 2 -r localhost:4500 M USB 8000
-
-

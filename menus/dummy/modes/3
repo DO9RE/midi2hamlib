@@ -1,4 +1,4 @@
-#!/bin/bash
+#./bin/bash
 #3
-# Set Mode USB
-source $funcdir/modes/set_mode_usb
+# Set bandwidth
+source $funcdir/modes/bandwidth_toggle

@@ -1,0 +1,18 @@
+#!/bin/bash
+declare -a bandwidths
+unset bandwidths
+# get possible bandwidths for current mode
+# Filter the --dump-caps output to get the paragraph between "Bandwidths:" and "Spectrum scopes:". Filter for the current Mode using Grep. Build an array ready string without letters and cut to much spaces.
+bandwidths=($(rigctl -m $model -r localhost:$port --dump-caps | sed -n '/Bandwidths:/,/Spectrum scopes:/p' | sed '$d' | grep "$(rigctl -m 2 -r localhost:$port m | head -n 1)" | sed 's/[^0-9. ]//g' | sed 's/  */ /g'))
+if [[ $1 ]]; then # called with midi parameter
+  rigctl -m 2 -r localhost:$port M $(rigctl -m 2 -r localhost:$port m | head -n 1) ${bandwidths[$1]}
+else # Called from keyboard
+# Show the bandwidths menu
+  echo 'Bandwith selection'
+  for index in "${!bandwidths[@]}"; do
+    echo "$index: ${bandwidths[$index]}"
+  done
+  read -p 'Bandwidth?: ' selection
+  rigctl -m 2 -r localhost:$port M $(rigctl -m 2 -r localhost:$port m | head -n 1) ${bandwidths[$selection]}
+fi
+rigctl -m 2 -r localhost:$port m
