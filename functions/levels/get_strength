@@ -3,6 +3,21 @@
 # Later remove the absolute port value, but for testing its quicker.
 
 strength=$(rigctl -m 2 -r localhost:4500 l STRENGTH)
-echo $strength
 # task: Turn the number into a -s-value in DB. Here is what hamlib developer Phil, GM3ZZA said:
 # A value of STRENGTH meter reading of 0 (zero) indicates S9. The value is dB relative to S9. My application uses 6dB per S-point so -54 and below indicates a reading S0. A value above 0 indicates S9 plus that value in dB.
+# Richard: My approach:
+calculate_s_level() {
+  local strength=$1
+  if (( strength <= -54 )); then
+    echo "S 0"
+  elif (( strength > -54 && strength <= 0 )); then
+    s_level=$(( (strength + 54) / 6 ))
+    echo "S $s_level"
+  else
+    echo "S 9 plus $strength"
+  fi
+}
+
+calculate_s_level $strength
+
+
