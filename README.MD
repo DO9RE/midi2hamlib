@@ -22,6 +22,7 @@ The primary aim of this project is to provide an accessible control interface fo
 - A connected MIDI controller, keyboard or numpad
 - `aseqdump` from the ALSA utilities
 - `hamlib` and its utilities
+- `bc` for some math
 - A screen reader in the console (tested with [Fenrir](https://github.com/chrys87/fenrir) for blind users)
 
 ## Accessibility
@@ -37,9 +38,9 @@ First, we need to download this wonderful package. We do this with the following
 git clone https://github.com/do9re/midi2hamlib
 ```
 
-Install the necessary packages via apt: build essentials, Hamlib, pip, Sox, git, Speech-Dispatcher, and Espeak:
+Install the necessary packages via apt: build essentials, Hamlib, bc, pip, Sox, git, Speech-Dispatcher, and Espeak:
 ```
-sudo apt install sox espeak espeak-ng speech-dispatcher build-essential libdbus-glib-1-dev libgirepository1.0-dev libpython3-dev libdbus-1-dev git python3-pip
+sudo apt install sox espeak espeak-ng speech-dispatcher build-essential libdbus-glib-1-dev libgirepository1.0-dev libpython3-dev libdbus-1-dev git python3-pip bc
 ```
 
 Then, get the Fenrir package from Storm:
@@ -47,9 +48,9 @@ Then, get the Fenrir package from Storm:
 git clone https://git.stormux.org/storm/fenrir
 ```
 
-Storm has an extra 'P' at the beginning of the pyperclip package in the requirements.txt file. Remove it using your favorite editor. I use Nano.
+Storm currently has an extra 'P' at the beginning of the pyperclip package in the requirements.txt file. This is reported and he told me, he would fix it in the upcomming release. Remove it using your favorite editor. I use Nano.
 
-Now, run the requirements:
+Now, run the requirements installation:
 ```
 sudo pip install -r requirements.txt --break-system-packages
 ```
