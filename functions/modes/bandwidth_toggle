@@ -3,16 +3,42 @@ declare -a bandwidths
 unset bandwidths
 # get possible bandwidths for current mode
 # Filter the --dump-caps output to get the paragraph between "Bandwidths:" and "Spectrum scopes:". Filter for the current Mode using Grep. Build an array ready string without letters and cut to much spaces.
-bandwidths=($(rigctl -m $model -r localhost:$port --dump-caps | sed -n '/Bandwidths:/,/Spectrum scopes:/p' | sed '$d' | grep "$(rigctl -m 2 -r localhost:$port m | head -n 1)" | sed 's/[^0-9. ]//g' | sed 's/  */ /g'))
+bandwidths_string=$(rigctl -m $model --dump-caps |
+sed -n '/Bandwidths:/,/Spectrum scopes:/p' |
+sed '$d' |
+grep $(get_current_mode) |
+head -n 1 |
+sed 's/,//g')
+# Reformat numbers in accordance to their power of 10
+num_fields=$(echo "$bandwidths_string" | awk '{print NF}')
+processed_bandwidths_string=""
+for ((i=1; i<=num_fields; i++)); do
+  field=$(echo "$bandwidths_string" | awk -v idx="$i" '{print $(idx)}')
+  if [[ $field =~ ^[0-9]+(\.[0-9]+)?$ ]]; then # Do we have a number?
+    ((i++))
+    power=$(echo "$bandwidths_string" | awk -v idx="$i" '{print $(idx)}')
+    if [[ $power == "kHz" ]]; then
+      field=$(multiply_and_format $field 1000)
+      processed_bandwidths_string="$field $processed_bandwidths_string"
+    elif [[ $power == "Hz" ]]; then
+      field=$(multiply_and_format $field 1)
+      processed_bandwidths_string="$field $processed_bandwidths_string"
+    fi
+  fi
+done
+# Turn our formatted list into an array
+bandwidths=($processed_bandwidths_string)
+# echo $processed_bandwidths_string
 if [[ $1 ]]; then # called with midi parameter
   rigctl -m 2 -r localhost:$port M $(rigctl -m 2 -r localhost:$port m | head -n 1) ${bandwidths[$1]}
 else # Called from keyboard
 # Show the bandwidths menu
-  echo 'Bandwith selection'
+  echo 'Bandwith selection; ' $(get_current_mode)
   for index in "${!bandwidths[@]}"; do
-    echo "$index: ${bandwidths[$index]}"
+    echo "$index: ${bandwidths[$index]}" Hz
   done
   read -p 'Bandwidth?: ' selection
   rigctl -m 2 -r localhost:$port M $(rigctl -m 2 -r localhost:$port m | head -n 1) ${bandwidths[$selection]}
 fi
-rigctl -m 2 -r localhost:$port m
+# Show mode and bandwidth in one line, remove \n from string
+echo $(rigctl -m 2 -r localhost:$port m | sed ':a;N;$!ba;s/\n/ /g') Hz

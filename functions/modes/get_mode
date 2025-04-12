@@ -1,3 +1,4 @@
 #!/bin/bash
-rigctl -m 2 -r localhost:$port m
+# Output Mode and passband in one line by removing \n from the string
+rigctl -m 2 -r localhost:$port m | sed ':a;N;$!ba;s/\n/ /g'
 

@@ -1,8 +1,11 @@
 #!/bin/bash
 source ./settings/settings.conf
+source $funcdir/helper_functions
 # echo $model $port $basedir $midi_device
 source $basedir/midi/reader &
+# Connect to the transceiver
 rigctld -m $model -t $port &
+# rigctld -m $model -r $device_path -t $port &
 declare -A menu_options
 declare -A menu_numbers
 

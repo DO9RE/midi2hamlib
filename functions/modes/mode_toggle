@@ -14,5 +14,6 @@ read -p 'Mode?: ' selection
 # Switch transceiver to selected mode, preserving current bandwidth and passing it as second parameter
   rigctl -m 2 -r localhost:$port M ${modes[$selection]} $(rigctl -m 2 -r localhost:$port m | tail -n 1)
 fi
-rigctl -m 2 -r localhost:$port m
+# Show mode and passband in one line by removing \n from the string
+rigctl -m 2 -r localhost:$port m | sed ':a;N;$!ba;s/\n/ /g'
 
