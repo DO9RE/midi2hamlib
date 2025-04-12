@@ -4,11 +4,11 @@ unset bandwidths
 # get possible bandwidths for current mode
 # Filter the --dump-caps output to get the paragraph between "Bandwidths:" and "Spectrum scopes:". Filter for the current Mode using Grep. Build an array ready string without letters and cut to much spaces.
 bandwidths_string=$(rigctl -m $model --dump-caps |
-sed -n '/Bandwidths:/,/Spectrum scopes:/p' |
-sed '$d' |
-grep $(get_current_mode) |
-head -n 1 |
-sed 's/,//g')
+sed -n '/Bandwidths:/,/Spectrum scopes:/p' | # The part between Bandwidths: and Spectrum scopes:
+sed '$d' | # drop the last line, cause its already the next paragraph, but we need something to narrow down on our target.
+grep $(get_current_mode) | # Filter the list only for the line with the current mode.
+head -n 1 | # Just in case, there is more then one entry, fm and wfm for example.
+sed 's/,//g') # get rid of the commas.
 # Reformat numbers in accordance to their power of 10
 num_fields=$(echo "$bandwidths_string" | awk '{print NF}')
 processed_bandwidths_string=""

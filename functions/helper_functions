@@ -7,6 +7,24 @@ function multiply_and_format { # expects a number and its multiplier. Returns th
   echo $formatted_result
 }
 
+# ${#array[@]} to determine an arrays length in elements.
+# Use this to restrict a midi controllers range to the given range of an options array for example.
+function apply_modulo {
+  local value=$1
+  local max_value=$2
+  local result=$((value % max_value))
+  echo $result
+}
+
+# Use this for example, if you have a long fader path and a little list of possible values. The overall maximum fader value is divided by the possible options to create zones. Then, each fader value is checked, in which zone it is.
+function fader_to_zones {
+  local fader_value=$1
+  local num_states=$2
+  local zone_size=$((128 / num_states)) # we say, the fader has 128 possible values, maybe this changes later.
+  local state=$((fader_value / zone_size))
+  echo $state
+}
+
 function get_current_mode {
 # Return only the mode name without the passband
   echo $(rigctl -m 2 -r localhost:$port m | head -n 1)
