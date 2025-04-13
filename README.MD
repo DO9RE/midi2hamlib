@@ -114,6 +114,43 @@ Save the file with Control+X.
 
 Happy testing!
 
+## For the brave; Install Speechd and Pico TTS.
+After some tinkering, I have managed to get Speech Dispatcher and Pico TTS running with Fenrir. This section might later become part of the general installation, but for now, it will remain separate. The system with Espeak-NG has been stable so far, so this setup is optional and experimental.
+
+First, we need to get the speechd package:
+```
+sudo apt install python3-speechd
+```
+
+Next, install Pico TTS. Start with the support files so that the Speech Dispatcher can access Pico:
+```
+sudo apt install speech-dispatcher-pico
+```
+
+Finally, install the speech output itself:
+```
+sudo apt install libttspico-utils
+```
+
+Now it's time to install Pulseaudio. It seems that this wasn't present on Raspbian OS Lite, so we need to add it:
+```
+sudo apt install pulseaudio
+```
+To allow Fenrir to communicate with us via Pulseaudio, we need to create a Pulseaudio configuration for both Root and our user. Since Fenrir runs as Root, we wouldn't be able to hear its output otherwise. In the directory:
+/usr/share/fenrirscreenreader/tools
+there is a script called configure_pulseaudio.sh. Run this script both as your user and then as Root.
+
+Next, we need to tell Fenrir to use Pico TTS. Note: I reverted the changes in Fenrir's configuration file before starting the configuration tool. I'm not sure if this was necessary, but it felt safer.
+
+The configuration tool is located in the folder:
+/usr/share/fenrirscreenreader/tools and is called configure_fenrir.py. Run it and select your desired speech output.
+
+In my case, I had to install Dialog first:
+```
+sudo apt install python3-dialog.
+```
+Restard and cross your fingers.
+
 ## License
 
 This project is released under an open-source license. See `LICENSE` for more details.
