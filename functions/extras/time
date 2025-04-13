@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "Local time: $(date +%H:%M) / UTC time: $(date -u +%H:%M)"
+
