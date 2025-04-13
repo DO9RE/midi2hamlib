@@ -1,13 +1,17 @@
 #!/bin/bash
 # Generate CTCSS Range from the given models --caps-dump output
-ctcss_range=($(rigctl -m $model --dump-caps | grep "CTCSS: " | sed 's/CTCSS //g'))
+# Remove the decimal points, because the System needs every value as an integer.
+ctcss_range=($(rigctl -m $model --dump-caps | grep "CTCSS: " | sed 's/CTCSS //g' | sed 's/\.//g'))
 # echo ${ctcss_range[$1]}
 # Important! Not every transceiver supports querying.
 if [[ $1 ]]; then # Its been invoced by a MIDI action:
   rigctl -m 2 -r localhost:$port C ${ctcss_range[$1]}
-  echo -e "\n$(rigctl -m 2 -r localhost:$port c)"
 else # Triggered from keyboard
-read -p 'Enter CTCSS-Tone: ' ctcss
-  rigctl -m 2 -r localhost:$port C $ctcss
-  rigctl -m 2 -r localhost:$port c
+  read -p 'Enter CTCSS-Tone: ' ctcss
+# Let the user input what ever, in the end, we just need the numbers an as an integer.  
+  rigctl -m 2 -r localhost:$port C $(echo $ctcss | sed 's/[^0-9]//g')
 fi
+# Format the output as decimal with one position behind the decimal point
+ctcss=$(rigctl -m 2 -r localhost:$port c)
+echo "scale=1;$ctcss/10" | bc
+
