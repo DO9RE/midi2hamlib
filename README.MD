@@ -88,6 +88,8 @@ At the very end of the file, add:
 ```
 Fenrir should now start automatically.
 
+To avoid the spoken messages about started services during system startup and to have the speech output begin immediately upon reaching the user prompt and starting the Midi2Hamlib application, you can modify the approach. Instead of placing a @reboot call for fenrir in the root's crontab, you can insert the start_fenrir.sh script, located in the additional-scripts folder, into the user's .bashrc after a call to clear. This ensures that speech output only begins after login.
+
 The user should be logged in automatically so that the system doesn't require entering a username and password to unlock. You can use the Raspi-Config tool for this:
 ```
 sudo raspi-config

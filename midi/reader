@@ -3,7 +3,7 @@
 ports=$(IFS=,; echo "${midi_ports[*]}")
 # Read Midi mapping from file into memory
 midi_mapping=$(cat $midi_mapping_file)
-echo $midi_mapping
+# echo $midi_mapping
 stdbuf -oL aseqdump -p $ports | while read -r line; do
 # Clean values:
 source=""
