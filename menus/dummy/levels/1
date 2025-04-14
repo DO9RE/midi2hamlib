@@ -1,0 +1,4 @@
+#!/bin/bash
+#1
+# Get S Meter value
+source $funcdir/levels/get_strength

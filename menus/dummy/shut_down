@@ -1,4 +1,6 @@
 #!/bin/bash
-#3
+#4
 # Shutdown the system
-shutdown -h now
+echo Shutting down. 
+sleep 3
+sudo shutdown -h now
