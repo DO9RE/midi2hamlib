@@ -3,6 +3,7 @@
 0 note_on 0 36 64 ctcss/get_ctcss
 0 note_off 0 38 64 ctcss/get_ctcss
 0 Controler 0 74 n modes/bandwidth_toggle
+0 Controler 0 71 n levels/level_toggle
 0 Controler 0 114 n modes/mode_toggle
 0 Controler 0 10 n ctcss/set_ctcss
 0 Controler 0 18 n functions/function_select

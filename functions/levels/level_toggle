@@ -1,0 +1,14 @@
+#!/bin/bash
+# Build an array from the transceiver models supported levels, using the --dump-caps flag.
+levels=($(rigctl -m $model --dump-caps | 
+grep "Set level:" | 
+sed 's/[^A-Z_ ]//g'))
+if [[ $1 ]]; then #Triggered with parameter
+echo "${levels[$1]} = $(rigctl -m $model -r localhost:4500 l ${levels[$1]})"
+else #Called from keyboard, show modes list and ask for selection.
+  for index in "${!levels[@]}"; do
+  echo "$index: ${levels[$index]}"
+done
+read -p 'level?: ' selection
+fi
+
