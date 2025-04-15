@@ -1,8 +1,38 @@
 #!/bin/bash
-source ./settings/settings.conf
+default_config_file="./settings/settings.conf"
+funcdir=./functions
 source $funcdir/helper_functions
-# echo $model $port $basedir $midi_device
-source $basedir/midi/reader &
+# Process command line arguments
+config_file=$default_config_file
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -c|--config-file)
+      config_file="$2"
+      shift 2
+      ;;
+    -h|--help)
+      show_help
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      show_help
+      exit 1
+      ;;
+  esac
+done
+
+# Check, if config file exists:
+if [[ ! -f "$config_file" ]]; then
+  echo "Error! Configuration file '$config_file' does not exist."
+  exit 1
+else
+  source $config_file
+fi
+# Use MIDI devices?
+if [[ $use_midi_device == "TRUE" ]]; then
+  source $basedir/midi/reader &
+fi
 # Connect to the transceiver
 rigctld -m $model -t $port &
 # rigctld -m $model -r $device_path -t $port &
@@ -10,7 +40,7 @@ declare -A menu_options
 declare -A menu_numbers
 
 clear
-echo -e "Hello DO9RE.\n
+echo -e "$greeting \n
 Use 0 to return from a menu."
 cd $menudir
 

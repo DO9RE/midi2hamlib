@@ -7,31 +7,31 @@ if [[ $1 ]]; then #Triggered with parameter
 # What ever kind of midi controller the user has: These variables can be used to toggle the function on or off. Due to the sourcing natureof the whole project, the variables are available from everywhere.
   last_function=${functions[$1]}
   status_last_function=$(rigctl -m 2 -r localhost:$port u ${functions[$1]})
-  echo "$last_function = $(echo $status_last_function | sed -e 's/0/off/g' -e 's/1/on/g')"
+  echo "$last_function = $(humanize_status "$status_last_function")"
 else # Called from keyboard, show functions list and ask for selection.
 # Add an element called goback at index 0, to give a possibility to back out of the menu.
-functions=("goback" "${functions[@]}")
-while [[ ! $selection == 0 ]]; do
-  for index in "${!functions[@]}"; do
-#   Do not show the 0 index, cause its not a function, its the go back feature.
-    if [[ ${functions[$index]} == "goback" ]]; then
-      continue
+  functions=("goback" "${functions[@]}")
+  while [[ ! $selection == 0 ]]; do
+    for index in "${!functions[@]}"; do
+#     Do not show the 0 index, cause its not a function, its the go back feature.
+      if [[ ${functions[$index]} == "goback" ]]; then
+        continue
+      fi
+#     Show number, name and status of selected function
+      echo "$index: ${functions[$index]} = $(humanize_status "$(rigctl -m 2 -r localhost:$port u ${functions[$index]})")"
+    done
+    read -p 'Function?: ' selection
+#   Exit functions menu when 0 is issued
+    if [[ $selection == 0 ]]; then
+      break
     fi
-#   Show number, name and status of selected function
-    echo "$index: ${functions[$index]} = $(echo $(rigctl -m 2 -r localhost:$port u ${functions[$index]}) | sed -e 's/0/off/g' -e 's/1/on/g')"
+#   toggle function on or off, according to its current status:
+    if [[ $(rigctl -m 2 -r localhost:$port u ${functions[$selection]}) == 0 ]]; then
+      rigctl -m 2 -r localhost:$port U ${functions[$selection]} 1
+    elif [[ $(rigctl -m 2 -r localhost:$port u ${functions[$selection]}) == 1 ]]; then
+      rigctl -m 2 -r localhost:$port U ${functions[$selection]} 0
+    fi
+#   Show function status
+    rigctl -m 2 -r localhost:$port u ${functions[$selection]} | humanize_status
   done
-read -p 'Function?: ' selection
-# Exit functions menu when 0 is issued
-if [[ $selection == 0 ]]; then
-  break
-fi
-# toggle function on or off, according to its current status:
-  if [[ $(rigctl -m 2 -r localhost:$port u ${functions[$selection]}) == 0 ]]; then
-    rigctl -m 2 -r localhost:$port U ${functions[$selection]} 1
-  elif [[ $(rigctl -m 2 -r localhost:$port u ${functions[$selection]}) == 1 ]]; then
-    rigctl -m 2 -r localhost:$port U ${functions[$selection]} 0
-  fi
-# Show function status
-  rigctl -m 2 -r localhost:$port u ${functions[$selection]} | sed -e 's/0/off/g' -e 's/1/on/g'
-done
 fi

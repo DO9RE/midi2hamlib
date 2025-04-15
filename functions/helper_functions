@@ -30,3 +30,19 @@ function get_current_mode {
   echo $(rigctl -m 2 -r localhost:$port m | head -n 1)
 }
 
+# Function for use with the transceiver functions.
+# Convert the status_last_function into human friendly on of texts
+humanize_status() {
+  local status=$1
+  echo "$status" | sed -e 's/0/off/g' -e 's/1/on/g'
+}
+
+show_help() {
+  echo "Usage: $0 [OPTIONS]"
+  echo
+  echo "Options:"
+  echo "  -C, --config-file path_to_alternative_configuration/file.conf"
+  echo "  -h, --help        Show this help"
+}
+
+
