@@ -8,6 +8,6 @@ elif [[ $status_last_function == 1 ]]; then
   rigctl -m 2 -r localhost:$port U $last_function 0
 fi
 status_last_function=$(rigctl -m 2 -r localhost:$port u $last_function)
-echo "$last_function = $status_last_function"
+echo "$last_function = $(echo $status_last_function | sed -e 's/0/off/g' -e 's/1/on/g')"
   
 

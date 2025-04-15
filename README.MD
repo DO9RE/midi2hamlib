@@ -48,8 +48,6 @@ Then, get the Fenrir package from Storm:
 git clone https://git.stormux.org/storm/fenrir
 ```
 
-Storm currently has an extra 'P' at the beginning of the pyperclip package in the requirements.txt file. This is reported and he told me, he would fix it in the upcomming release. Remove it using your favorite editor. I use Nano.
-
 Now, run the requirements installation:
 ```
 sudo pip install -r requirements.txt --break-system-packages
