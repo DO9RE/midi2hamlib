@@ -41,7 +41,10 @@ stdbuf -oL aseqdump -p "$ports" | while read -r line; do
   if [[ $type == "Note" && $on_off == "on" ]]; then
     source $funcdir/$(echo "$midi_mapping" | awk -v device=$device -v note=$note '$1 == device && $4 == note && $2 == "note_on" {print $6}')
   elif [[ $type == "Note" && $on_off == "off" ]]; then
-    source $funcdir/$(echo "$midi_mapping" | awk -v device=$device -v note=$note '$1 == device && $4 == note && $2 == "note_off" {print $6}')
+    mapping=$(echo "$midi_mapping" | awk -v device=$device -v note=$note '$1 == device && $4 == note && $2 == "note_off" {print $6}')
+    if [[ -n "$mapping" ]]; then
+      source $funcdir/$mapping
+    fi
   elif [[ $type == "Control" ]]; then
     source $funcdir/$(echo "$midi_mapping" | awk -v device=$device -v controller=$controller '$1 == device && $4 == controller {print $6}') $value
   fi

@@ -2,6 +2,7 @@
 0 note_on 0 44 64 modes/get_mode
 0 note_on 0 36 64 ctcss/get_ctcss
 0 note_off 0 38 64 ctcss/get_ctcss
+0 note_off 0 43 64 ctcss/get_ctcss # testing note off event.
 0 Controler 0 74 n modes/bandwidth_toggle
 0 Controler 0 71 n levels/level_toggle
 0 Controler 0 114 n modes/mode_toggle
