@@ -72,7 +72,7 @@ function show_menu {
 
 while true; do
   show_menu
-  read -p 'and now?: ' selection
+  read -p 'And now? ' selection
   if [[ $selection -eq "0" ]]; then
     if [[ $(pwd) == "$menudir" ]]; then
       echo "Already at top level."
