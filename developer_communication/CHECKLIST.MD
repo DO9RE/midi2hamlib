@@ -13,7 +13,14 @@
   - Use one rotary control to set the frequency step size (in Hz).  
   - Use two buttons to increase or decrease the frequency based on the step size.
 
-- [ ] Test Braille display compatibility. How straightforward is it to connect a Braille output device to the screen reader?
+- [x] Test Braille display compatibility. How straightforward is it to connect a Braille output device to the screen reader?
+  **Note by DO9RE – 2025-04-16:**  
+  After running 
+  ```bash
+  sudo apt-get install brltty
+  ```  
+  the Braille display was functional in the terminal within approximately 10 seconds.  
+   Tested with a Focus 40 Blue display.
 
 - [ ] Implement "Fast Lock" feature directly from the script using available telemetry data.
 
