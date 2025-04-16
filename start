@@ -1,4 +1,5 @@
 #!/bin/bash
+setleds +num
 default_config_file="./settings/settings.conf"
 funcdir=./functions
 source $funcdir/helper_functions
