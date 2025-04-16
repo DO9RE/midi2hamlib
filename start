@@ -1,7 +1,7 @@
 #!/bin/bash
 setleds +num
 default_config_file="./settings/settings.conf"
-funcdir=./functions
+funcdir="$(pwd)/functions"
 source $funcdir/helper_functions
 # Process command line arguments
 config_file=$default_config_file
