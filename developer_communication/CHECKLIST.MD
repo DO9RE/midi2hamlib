@@ -5,6 +5,14 @@
   - Don't know how to contol state of additional numpad. Neither setleds nor writing to sys/leds.. works. 
   - How shall we proceed? Add a flag in settings to set numlock at startup?
 
+  **Note by DO9RE – 2025-04-16:**  
+  Added
+  ```
+  setleds +num
+  ```
+  to the start script to ensure numlock is always on.
+  Stays still the question, how to handle other external numpads.
+
 - [ ] Plan for multilingual support in the long term. Decide whether to handle translations directly in the script or implement a more professional solution. Note: Menu entries are currently embedded as comments in the menu definition files, which complicates proper translation via variables.
 
 - [ ] Validate all user inputs in text fields and all settings via knobs or sliders to prevent meaningless or out-of-range values.
@@ -14,6 +22,7 @@
   - Use two buttons to increase or decrease the frequency based on the step size.
 
 - [x] Test Braille display compatibility. How straightforward is it to connect a Braille output device to the screen reader?
+
   **Note by DO9RE – 2025-04-16:**  
   After running 
   ```bash
