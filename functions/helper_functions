@@ -13,7 +13,8 @@ format_frequency() {
   else
     power="hz"
   fi
-  echo "$frequency $power"
+# Output Frequency, remove trailing 0s or the whole decimal point if needed and add the power in Hz.
+  echo "$(echo $frequency | sed -E 's/\.?0+$//; s/(\.[0-9]*[1-9])0+$/\1/') $power"
 }
 
 function multiply_and_format { # expects a number and its multiplier. Returns the Number without the decimal point.
