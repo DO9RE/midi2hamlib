@@ -1,2 +1,2 @@
 #!/bin/bash
-rigctl -m 2 -r localhost:$port c
+rigctl -m 2 -r $host:$port c

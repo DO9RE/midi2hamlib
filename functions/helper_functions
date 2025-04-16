@@ -57,7 +57,7 @@ function fader_to_zones {
 
 function get_current_mode {
 # Return only the mode name without the passband
-  echo $(rigctl -m 2 -r localhost:$port m | head -n 1)
+  echo $(rigctl -m 2 -r $host:$port m | head -n 1)
 }
 
 # Function for use with the transceiver functions.

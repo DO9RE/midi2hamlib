@@ -5,6 +5,6 @@ read -p 'command: ' command
 if [[ $command == "quit" ]]; then
   break
 else
-  rigctl -m 2 -r localhost:$port $command
+  rigctl -m 2 -r $host:$port $command
 fi
 done

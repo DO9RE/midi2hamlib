@@ -4,7 +4,7 @@ levels=($(rigctl -m $model --dump-caps |
 grep "Set level:" | 
 sed 's/[^A-Z_ ]//g'))
 if [[ $1 ]]; then #Triggered with parameter
-echo "${levels[$1]} = $(rigctl -m $model -r localhost:4500 l ${levels[$1]})"
+echo "${levels[$1]} = $(rigctl -m $model -r $host:4500 l ${levels[$1]})"
 else #Called from keyboard, show modes list and ask for selection.
   for index in "${!levels[@]}"; do
   echo "$index: ${levels[$index]}"
