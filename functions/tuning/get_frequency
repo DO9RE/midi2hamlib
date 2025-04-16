@@ -1,0 +1,4 @@
+#!/bin/bash
+f=$(rigctl -m 2 -r localhost:$port f)
+echo $(format_frequency $f)
+

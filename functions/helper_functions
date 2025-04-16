@@ -4,13 +4,13 @@ format_frequency() {
   local frequency=$1
 
   if (( frequency >= 1000000 )); then
-    frequency=$(echo "scale=2; $frequency / 1000000" | bc)
-    echo "${frequency} MHz"
+    frequency=$(echo "scale=6; $frequency / 1000000" | bc)
+    echo "$frequency MHz"
   elif (( frequency >= 1000 )); then
-    frequency=$(echo "scale=2; $frequency / 1000" | bc)
-    echo "${frequency} KHz"
+    frequency=$(echo "scale=3; $frequency / 1000" | bc)
+    echo "$frequency KHz"
   else
-    echo "${frequency} Hz"
+    echo "$frequency Hz"
   fi
 }
 

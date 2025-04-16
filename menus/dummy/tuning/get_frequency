@@ -1,0 +1,5 @@
+#!/bin/bash
+#1
+# Get frequency
+source $funcdir/tuning/get_frequency
+
