@@ -1,3 +1,11 @@
+- [ ] MIDI ports can change, but device names remain consistent. 
+
+  **Note by DO9RE – 2025-04-16:**  
+
+  We can use `aconnect -i` to display a list of MIDI devices, which will appear with their names. Finally, you can access the device directly with `aseqdump -p 'device name'`. 
+  Question: What needs to be changed in the script to work with the more reliable device names instead of the previously used port numbers?
+  How can we preserve multi device usage possibility?
+
 - [ ] Ensure that the numeric keypad is automatically enabled on all virtual consoles at system startup, allowing for numeric input.
 
   **Note by DK7STJ – 2025-04-16:**  
