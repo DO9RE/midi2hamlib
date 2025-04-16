@@ -1,4 +1,13 @@
 #!/bin/bash
+# Function for formatting human input frequencies into the hamlib needed format
+# We assume a base of MHz, therefore we multiply with 1000000
+# We switch eventually commas with decimal points, using SED.
+re_format_frequency() {
+  local frequency=$1
+  frequency=$(echo "$frequency * 1000000 /1" | sed 's/,/./g' | bc)
+  echo $frequency
+}
+
 # Function for formatting frequencies output more human friendly
 format_frequency() {
   local frequency=$1
