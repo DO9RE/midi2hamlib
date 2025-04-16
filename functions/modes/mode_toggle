@@ -5,9 +5,7 @@ if [[ $1 ]]; then #Triggered with parameter
 # echo ${modes[$1]} 
 # echo $(rigctl -m 2 -r localhost:$port m | tail -n 1)
 # Switch transceiver to selected mode, passing 0 as second parameter, device default bandwidth
-# rigctl -m 2 -r localhost:$port M ${modes[$1]} $(rigctl -m 2 -r localhost:$port m | tail -n 1)
   rigctl -m 2 -r localhost:$port M ${modes[$1]} 0
-# $(rigctl -m 2 -r localhost:$port m | tail -n 1)
 else #Called from keyboard, show modes list and ask for selection.
   for index in "${!modes[@]}"; do
   echo "$index: ${modes[$index]}"
@@ -15,7 +13,6 @@ done
 read -p 'Mode?: ' selection
 # Switch transceiver to selected mode, passing 0 as second parameter, device default bandwidth
   rigctl -m 2 -r localhost:$port M ${modes[$selection]} 0
-# $(rigctl -m 2 -r localhost:$port m | tail -n 1)
 fi
 # Show mode and passband in one line by removing \n from the string
 rigctl -m 2 -r localhost:$port m | sed ':a;N;$!ba;s/\n/ /g'
