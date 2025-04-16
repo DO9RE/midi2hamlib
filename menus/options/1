@@ -1,4 +1,4 @@
 #!/bin/bash
 #1
-# Start MIDI mapper
-source $basedir/midi/midi_mapper
+# Start RIGCTL console
+source $basedir/additional_scripts/rigctl_console.sh
