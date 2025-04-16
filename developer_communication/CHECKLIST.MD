@@ -1,4 +1,7 @@
-- [ ] DK7STJ: Ensure that the numeric keypad is automatically enabled on all virtual consoles at system startup, allowing for numeric input.
+- [ ] Ensure that the numeric keypad is automatically enabled on all virtual consoles at system startup, allowing for numeric input.
+
+  **Note by DK7STJ – 2025-04-16:**  
+
   - numlock state of main keyboard can be set with setleds.
   - This however also changes numlock on smal keyboards like on pi400, where leters jkl are then 123. this is maybe not what you want when you also need to type text.
   - Additional numpad seems to have independent numlock state and works out of the box.
