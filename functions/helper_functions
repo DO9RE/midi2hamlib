@@ -8,6 +8,12 @@ re_format_frequency() {
   echo $frequency
 }
 
+# Function for stripping leading zeros and maybe also decimal point.
+# This also replaces ',' by '.'.
+strip_trailing_zeros() {
+	echo $1 | sed 's/,/./g; s/\(\.[1-9]\+\)0*$/\1/g; s/\.0*$//g'
+}
+ 
 # Function for formatting frequencies output more human friendly
 format_frequency() {
   local frequency=$1
@@ -21,19 +27,19 @@ format_frequency() {
     power="MHz"
   elif (( frequency >= 1000 )); then
     frequency=$(echo "scale=3; $frequency / 1000" | bc)
-    power="KHz"
+    power="kHz"
   else
-    power="hz"
+    power="Hz"
   fi
-# Output Frequency, remove trailing 0s or the whole decimal point if needed and add the power in Hz.
-  echo "$(echo $frequency | sed -E 's/\.?0+$//; s/(\.[0-9]*[1-9])0+$/\1/') $power"
+  # Output Frequency, remove trailing 0s or the whole decimal point if needed and add the power in Hz.
+  echo "$(strip_trailing_zeros $frequency) $power"
 }
 
 function multiply_and_format { # expects a number and its multiplier. Returns the Number without the decimal point.
   local number=$1
   local multiplier=$2
   local result=$(echo "$number * $multiplier" | bc)
-  local formatted_result=$(echo $result | sed 's/\.0*$//')
+  local formatted_result=$(strip_trailing_zeros $result)
   echo $formatted_result
 }
 
