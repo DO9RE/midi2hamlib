@@ -40,7 +40,7 @@ git clone https://github.com/do9re/midi2hamlib
 
 Install the necessary packages via apt: build essentials, Hamlib, bc, pip, Sox, git, Speech-Dispatcher, and Espeak:
 ```
-sudo apt install sox espeak espeak-ng speech-dispatcher build-essential libdbus-glib-1-dev libgirepository1.0-dev libpython3-dev libdbus-1-dev git python3-pip bc
+sudo apt install libhamlib-utils sox espeak espeak-ng speech-dispatcher build-essential libdbus-glib-1-dev libgirepository1.0-dev libpython3-dev libdbus-1-dev git python3-pip bc
 ```
 
 Then, get the Fenrir package from Storm:
@@ -57,10 +57,14 @@ Yes, I know, this is usually done with a virtual environment and Venv, but it di
 
 We also want to install Enchant:
 ```
-sudo install enchant --break-system-packages
+sudo pip install enchant --break-system-packages
 ```
 
-Now, check with the check-dependencies.py file located in the Fenrir directory of your user folder if all dependencies are met.
+Now, check with the check-dependencies.py file located in the Fenrir directory of your user folder if all dependencies are met. Then install Fenrir with the install.sh script.
+
+```
+sudo ./install.sh
+```
 
 For me, it still says Speechd is not available despite installing Speech-Dispatcher. Therefore, I changed two lines in the file ./etc/fenrir-screenreader/settings/settings.conf:
 
