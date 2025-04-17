@@ -16,6 +16,13 @@
   I cannot test this, only have one MIDI device.
   Questions: Can device names contain spaces? What if two identical controllers are connected?
 
+## **Note by DO9RE – 2025-04-17:**  
+  midi_ports is now called midi_devices.  
+  Names of MIDI devices can be entered in quotation marks.  
+  The reader generates a list of ports for these device names by using ASEQDUMP -L, filtering with grep and sed. Head -n 1 outputs only the first line.  
+  Variable_Name changed both in the settings and in the reader.  
+  Tests with a MIDI device name worked, need to wait until I have two devices available again.
+
 - [ ] Ensure that the numeric keypad is automatically enabled on all virtual consoles at system startup, allowing for numeric input.
 
 ## **Note by DK7STJ – 2025-04-16:**  
