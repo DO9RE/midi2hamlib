@@ -4,13 +4,13 @@
 
 - [ ] MIDI ports can change, but device names remain consistent. 
 
-  **Note by DO9RE – 2025-04-16:**  
+## **Note by DO9RE – 2025-04-16:**  
 
   We can use `aconnect -i` to display a list of MIDI devices, which will appear with their names. Finally, you can access the device directly with `aseqdump -p 'device name'`. 
   Question: What needs to be changed in the script to work with the more reliable device names instead of the previously used port numbers?
   How can we preserve multi device usage possibility?
 
-  **Note by DK7STJ – 2025-04-17:**  
+## **Note by DK7STJ – 2025-04-17:**  
 
   aseqdump uses the same command-line option regardless if you give a client name or numeric port. Also should accept more than one clients.
   I cannot test this, only have one MIDI device.
@@ -18,7 +18,7 @@
 
 - [ ] Ensure that the numeric keypad is automatically enabled on all virtual consoles at system startup, allowing for numeric input.
 
-  **Note by DK7STJ – 2025-04-16:**  
+## **Note by DK7STJ – 2025-04-16:**  
 
   - numlock state of main keyboard can be set with setleds.
   - This however also changes numlock on smal keyboards like on pi400, where leters jkl are then 123. this is maybe not what you want when you also need to type text.
@@ -26,7 +26,7 @@
   - Don't know how to contol state of additional numpad. Neither setleds nor writing to sys/leds.. works. 
   - How shall we proceed? Add a flag in settings to set numlock at startup?
 
-  **Note by DO9RE – 2025-04-16:**  
+## **Note by DO9RE – 2025-04-16:**  
   Added
   ```
   setleds +num
@@ -44,7 +44,7 @@
 
 - [x] Test Braille display compatibility. How straightforward is it to connect a Braille output device to the screen reader?
 
-  **Note by DO9RE – 2025-04-16:**  
+## **Note by DO9RE – 2025-04-16:**  
   After running 
   ```bash
   sudo apt-get install brltty
