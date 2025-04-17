@@ -1,3 +1,5 @@
+# Checklist, Todo and ideas
+
 - [ ] The application should also benefit visually impaired users. Therefore, we need to consider a visually impaired-friendly display. In the console, there is the option to enlarge the font and use alternative fonts. We also need to think about alternative color representations. We must examine how an alternative display affects the ability of the Fenrir screen reader to read the text in the console. A small screen can then be connected to the Raspberry Pi to provide access to the system for sighted users who may only need a small adjustment.
 
 - [ ] MIDI ports can change, but device names remain consistent. 
