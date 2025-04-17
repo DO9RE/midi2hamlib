@@ -1,4 +1,3 @@
-#!/bin/bash
 # Build an array from the transceiver models supported levels, using the --dump-caps flag.
 levels=($(rigctl -m $model --dump-caps | 
 grep "Set level:" | 

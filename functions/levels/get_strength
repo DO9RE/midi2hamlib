@@ -1,4 +1,3 @@
-#!/bin/bash
 # Function for displaying the S-Meter-Reading
 strength=$(rigctl -m 2 -r $host:$port l STRENGTH)
 # task: Turn the number into a -s-value in DB. Here is what hamlib developer Phil, GM3ZZA said:

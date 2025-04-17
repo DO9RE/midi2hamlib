@@ -1,4 +1,3 @@
-#!/bin/bash
 declare -a bandwidths
 unset bandwidths
 # get possible bandwidths for current mode

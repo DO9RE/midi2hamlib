@@ -1,4 +1,3 @@
-#!/bin/bash
 # Toggle the selected function according to $last_function and $status_last_function, coming from the function_select script
 if [[ ! $last_function || ! $status_last_function ]]; then
   echo "No function selected"

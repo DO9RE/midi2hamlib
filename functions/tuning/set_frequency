@@ -1,4 +1,3 @@
-#!/bin/bash
 # Set frequency from keyboard input
 read -p 'Frequency' freq
 rigctl -m 2 -r $host:$port F $(re_format_frequency $freq)

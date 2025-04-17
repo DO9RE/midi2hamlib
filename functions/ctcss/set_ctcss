@@ -1,4 +1,3 @@
-#!/bin/bash
 # Generate CTCSS Range from the given models --caps-dump output
 # Remove the decimal points, because the System needs every value as an integer.
 ctcss_range=($(rigctl -m $model --dump-caps | grep "CTCSS: " | sed 's/CTCSS //g' | sed 's/\.//g'))
