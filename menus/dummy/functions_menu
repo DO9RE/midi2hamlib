@@ -1,4 +1,3 @@
-#!/bin/bash
 #5
 # Functions Menu
 source $funcdir/functions/function_select

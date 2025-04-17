@@ -1,4 +1,3 @@
-#!/bin/bash
 #6
 # Shutdown the system
 echo Shutting down. 

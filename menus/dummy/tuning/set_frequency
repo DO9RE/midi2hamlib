@@ -1,4 +1,3 @@
-#!/bin/bash
 #2
 # Set Frequency
 source $funcdir/tuning/set_frequency

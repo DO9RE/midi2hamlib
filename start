@@ -55,8 +55,8 @@ function show_menu {
 # Walk through the menu folder and build the menu from line 2 and 3 of each file
   for file in *; do
     if [[ -f $file && ! $file == "name" ]]; then
-      menu_number=$(sed -n '2p' "$file" | sed 's/#//')
-      menu_name=$(sed -n '3p' "$file" | sed 's/#//')
+      menu_number=$(sed -n '1p' "$file" | sed 's/#//')
+      menu_name=$(sed -n '2p' "$file" | sed 's/#//')
       menu_numbers["$menu_number"]="$menu_name"
 #     echo "$menu_number: $menu_name"
       menu_options["$menu_number"]="$file"
