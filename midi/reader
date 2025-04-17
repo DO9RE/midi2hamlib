@@ -6,7 +6,7 @@ if [[ ${midi_ports[*]} ]]; then
 fi
 if [[ ${midi_devices[*]} ]]; then
   for i in "${!midi_devices[@]}"; do
-    midi_devices[$i]="-p '{$midi_devices[$i]}'"
+    midi_devices[$i]="-p '${midi_devices[$i]}'"
   done
   echo ${midi_devices[0]}
 fi
