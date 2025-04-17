@@ -1,6 +1,12 @@
 #!/bin/bash
-# Extract MIDI ports from settings array into a comma-separated list for ASEQDUMP
-ports=$(IFS=,; echo "${midi_ports[*]}")
+# Build Port list from device names:
+for i in "${!midi_devices[@]}"; do
+  device_port=$(aseqdump -l | grep "${midi_devices[$i]}" | awk '{print $1}' | head -n 1)
+  midi_devices[$i]=$device_port
+done
+
+# Convert MIDI ports into a comma-separated list for ASEQDUMP
+ports=$(IFS=,; echo "${midi_devices[*]}")
 
 # Read MIDI mapping from file into memory
 midi_mapping=$(cat "$midi_mapping_file")
@@ -29,8 +35,8 @@ stdbuf -oL aseqdump -p "$ports" | while read -r line; do
 
   # Map source to device
   device=""
-  for i in "${!midi_ports[@]}"; do
-    if [[ "${midi_ports[$i]}" == "$source" ]]; then
+  for i in "${!midi_devices[@]}"; do
+    if [[ "${midi_devices[$i]}" == "$source" ]]; then
       device=$i
       break
     fi
