@@ -59,6 +59,10 @@
   the Braille display was functional in the terminal within approximately 10 seconds.  
    Tested with a Focus 40 Blue display.
 
+## **Note by DO9RE – 2025-04-17:**  
+
+   Added a small section to the installation hints about BRLTTY, so I consider this point as successfully done, changed checkmark accordingly.
+
 - [ ] Implement "Fast Log" feature directly from the script using available telemetry data.
 
 - [ ] Optimize boot time. On a Raspberry Pi 4 (4 GB or 8 GB), the system currently takes around 25 seconds to start.  
