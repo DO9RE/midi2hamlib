@@ -5,10 +5,13 @@ if [[ ${midi_ports[*]} ]]; then
   ports=$(IFS=,; echo "${midi_ports[*]}")
 fi
 if [[ ${midi_devices[*]} ]]; then
-  for i in "${!midi_devices[@]}"; do
-    midi_devices[$i]="-p '${midi_devices[$i]}'"
-  done
-  echo ${midi_devices[0]}
+for i in "${!midi_devices[@]}"; do
+    midi_devices[$i]="-p '${midi_devices[$i]}' "
+done
+# lets check, test test
+for element in "${midi_devices[@]}"; do
+    echo "$element"
+done
 fi
 
 # Read MIDI mapping from file into memory
