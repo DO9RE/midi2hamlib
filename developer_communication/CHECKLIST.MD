@@ -8,6 +8,12 @@
   Question: What needs to be changed in the script to work with the more reliable device names instead of the previously used port numbers?
   How can we preserve multi device usage possibility?
 
+  **Note by DK7STJ – 2025-04-17:**  
+
+  aseqdump uses the same command-line option regardless if you give a client name or numeric port. Also should accept more than one clients.
+  I cannot test this, only have one MIDI device.
+  Questions: Can device names contain spaces? What if two identical controllers are connected?
+
 - [ ] Ensure that the numeric keypad is automatically enabled on all virtual consoles at system startup, allowing for numeric input.
 
   **Note by DK7STJ – 2025-04-16:**  
@@ -44,7 +50,7 @@
   the Braille display was functional in the terminal within approximately 10 seconds.  
    Tested with a Focus 40 Blue display.
 
-- [ ] Implement "Fast Lock" feature directly from the script using available telemetry data.
+- [ ] Implement "Fast Log" feature directly from the script using available telemetry data.
 
 - [ ] Optimize boot time. On a Raspberry Pi 4 (4 GB or 8 GB), the system currently takes around 25 seconds to start.  
   - Identify services that can be disabled without impacting functionality.  
