@@ -153,6 +153,18 @@ sudo apt install python3-dialog.
 ```
 Restard and cross your fingers.
 
+## Braille Support
+
+Native Braille support in Fenrir never functioned reliably. When Storm took over responsibility for the project, he decided to remove Braille support from the main program entirely. This change does not pose a real issue, as there is already a very capable alternative available: **BRLTTY**.
+
+BRLTTY provides excellent functionality for working with Braille output devices directly on the console. It can be installed easily using:
+
+```
+sudo apt install brltty
+```
+
+This offers an optional tactile access method to the system for users who rely on Braille displays.
+
 ## License
 
 This project is released under an open-source license. See `LICENSE` for more details.
