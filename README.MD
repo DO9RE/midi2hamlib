@@ -165,6 +165,195 @@ sudo apt install brltty
 
 This offers an optional tactile access method to the system for users who rely on Braille displays.
 
+# Project Structure: Separation of Menu Logic and Function Logic
+
+At the root level of the project directory, there are two main folders:
+
+- `menus/`
+- `functions/`
+
+---
+
+## `menus/` Folder
+
+The `menus/` folder contains the structure and logic for the user interface menus. It consists of:
+
+1. **`options/` folder**  
+   This folder is always present and visible, regardless of the selected transceiver.
+
+2. **One folder per transceiver type**  
+   Each supported transceiver has its own dedicated subfolder. These contain the complete menu structure for the respective device.
+
+   ### Example: `dummy/`
+   The folder `dummy/` contains a fully developed menu structure for the Dummy transceiver by RIGCTL. This serves as a template for creating your own custom menu structures.
+
+---
+
+## Menu Structure Details
+
+Each subfolder within a transceiver folder represents a **submenu**. The name of the submenu is defined by creating a file named `Name` inside that folder. The content of this file (plain text) will be used as the **title** of the submenu when it is displayed.
+
+### Menu Entries
+
+Menu entries within a submenu are defined using individual script files placed in the respective folder. These scripts control both the display name and the action of the menu item.
+
+The **first two lines** of each script define the **order and label** of the menu item:
+
+- **Line 1:** A hash (`#`) followed immediately (no space) by a number, which determines the order of the item in the menu.  
+  Example: `#1`
+
+- **Line 2:** Another hash (`#`) followed by the name of the menu item.  
+  Example: `#Get frequency`
+
+Below these two lines, the actual shell commands are defined. A menu item can either:
+
+1. **Execute a function**  
+   Use the command `source` followed by the path to the desired function script.  
+   You may use the `$funcdir` placeholder, defined in settings/settings.conf, to reference the base path to the functions directory.  
+   Example:  
+   ```bash
+   source $funcdir/dummy/tuning/get_frequency
+   ```
+
+2. **Navigate to a submenu**  
+   Use standard shell commands such as `cd` to change into another menu directory. When the script is executed, it will switch to the specified folder and the main loop will display its `Name` and menu entries.  
+   Example:  
+   ```bash
+   cd modes
+   ```
+
+---
+
+## `functions/` Folder
+
+The `functions/` folder contains subfolders with scripts that control the specific behavior of the transceivers.
+
+Although the structure is still under development and not fully defined, we aim to maintain a **consistent naming logic** for these subdirectories to ensure clarity and scalability.
+
+---
+
+## Using the Tool with MIDI Hardware
+
+All functions provided by the tool can also be triggered via **MIDI hardware**. This includes devices such as DJ controllers, digital mixing consoles, step sequencers, or even musical keyboards. The essential requirement is that the device offers **interactive controls** like buttons, sliders, or rotary knobs.
+
+### Selecting a MIDI Device
+
+To specify which connected MIDI device(s) should be used, edit the `settings.conf` file located in the `settings/` directory.
+
+To discover the names of available MIDI devices on your system, use the following command:
+
+```bash
+aseqdump -l
+```
+
+Copy the exact device names (in quotes) into the appropriate variable in the `settings.conf` file.
+
+You can assign **multiple devices** at once by listing their names inside parentheses, each enclosed in quotes and separated by a space:
+
+```bash
+midi_devices=("Device 1" "Device 2")
+```
+
+### Assigning MIDI Controls to Functions
+
+To map MIDI events to specific functions or scripts, define your control mappings in a file named `midi.map`, located in the `midi/` subdirectory.
+
+Each mapping occupies a **single line**, with all fields separated by a **space**. Here's the structure of each line:
+
+```
+DEVICE TYPE CHAN NUM VAL SCRIPT
+```
+
+#### Field Breakdown:
+
+- **DEVICE**  
+  The device number, corresponding to the order in which devices are listed in `settings.conf`.  
+  - The first device is `0`, the second is `1`, and so on.
+
+- **_TYPE**  
+  The type of MIDI event:
+  - **note_on** or **note_off** for button presses/releases.
+  - **control** for Control Change events (e.g., knobs and faders).
+
+- **CHAN**  
+  The MIDI channel number (typically between 0 and 15).  
+  Many MIDI controllers allow you to switch channels, effectively multiplying the available controls.
+
+- **NUM**  
+  The specific number of the MIDI control element (e.g., note number or control number).
+
+- **VAL**  
+  The velocity or value associated with the event:
+  - For notes, this is the velocity (e.g., how hard the button was pressed).
+  - For Control Change events, it represents the current value of the control.
+
+- **SCRIPT**  
+  The script or function to execute when the event occurs.  
+  If a field is not relevant for your use case, enter the letter **`N`** to mark it as ignored.
+
+#### Example:
+
+```text
+0 note_on 0 60 N modes/get_mode
+0 control 0 10 n sub_tones/ctcss_toggle
+```
+
+When a control change event is triggering a function, its value is always passed. This flexibility allows for dynamic and tactile control of transceiver functions using your preferred MIDI gear.
+
+---
+
+## Identifying MIDI Events Sent by Your Hardware
+
+At the current stage of development, the script does **not yet provide an interactive tool** to assign MIDI events to functions in real-time. Instead, you must **manually edit the `midi.map` file** to map hardware controls to specific actions.
+
+So how do you find out which events your MIDI controller sends?
+
+### Using `aseqdump` to Monitor MIDI Input
+
+To determine what messages your MIDI device sends when you press buttons, turn knobs, or move faders, you can use the command-line utility `aseqdump`. Here's how:
+
+1. **List Available MIDI Ports**
+
+   First, use the following command to display a list of connected MIDI devices:
+
+   ```bash
+   aseqdump -l
+   ```
+
+   This will output all available MIDI devices by name and port number. Make a note of the device or port you wish to monitor.
+
+2. **Start Listening to a Specific Device**
+
+   Then, use the `-p` flag to start listening to a specific port. You can either use the **port number** or the **device name** (in quotes):
+
+   ```bash
+   aseqdump -p "Device Name"
+   ```
+
+   or
+
+   ```bash
+   aseqdump -p 20:0
+   ```
+
+3. **Trigger Controls on Your MIDI Device**
+
+   While `aseqdump` is running, start interacting with your hardware. Each control you use—buttons, sliders, knobs—will output a corresponding MIDI message to the terminal.
+
+   Example output might look like:
+
+   ```
+   Source  Event                    Ch  Data
+   20:0    Control change           1   10 127
+   20:0    Note on                 10   60 100
+   ```
+
+4. **Transfer These Values into `midi.map`**
+
+   Using the structure described in the previous section, manually enter these values into your `midi.map` file. Make sure to assign the appropriate script or function to each event.
+
+---
+
 ## License
 
 This project is released under an open-source license. See `LICENSE` for more details.
