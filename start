@@ -40,7 +40,7 @@ rigctld -m $model -t $port &
 declare -A menu_options
 declare -A menu_numbers
 
-clear
+# clear
 echo -e "$greeting \n
 Use 0 to return from a menu."
 cd $menudir
