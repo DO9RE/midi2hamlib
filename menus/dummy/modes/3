@@ -1,4 +1,3 @@
-#./bin/bash
 #3
 # Set bandwidth
 source $funcdir/modes/bandwidth_toggle
