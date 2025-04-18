@@ -1,5 +1,14 @@
 # Checklist, Todo and ideas
 
+- [ ] Rework function selection / toggling.
+
+## **Note by DK7STJ – 2025-04-18:**  
+
+  Selecting and toggling a function alternately by MIDI and by menu doesn't work as expected.
+  Toggling a function by menu doesn't update the variable n which the last function state is stored. So toggling it afterwards by MIDI yields wrong results.
+  Either do not use last function state and always get status from TRX
+  first, or update function state when using menu.
+
 - [ ] We need to compile the latest Hamlib from its Repo, cause the Version which comes with aptAPT on Bookworm is 2 years old.
 
 ## **Note by DO9RE – 2025-04-18:**  
