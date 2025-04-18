@@ -10,4 +10,4 @@
 0 control  0 10 n ctcss/set_ctcss
 0 control  0 18 n functions/function_select
 0 note_on  0 45 64 functions/function_toggle
-1 note_off 0 60 n plusterschrommel
+0 note_off 0 60 n plusterschrommel
