@@ -76,8 +76,7 @@ stdbuf -oL aseqdump -p "$ports" | while read -r line; do
       source $funcdir/$mapping
     fi
   elif [[ $type == "Control" ]]; then
-    # Value (from map file) is currently not used.
-    mapping=$(echo "$midi_mapping" | awk -v device=$device -v channel=$channel -v controller=$controller '$1 == device && $3 == channel && $4 == controller && $2 == "control" {print $6}')
+    mapping=$(echo "$midi_mapping" | awk -v device=$device -v channel=$channel -v controller=$controller -v value=$value '$1 == device && $3 == channel && $4 == controller && $2 == "control" && ($5=="n" || $5==value) {print $6}')
     if [[ -n "$mapping" ]]; then
 #     echo "control $controller $value"
       source $funcdir/$mapping $value
