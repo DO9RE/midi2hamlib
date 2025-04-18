@@ -1,5 +1,5 @@
 # Build an array from the transceiver models supported modes, using the --dump-caps flag.
-tuning_steps=(1 50 100 200 500 1000)
+tuning_steps=(1 10 100 1000 10000 100000 1000000)
 if [[ $1 ]]; then #Triggered with parameter
   tuning_step=${tuning_steps[$1]}
 else #Called from keyboard, show tuning steps list
@@ -10,4 +10,4 @@ read -p 'Tuning step: ' selection
 tuning_step=${tuning_steps[$selection]}
 fi
 # Display tuning step
-echo $tuning_step
+format_frequency $tuning_step
