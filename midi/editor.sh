@@ -1,72 +1,73 @@
 #!/bin/bash
 
-FILE="$1"
+file="$1" # The MIDI map
+funcdir="$2" # coming from stard, passed to file_picker.sh
 
-# Function to display the midi map linewise
+# function to display the midi map linewise
 function show_file {
-# Show file with numbered lines from line 2 on
-  echo "File Contents:"
-  tail -n +2 "$FILE" | nl -w2 -s" "  
+# show file with numbered lines from line 2 on
+  echo "file contents:"
+  tail -n +2 "$file" | nl -w2 -s" "  
 }
 
-# Function to get the field headers
+# function to get the field headers
 function get_headers {
-  read -r header_line < "$FILE"
-  IFS=' ' read -r -a headers <<< "$header_line"
+  read -r header_line < "$file"
+  ifs=' ' read -r -a headers <<< "$header_line"
 }
 
-# Function to display the editors main menu
+# function to display the editors main menu
 function main_menu {
   while true; do
     clear
     show_file
-    echo "Midi Map Editor Menu"
+    echo "midi map editor menu"
     echo "0 = exit editor."
-    echo "Enter line number to edit:"
+    echo "enter line number to edit:"
     read -r menu_index
 
     if [[ "$menu_index" == "0" ]]; then
-      echo "Leaving Editor"
+      echo "leaving editor"
       exit 0
     fi
 
     if ! [[ "$menu_index" =~ ^[0-9]+$ ]] || (( menu_index < 1 )); then
-      echo "Invalid line number."
-      read -p "Press Enter to continue."
+      echo "invalid line number."
+      read -p "press enter to continue."
       continue
     fi
-#   Skip header line
+#   skip header line
     line_number=$((menu_index + 1))
     edit_menu "$line_number"
   done
 }
 
-# Function for edit menu
+# function for edit menu
 function edit_menu {
   local line_number=$1
   local line
-  line=$(sed -n "${line_number}p" "$FILE")  # Read the line
+  line=$(sed -n "${line_number}p" "$file")  # read the line
 
   if [[ -z "$line" ]]; then
-    echo "Invalid line number."
-    read -p "Press Enter to go back."
+    echo "invalid line number."
+    read -p "press enter to go back."
     return
   fi
 
-  IFS=' ' read -r -a fields <<< "$line"  # Part fields in an array
+  ifs=' ' read -r -a fields <<< "$line"  # part fields in an array
 
   while true; do
     clear
-    echo "Line $((line_number - 1)): $line"
-    echo "Edit Menu:"
-    echo "0 = Back to main menu."
+    echo "line $((line_number - 1)): $line"
+    echo "edit menu:"
+    echo "0 = back to main menu."
 
-#   Display fields, numbered and with headers
+#   display fields, numbered and with headers
     for i in "${!fields[@]}"; do
-      echo "$((i + 1)) = Field $((i + 1)) (${headers[i]}: ${fields[i]})"
+      echo "$((i + 1)) = field $((i + 1)) (${headers[i]}: ${fields[i]})"
     done
 
-    echo "$(( ${#fields[@]} + 1 )) = Delete whole mapping."
+    echo "$(( ${#fields[@]} + 1 )) = delete whole mapping."
     read -r field_choice
 
     if [[ "$field_choice" == "0" ]]; then
@@ -80,13 +81,13 @@ function edit_menu {
 
     if ! [[ "$field_choice" =~ ^[0-9]+$ ]] || (( field_choice < 1 )) || (( field_choice > ${#fields[@]} )); then
       echo "invalid option."
-      read -p "Press Enter to continue..."
+      read -p "press enter to continue..."
       continue
     fi
 
     edit_field "$line_number" "$((field_choice - 1))"
-    line=$(sed -n "${line_number}p" "$FILE")  # Reread line
-    IFS=' ' read -r -a fields <<< "$line"    # re-divide fields
+    line=$(sed -n "${line_number}p" "$file")  # reread line
+    ifs=' ' read -r -a fields <<< "$line"    # re-divide fields
   done
 }
 
@@ -94,46 +95,73 @@ function edit_field {
   local line_number=$1
   local field_index=$2
   local line
-  line=$(sed -n "${line_number}p" "$FILE") 
-  IFS=' ' read -r -a fields <<< "$line"    
+  line=$(sed -n "${line_number}p" "$file") 
+  ifs=' ' read -r -a fields <<< "$line"    
 
-  echo "Current value of ${headers[field_index]} (Feld $((field_index + 1))): ${fields[field_index]}"
-  read -p "New value for ${headers[field_index]}: " new_value
+  echo "current value of ${headers[field_index]} (feld $((field_index + 1))): ${fields[field_index]}"
+
+  # Check for special case: editing "Field 2", TYPE
+  if [[ $field_index -eq 1 ]]; then
+    while true; do
+      echo "Select a new value for ${headers[field_index]}:"
+      echo "1 = note_on"
+      echo "2 = note_off"
+      echo "3 = control"
+      echo "4 = pitch"
+      echo "0 = go back"
+      read -p "Your choice: " choice
+
+      case $choice in
+        1) new_value="note_on"; break ;;
+        2) new_value="note_off"; break ;;
+        3) new_value="control"; break ;;
+        4) new_value="pitch"; break ;;
+        0) return ;;
+        *) echo "Invalid option. Please try again." ;;
+      esac
+    done
+# Check for special case: editing "Field 5", SCRIPT
+  elif [[ $field_index -eq 5 ]]; then
+    echo $funcdir
+    new_value=$(source $funcdir/file_picker.sh $funcdir)
+  else
+    read -p "new value for ${headers[field_index]}: " new_value
+  fi
 
   fields[field_index]=$new_value
-  new_line=$(IFS=' '; echo "${fields[*]}")
+  new_line=$(ifs=' '; echo "${fields[*]}")
 
-# We have some slashes in our file, need to mask those from SED
+  # Escape slashes for sed
   escaped_new_line=$(printf '%s' "$new_line" | sed 's/[&/\]/\\&/g')
-  sed -i "${line_number}s/.*/$escaped_new_line/" "$FILE" # Write file
+  sed -i "${line_number}s/.*/$escaped_new_line/" "$file" # Write file
   echo "Field updated."
-  read -p "Press Enter to continue."
+  read -p "Press enter to continue."
 }
 
 function delete_line {
   local line_number=$1
 
   while true; do
-    echo "Delete mapping $((line_number - 1))?"
-    echo "0 = No"
-    echo "1 = Yes"
+    echo "delete mapping $((line_number - 1))?"
+    echo "0 = no"
+    echo "1 = yes"
     read -r confirm
 
     if [[ "$confirm" == "0" ]]; then
       return
     elif [[ "$confirm" == "1" ]]; then
-      sed -i "${line_number}d" "$FILE"
-      echo "Deleted."
-      read -p "Press Enter, to return to the main menu."
+      sed -i "${line_number}d" "$file"
+      echo "deleted."
+      read -p "press enter, to return to the main menu."
       return
     else
-      echo "Invalid option."
+      echo "invalid option."
     fi
   done
 }
-# Run main program
-if [[ ! -f "$FILE" ]]; then
-  echo "File '$FILE' not found."
+# run main program
+if [[ ! -f "$file" ]]; then
+  echo "file '$file' not found."
   exit 1
 fi
 
