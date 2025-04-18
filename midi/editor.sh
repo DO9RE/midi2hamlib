@@ -99,16 +99,39 @@ function edit_field {
   ifs=' ' read -r -a fields <<< "$line"    
 
   echo "current value of ${headers[field_index]} (feld $((field_index + 1))): ${fields[field_index]}"
-  read -p "new value for ${headers[field_index]}: " new_value
+
+  # Check for special case: editing "Field 2", TYPE
+  if [[ $field_index -eq 1 ]]; then
+    while true; do
+      echo "Select a new value for ${headers[field_index]}:"
+      echo "1 = note_on"
+      echo "2 = note_off"
+      echo "3 = control"
+      echo "4 = pitch"
+      echo "0 = go back"
+      read -p "Your choice: " choice
+
+      case $choice in
+        1) new_value="note_on"; break ;;
+        2) new_value="note_off"; break ;;
+        3) new_value="control"; break ;;
+        4) new_value="pitch"; break ;;
+        0) return ;;
+        *) echo "Invalid option. Please try again." ;;
+      esac
+    done
+  else
+    read -p "new value for ${headers[field_index]}: " new_value
+  fi
 
   fields[field_index]=$new_value
   new_line=$(ifs=' '; echo "${fields[*]}")
 
-# we have some slashes in our file, need to mask those from sed
+  # Escape slashes for sed
   escaped_new_line=$(printf '%s' "$new_line" | sed 's/[&/\]/\\&/g')
-  sed -i "${line_number}s/.*/$escaped_new_line/" "$file" # write file
-  echo "field updated."
-  read -p "press enter to continue."
+  sed -i "${line_number}s/.*/$escaped_new_line/" "$file" # Write file
+  echo "Field updated."
+  read -p "Press enter to continue."
 }
 
 function delete_line {
