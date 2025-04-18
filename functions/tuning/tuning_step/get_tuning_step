@@ -1,0 +1,2 @@
+# Output Mode and passband in one line by removing \n from the string
+echo $tuning_step"

@@ -1,8 +1,6 @@
 #DEVICE TYPE    CHAN NUM VAL SCRIPT
 0       note_on 0    44  64  modes/get_mode
 0 note_on  0 36 64 ctcss/get_ctcss
-0 note_off 0 38 64 ctcss/get_ctcss
-0 note_off 0 43 64 ctcss/get_ctcss # testing note off event.
 0 control  0 19 n tuning/vfo/vfo_toggle
 0 control  0 74 n modes/bandwidth_toggle
 0 control  0 71 n levels/level_toggle
@@ -10,4 +8,8 @@
 0 control  0 10 n ctcss/set_ctcss
 0 control  0 18 n functions/function_select
 0 note_on  0 45 64 functions/function_toggle
-1 note_on 0 60 n levels/level_toggle
+0 note_on 0 60 n levels/level_toggle
+0 control 0 79 n tuning/tuning_step/tuning_step_toggle
+0 note_on 0 51 n tuning/get_frequency
+0 note_on 0 50 n tuning/tuning_step/tuning_step_tune_up
+0 note_on 0 42 n tuning/tuning_step/tuning_step_tune_down
