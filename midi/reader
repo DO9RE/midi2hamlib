@@ -1,7 +1,19 @@
 #!/bin/bash
 midi_mapper() {
-echo "mapper here"
+  echo "New MIDI event detected"
+  if [[ $type == "Note" ]]; then
+    event="$device note_on $channel $note $velocity"
+  elif [[ $type == "Control" ]]; then
+    event="$device control $channel $controller $value"
+  fi
+# Map the event to a dummy function
+  echo "$event dummy_function" >> $midi_mapping_file
+# delete midi_mapper_on file
+rm $basedir/midi/midi_mapper_on
+# Exit MIDI reader to reload mapping file at restart
+exit
 }
+
 # Build Port list from device names:
 for i in "${!midi_devices[@]}"; do
   device_port=$(aseqdump -l | grep "${midi_devices[$i]}" | awk '{print $1}' | head -n 1)
@@ -63,8 +75,8 @@ stdbuf -oL aseqdump -p "$ports" | while read -r line; do
     fi
 #   source $funcdir/$(echo "$midi_mapping" | awk -v device=$device -v controller=$controller '$1 == device && $4 == controller {print $6}') $value
   fi
-# run midi mapper function if there is no mapping for the current event, also its no note off
-  if [[ ! -n "$mapping" && ! $on_off == "off" ]]; then
+# run midi mapper function if there is no mapping for the current event, also its no note off and the midi_mapper_on file is present
+  if [[ -f $basedir/midi/midi_mapper_on && ! -n "$mapping" && ! $on_off == "off" ]]; then
     midi_mapper
   fi
 done

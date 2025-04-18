@@ -1,0 +1,2 @@
+echo "Event mapped to dummy function"
+echo "Edit $midi_mapping_file."

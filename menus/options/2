@@ -1,0 +1,9 @@
+#2
+# Start MIDI mapper
+# Because the MIDI reader is a background process, we can't communicate directly with it. Therefore, we put a flag file, so the process knows, we would like to map the next MIDI event.
+touch $basedir/midi/midi_mapper_on
+echo "Midi Mapper on, please press a button or move a control on Your MIDI device."
+read -p 'Press enter when finish'
+# restart midi_reader to reload midi map
+source $basedir/midi/reader &
+
