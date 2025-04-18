@@ -121,7 +121,7 @@ function edit_field {
 # Check for special case: editing "Field 5", SCRIPT
   elif [[ $field_index -eq 5 ]]; then
     source $funcdir/file_picker.sh $funcdir
-    new_value=$(echo "$escaped_file_picker_result" | sed "s#$funcdir##g")
+    new_value=$(echo "$file_picker_result" | sed "s#${funcdir}/##g")
   else
     read -p "new value for ${headers[field_index]}: " new_value
   fi
