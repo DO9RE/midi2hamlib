@@ -1,7 +1,6 @@
 #!/bin/bash
 
 file="$1" # The MIDI map
-funcdir="$2" # coming from stard, passed to file_picker.sh
 
 # function to display the midi map linewise
 function show_file {
@@ -123,7 +122,7 @@ function edit_field {
 # Check for special case: editing "Field 5", SCRIPT
   elif [[ $field_index -eq 5 ]]; then
     echo $funcdir
-    new_value=$(source $funcdir/file_picker.sh $funcdir)
+    source $funcdir/file_picker.sh $funcdir
   else
     read -p "new value for ${headers[field_index]}: " new_value
   fi
