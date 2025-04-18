@@ -1,5 +1,5 @@
-#!/bin/bash
-
+#!/bin/basH
+file_picker_result=""
 # Do we have a directory?
 if [ -z "$1" ]; then
   echo "Please pass directory"
@@ -32,7 +32,7 @@ while true; do
 # Quit if 0 is given
   if [ "$choice" -eq 0 ]; then
     echo "Returning to interface"
-    exit 0
+    return 0
   fi
 
 # Up one level, if 1 is given, but not beyond the starting directory
@@ -53,8 +53,8 @@ while true; do
         current_dir="$item"
       else
 #       Output file to stdout
-        echo "$item"
-        exit 0
+        file_picker_result="$item"
+        return 0
       fi
       break
     fi

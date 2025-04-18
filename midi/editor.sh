@@ -1,6 +1,5 @@
 #!/bin/bash
-
-file="$1" # The MIDI map
+file=$midi_mapping_file
 
 # function to display the midi map linewise
 function show_file {
@@ -27,7 +26,7 @@ function main_menu {
 
     if [[ "$menu_index" == "0" ]]; then
       echo "leaving editor"
-      exit 0
+      return 0
     fi
 
     if ! [[ "$menu_index" =~ ^[0-9]+$ ]] || (( menu_index < 1 )); then
@@ -121,8 +120,8 @@ function edit_field {
     done
 # Check for special case: editing "Field 5", SCRIPT
   elif [[ $field_index -eq 5 ]]; then
-    echo $funcdir
     source $funcdir/file_picker.sh $funcdir
+    new_value=$(echo "$escaped_file_picker_result" | sed "s#$funcdir##g")
   else
     read -p "new value for ${headers[field_index]}: " new_value
   fi
