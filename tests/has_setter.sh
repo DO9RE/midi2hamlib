@@ -28,4 +28,4 @@ function get_functions_with_setter_info() {
     done
 }
 
-get_functions_with_setter_info u U
+get_functions_with_setter_info p P
