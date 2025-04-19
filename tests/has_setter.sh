@@ -1,5 +1,4 @@
 #!/bin/bash
-
 function get_functions_with_setter_info() {
   local getter=$1
   local setter=$2
@@ -10,22 +9,35 @@ function get_functions_with_setter_info() {
   echo "$getter_list"
   echo "$setter_list"
   IFS=' ' read -r -a getter_array <<< "$getter_list"
-    IFS=' ' read -r -a setter_array <<< "$setter_list"
-    declare -A setter_map
-    for setter in "${setter_array[@]}"; do
-      setter_map["$setter"]=true
-    done
-    declare -A items
-    for item in "${getter_array[@]}"; do
-      if [[ -n "${setter_map[$item]}" ]]; then
-        items["$item"]="has_setter=true"
-      else
-        items["$item"]="has_setter=false"
-      fi
-    done
-    for item in "${!items[@]}"; do
-        echo "$item: ${items[$item]}"
-    done
+  IFS=' ' read -r -a setter_array <<< "$setter_list"
+  declare -A map
+  for setter in "${setter_array[@]}"; do
+    map["$setter"]=$(( ${map["$setter"]} + 2))
+  done
+  for getter in "${getter_array[@]}"; do
+    map["$getter"]=$(( ${map["$getter"]} + 1))
+  done
+  for item in "${!map[@]}"; do
+    case ${map["$item"]} in
+      1)
+        echo "$item: read-only"
+        ;;
+      2)
+        echo "$item: write-only"
+        ;;
+      3)
+        echo "$item: read-write"
+        ;;
+      *)
+        echo "ERROR while processing $item"
+        ;;
+    esac
+  done
 }
 
+echo "Functions:"
+get_functions_with_setter_info u U
+echo -e "\nLevels:"
+get_functions_with_setter_info l L
+echo -e "\nParameters:"
 get_functions_with_setter_info p P
