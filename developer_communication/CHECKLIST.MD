@@ -9,6 +9,20 @@
   Either do not use last function state and always get status from TRX
   first, or update function state when using menu.
 
+## **Note by DK7STJ – 2025-04-19:**  
+  Although DO9Re and DK7STJ decided on synchronizing function selection by menu and MIDI, this is not possible currently.
+
+  Reason: The MIDI mapper runs in the background as a child process. So even
+  if we would set the variables last_function and status_last_function in
+  script function_select when invoked from within the menu, this change
+  wouldn't get through to the environment of the child process. 
+
+  Improvement however: I changed the implementation of functions_toggle that
+  it doesn't toggle the value based on last_function_status, but queries the
+  current setting before. So at least if the function has been updated through
+  the menu meanwhile and then is toggled again by MIDI input, it sets the
+  currect value.  
+
 - [ ] We need to compile the latest Hamlib from its Repo, cause the Version which comes with aptAPT on Bookworm is 2 years old.
 
 ## **Note by DO9RE – 2025-04-18:**  

@@ -6,7 +6,7 @@ if [[ $1 ]]; then #Triggered with parameter
 # What ever kind of midi controller the user has: These variables can be used to toggle the function on or off. Due to the sourcing natureof the whole project, the variables are available from everywhere.
   last_function=${functions[$1]}
   status_last_function=$(rigctl -m 2 -r $host:$port u ${functions[$1]})
-  echo "$last_function = $(humanize_status "$status_last_function")"
+  echo "$last_function is $(humanize_status "$status_last_function")"
 else # Called from keyboard, show functions list and ask for selection.
 # Add an element called goback at index 0, to give a possibility to back out of the menu.
   functions=("goback" "${functions[@]}")
@@ -17,11 +17,12 @@ else # Called from keyboard, show functions list and ask for selection.
         continue
       fi
 #     Show number, name and status of selected function
-      echo "$index: ${functions[$index]} = $(humanize_status "$(rigctl -m 2 -r $host:$port u ${functions[$index]})")"
+      funcstat=$(rigctl -m 2 -r $host:$port u ${functions[$index]})
+      echo "$index: ${functions[$index]} is $(humanize_status $funcstat)"
     done
     read -p 'Function?: ' selection
 #   Exit functions menu when 0 is issued
-    if [[ $selection == 0 ]]; then
+    if [[ $selection -eq 0 ]]; then
       break
     fi
 #   toggle function on or off, according to its current status:
@@ -31,6 +32,7 @@ else # Called from keyboard, show functions list and ask for selection.
       rigctl -m 2 -r $host:$port U ${functions[$selection]} 0
     fi
 #   Show function status
-    rigctl -m 2 -r $host:$port u ${functions[$selection]} | humanize_status
+    funcstat=$(rigctl -m 2 -r $host:$port u ${functions[$selection]})
+    echo "${functions[$selection]} is $(humanize_status $funcstat)"
   done
 fi
