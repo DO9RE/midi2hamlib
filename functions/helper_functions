@@ -114,3 +114,12 @@ read_and_validate() {
   fi
   return 0
 }
+
+# Like read_and_validate, but derives the maximum value from an array given by its name.
+# Please make sure that the array is zero-based. The maximum value is calculated
+# from the number of elements in the array.
+# Syntax: read_and_validate prompt arrname varname
+read_and_validate_arr() {
+  read_and_validate $1 ${#$2[@]} $3
+  return $?
+}
