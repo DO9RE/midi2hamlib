@@ -1,4 +1,4 @@
 #7
-# Options menu
-cd $basedir/menus/options
-
+# Options Menu
+cd ..
+cd options

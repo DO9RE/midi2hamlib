@@ -1,4 +1,4 @@
-#6
+#4
 # Shutdown the system
 echo Shutting down. 
 sleep 3
