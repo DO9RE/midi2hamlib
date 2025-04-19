@@ -11,7 +11,7 @@ is_within_input_range() {
 }
 
 my_array=("Element1" "Element2" "Element3" "Element4")
-if [[ $(is_within_input_range 2 my_array[@]) == 1 ]]; then
+if is_within_input_range 2 my_array[@] && [ $? -eq 1 ]; then
   echo "passt"
 else
   echo "passt nicht"
