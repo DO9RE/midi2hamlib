@@ -61,6 +61,7 @@ function show_menu {
         max_menu_number=$menu_number
       fi
       menu_name=$(sed -n '2p' "$file" | sed 's/#//')
+      eval "menu_name=\"$menu_name\""
       menu_numbers["$menu_number"]="$menu_name"
 #     echo "$menu_number: $menu_name"
       menu_options["$menu_number"]="$file"
