@@ -6,8 +6,8 @@ function get_functions_with_setter_info() {
   echo "$2"
   local getter_list="$(rigctl -m 1 $getter ?)"
   local setter_list="$(rigctl -m 1 $setter ?)"
-  echo "$getter_list"
-  echo "$setter_list"
+  echo "'$getter_list'"
+  echo "'$setter_list'"
   IFS=' ' read -r -a getter_array <<< "$getter_list"
   IFS=' ' read -r -a setter_array <<< "$setter_list"
   declare -A map

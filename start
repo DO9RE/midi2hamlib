@@ -50,12 +50,16 @@ function show_menu {
 # Resetting the menu arrays with every new menu to display
   unset menu_options
   unset menu_numbers
+  max_menu_number=0
 # Display the Menu Name from its name file
   cat $(pwd)/name
 # Walk through the menu folder and build the menu from line 2 and 3 of each file
   for file in *; do
     if [[ -f $file && ! $file == "name" ]]; then
       menu_number=$(sed -n '1p' "$file" | sed 's/#//')
+      if [[ $max_menu_number -lt $menu_number ]]; then
+        max_menu_number=$menu_number
+      fi
       menu_name=$(sed -n '2p' "$file" | sed 's/#//')
       menu_numbers["$menu_number"]="$menu_name"
 #     echo "$menu_number: $menu_name"
@@ -72,7 +76,8 @@ function show_menu {
 
 while true; do
   show_menu
-  read -p 'And now? ' selection
+  if ! read_and_validate 'And now? ' $max_menu_number selection; then continue; fi
+
   if [[ $selection -eq "0" ]]; then
     if [[ $(pwd) == "$menudir" ]]; then
       echo "Already at top level."
