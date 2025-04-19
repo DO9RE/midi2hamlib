@@ -10,4 +10,15 @@ while true; do
     break
   fi
 done
+arr=("zero" "one" "two")
+while true; do
+  echo "Menu with ${#arr[@]} entries from array (${arr[@]}) with keys ${!arr[@]}."
+  if ! read_and_validate_arr "Input: " arr choice ; then
+    continue
+  fi
+  echo "Input $choice OK."
+  if [[ $choice -eq 0 ]]; then
+    break
+  fi
+done
  

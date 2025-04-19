@@ -120,6 +120,8 @@ read_and_validate() {
 # from the number of elements in the array.
 # Syntax: read_and_validate prompt arrname varname
 read_and_validate_arr() {
-  read_and_validate $1 ${#$2[@]} $3
+  local maxval
+  eval 'maxval="${#'"$2"'[@]}"'
+  read_and_validate "$1" $maxval $3
   return $?
 }
