@@ -80,4 +80,37 @@ show_help() {
   echo "  -h, --help        Show this help"
 }
 
-
+# Read input and validate it.
+# Accepts numbers between 0 and a given maximum.
+# Prints an error message if input is invalid and returns 2.
+# Returns 1 when input in empty, but doesn't print an error. Can be used for repeating menu output.
+# Returns 0 if input is valid.
+# Exits with errorcode 1 if parameters are not supplied or do not make sense.
+# Syntax: read_and_validate prompt maxvalue varname
+read_and_validate() {
+  if [[ -z "$1" ]] ; then 
+    echo "No prompt given for read_and_validate."
+    exit 1 
+  fi
+  if [[ -z "$2" || $2 -lt 0 ]] ; then 
+    echo "No maximum value or negative value given for read_and_validate."
+    exit 1 
+  fi
+  if [[ -z "$3" ]] ; then 
+    echo "No varname given for read_and_validate."
+    exit 1 
+  fi
+  local result
+  read -rp "$1" result
+  eval "$3=\"$result\""
+  if [[ -z "$result" ]]; then
+    return 1
+  elif ! [[ "$result" =~ ^[0-9]+$ ]] ; then
+    echo "Invalid input. Please enter a number only using digits 0 to 9."
+    return 2
+  elif [[ $result -lt 0 || $result -gt $2 ]]; then
+    echo "Input out of range. please enter a number between 0 and $2."
+    return 2
+  fi
+  return 0
+}

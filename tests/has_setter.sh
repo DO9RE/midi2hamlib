@@ -3,8 +3,8 @@
 function get_functions_with_setter_info() {
   local getter=$1
   local setter=$2
- echo "$1"
- echo "$2"
+  echo "$1"
+  echo "$2"
   local getter_list="$(rigctl -m 1 $getter ?)"
   local setter_list="$(rigctl -m 1 $setter ?)"
   echo "$getter_list"
