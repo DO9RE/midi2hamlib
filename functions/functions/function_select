@@ -20,7 +20,7 @@ else # Called from keyboard, show functions list and ask for selection.
       funcstat=$(rigctl -m 2 -r $host:$port u ${functions[$index]})
       echo "$index: ${functions[$index]} is $(humanize_status $funcstat)"
     done
-    if ! read_and_validate_arr 'Function?: ' functions selection; then continue; fi
+    if ! read_and_validate_arr_0 'Function?: ' functions selection; then continue; fi
 #   Exit functions menu when 0 is issued
     if [[ $selection -eq 0 ]]; then
       break
