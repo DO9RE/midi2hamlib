@@ -135,6 +135,17 @@ read_and_validate_arr_1() {
   return $?
 }
 
+is_process_running_for_user() {
+  local process_name="$1"
+  local user_name="$2"
+
+  if ps -u "$user_name" -f | grep -v grep | grep "$process_name" > /dev/null; then
+    return 0
+  else
+    return 1
+  fi
+}
+
 # Display a menu with title and elements from an array.
 # the elements from the zero-based array are numbered beginning with 1.
 # Index shifting is performed transparently, so the selection is again zero-based and can 
