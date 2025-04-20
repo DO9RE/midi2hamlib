@@ -100,9 +100,8 @@ read_and_validate() {
     echo "No varname given for read_and_validate."
     exit 1 
   fi
-  local result
+  local -n result=$3
   read -rp "$1" result
-  eval "$3=\"$result\""
   if [[ -z "$result" ]]; then
     return 1
   elif ! [[ "$result" =~ ^[0-9]+$ ]] ; then
@@ -119,9 +118,19 @@ read_and_validate() {
 # Please make sure that the array is zero-based. The maximum value is calculated
 # from the number of elements in the array.
 # Syntax: read_and_validate prompt arrname varname
-read_and_validate_arr() {
-  local maxval
-  eval 'maxval="${#'"$2"'[@]}"'
+read_and_validate_arr_0() {
+  local -n ravarr=$2
+  local maxval=$((${#ravarr[@]}-1))
+  read_and_validate "$1" $maxval $3
+  return $?
+}
+
+# Like read_and_validate_arr_0, but adds adds 1 to maximum value.
+# This is used if the array for the menu entries is 1-based.
+# Syntax: read_and_validate prompt arrname varname
+read_and_validate_arr_1() {
+  local -n ravarr=$2
+  local maxval=${#ravarr[@]}
   read_and_validate "$1" $maxval $3
   return $?
 }

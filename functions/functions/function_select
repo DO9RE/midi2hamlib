@@ -1,5 +1,5 @@
 # Build the functions list by querying the backend for supported functions. 
-functions=($(rigctl -m $model U ?))
+functions=($(rigctl -m 2 -r $host:$port U ?))
 if [[ $1 ]]; then #Triggered with parameter
 # We assume that the user selects the desired function with a rotary encoder.
 # So we put name and status of the function in charge into two variables
@@ -20,7 +20,7 @@ else # Called from keyboard, show functions list and ask for selection.
       funcstat=$(rigctl -m 2 -r $host:$port u ${functions[$index]})
       echo "$index: ${functions[$index]} is $(humanize_status $funcstat)"
     done
-    read -p 'Function?: ' selection
+    if ! read_and_validate_arr_0 'Function?: ' functions selection; then continue; fi
 #   Exit functions menu when 0 is issued
     if [[ $selection -eq 0 ]]; then
       break
