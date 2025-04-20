@@ -138,7 +138,7 @@ read_and_validate_arr_1() {
 is_process_running_for_user() {
   local process_name="$1"
   local user_name="$2"
-echo $user_name
+
   if ps -u "$user_name" -f | grep -v grep | grep "$process_name" > /dev/null; then
     return 0
   else
