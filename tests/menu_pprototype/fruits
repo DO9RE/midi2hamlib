@@ -1,0 +1,6 @@
+fruit_handler() {
+  echo "Sorry, ${fruit_menu_entries[$1]}s are out of stock."
+}
+fruit_menu_entries=("Apple" "Banana" "Peach")
+show_menu "Fruit store:" fruit_menu_entries "Which fruit do you want to buy? " fruit_handler
+echo "Exiting fruits store. Bye!"

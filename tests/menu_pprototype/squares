@@ -1,0 +1,9 @@
+square_handler() {
+  echo "You will not get far from here, this is just a demo. Sorry."
+}
+square_entry_text() {
+  echo "${squares_menu_entries[$1]} has square $(( ($1+1)**2 ))"
+}
+squares_menu_entries=("One" "Two" "Three" "Four")
+show_menu "Squares menu:" squares_menu_entries "" square_handler square_entry_text
+echo "Exiting squares menu."
