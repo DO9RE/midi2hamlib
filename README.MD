@@ -354,6 +354,14 @@ To determine what messages your MIDI device sends when you press buttons, turn k
 
 ---
 
+## Adjustment of Display for the Visually Impaired
+
+Firstly, the font in the console can be adjusted using the tool DPKG-RECONFIGURE. To do this, enter `sudo dpkg-reconfigure console-setup`. Generally, all default settings such as character set and keyboard type should be retained, but the font on the screen is important.
+
+**Caution!** Not all fonts are compatible with Braille output and the screen reader Fenrir. The font **Terminus Bold** has been successfully tested.
+
+Furthermore, it is advisable to reduce the overall pixel count, i.e., the screen resolution, which greatly enlarges everything. This can be done using options in the file `/boot/firmware/cmdline.txt`. In the **Additional Scripts** directory, there is a file named `set_screen_resolution_to_640x480.sh`, which automatically sets the necessary entries after creating a backup of `cmdline.txt`.
+
 ## License
 
 This project is released under an open-source license. See `LICENSE` for more details.

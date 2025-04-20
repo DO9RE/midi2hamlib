@@ -1,4 +1,0 @@
-#1
-# Set VFO
-source $funcdir/tuning/vfo/vfo_toggle
-
