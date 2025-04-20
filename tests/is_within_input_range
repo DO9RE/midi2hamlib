@@ -4,14 +4,14 @@ is_within_input_range() {
   local array=("${!2}")
   
   if (( index >= 0 && index < ${#array[@]} )); then
-    return 1
-  else
     return 0
+  else
+    return 1
   fi
 }
 
 my_array=("Element1" "Element2" "Element3" "Element4")
-if is_within_input_range 2 my_array[@] && [ $? -eq 1 ]; then
+if is_within_input_range 22 my_array[@]; then
   echo "passt"
 else
   echo "passt nicht"
