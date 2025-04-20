@@ -35,8 +35,8 @@ if [[ $use_midi_device == "TRUE" ]]; then
   source $basedir/midi/reader &
 fi
 
-# If rigctl daemon is not already running, start it and connect to the transceiver 
-if ! is_process_running_for_user "rigctld" $(whoami); then
+# If we are not in multi transceiver mode, rigctl daemon is not already running, start it and connect to the transceiver 
+if {{ $multi_mode == "false" && ! is_process_running_for_user "rigctld" $(whoami); then
   rigctld -m $model -t $port &
 # rigctld -m $model -r $device_path -t $port &
 else
