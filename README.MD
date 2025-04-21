@@ -372,4 +372,5 @@ This project is released under an open-source license. See `LICENSE` for more de
 By
 DO9RE, Richard Emling
 DK7STJ, Stefan Jansen
+Come, join us!
 
