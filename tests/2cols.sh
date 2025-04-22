@@ -63,6 +63,11 @@ while true; do
   echo "Menü (Drücke Enter für nächste Seite oder gib die Nummer ein):"
   display_menu $current_start
 
+  # Hinweis hinzufügen, wenn es weitere Menüpunkte gibt
+  if ((current_start + max_lines - 1 < ${#menu_items[@]})); then
+    echo "(Es gibt weitere Optionen. Drücke Enter, um die nächsten zu sehen, oder wähle jetzt eine Option aus.)"
+  fi
+
   read -p "> " choice
 
   if [[ $choice =~ ^[0-9]+$ && $choice -le ${#menu_items[@]} ]]; then
