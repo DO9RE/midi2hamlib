@@ -1,0 +1,13 @@
+#DEVICE TYPE     CHAN NUM VAL script
+0       note_on  10   0   127 modes/get_mode
+0       control  10   1   n   modes/mode_toggle
+0       control  10   2   n   modes/bandwidth_toggle
+0       note_on  10   2   127 ctcss/get_ctcss
+0       control  10   3   n   ctcss/set_ctcss
+0       control  10   4   n   tuning/vfo/vfo_toggle
+0       control  10   5   n   functions/function_select
+0       note_on  10   4   127 functions/function_toggle
+0       control  10   6   n   levels/level_toggle
+0       control  10   8   1   dummy_function
+0       note_on  10   7   127 dummy_function
+0       note_off 10   7   0   dummy_function
