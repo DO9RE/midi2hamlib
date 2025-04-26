@@ -48,8 +48,8 @@ fi
   rigctld -m $model -t $port &
 # rigctld -m $model -r $device_path -t $port &
 
-declare -A menu_options
-declare -A menu_numbers
+declare -a menu_options
+declare -a menu_numbers
 
 # clear
 echo -e "$greeting \n

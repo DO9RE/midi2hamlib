@@ -1,16 +1,23 @@
 # Generate CTCSS Range from the given models --caps-dump output
 # Remove the decimal points, because the System needs every value as an integer.
-ctcss_range=($(rigctl -m $model --dump-caps | grep "CTCSS: " | sed 's/CTCSS //g' | sed 's/\.//g'))
-# echo ${ctcss_range[$1]}
+if [[ ! -v ctcss_range ]] ; then
+  ctcss_range=(0 $(rigctl -m $model --dump-caps | grep "CTCSS: " | sed 's/\(CTCSS: *\)\|\( Hz.*$\)\|\.//g'))
+# echo ${ctcss_range[@]}
+fi
 # Important! Not every transceiver supports querying.
 if [[ $1 ]]; then # Its been invoced by a MIDI action:
   rigctl -m 2 -r $host:$port C ${ctcss_range[$1]}
 else # Triggered from keyboard
   read -p 'Enter CTCSS-Tone: ' ctcss
-# Let the user input what ever, in the end, we just need the numbers an as an integer.  
-  rigctl -m 2 -r $host:$port C $(echo $ctcss | sed 's/[^0-9]//g')
+  ctcss=$(echo ${ctcss} | sed 's/[^0-9]//g')
+  # Check if this is a valid CTCSS tone.
+  # Works because CTCSS tones do not contain spaces.
+  if [[ " ${ctcss_range[*]} " =~ " ${ctcss} " ]]; then
+    rigctl -m 2 -r $host:$port C ${ctcss}
+  else
+    echo -n "Invalid CTCSS tone. CTCSS is still "
+  fi
 fi
 # Format the output as decimal with one position behind the decimal point
 ctcss=$(rigctl -m 2 -r $host:$port c)
-echo "scale=1;$ctcss/10" | bc
-
+humanize_ctcss "$ctcss"

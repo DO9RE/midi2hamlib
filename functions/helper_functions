@@ -72,11 +72,16 @@ humanize_status() {
   echo "$status" | sed -e 's/0/off/g' -e 's/1/on/g'
 }
 
+humanize_ctcss() {
+   ctcss=$1
+   echo "scale=1;${ctcss}/10" | bc | sed -e 's/^0$/off/g'
+}
+
 show_help() {
   echo "Usage: $0 [OPTIONS]"
   echo
   echo "Options:"
-  echo "  -C, --config-file path_to_alternative_configuration/file.conf"
+  echo "  -c, --config-file path_to_alternative_configuration/file.conf"
   echo "  -h, --help        Show this help"
 }
 
