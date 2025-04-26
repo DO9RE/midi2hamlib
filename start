@@ -1,4 +1,14 @@
 #!/bin/bash
+# We have a few background processes running, exit these when CTRL+C is pressed
+trap 'cleanup' INT TERM
+
+cleanup() {
+  echo "Cleaning up background processes..."
+  pkill -P $$
+  echo "Script terminated. All background processes have been stopped."
+  exit 1
+}
+
 setleds +num
 default_config_file="./settings/settings.conf"
 funcdir="$(pwd)/functions"
