@@ -51,29 +51,24 @@ function show_menu {
 # Resetting the menu arrays with every new menu to display
   unset menu_options
   unset menu_numbers
-  max_menu_number=0
 # Display the Menu Name from its name file
   cat $(pwd)/name
 # Walk through the menu folder and build the menu from line 2 and 3 of each file
-  for file in *; do
+  menu_number=0
+  for file in $(ls | sort) ; do
     if [[ -f $file && ! $file == "name" ]]; then
-      menu_number=$(sed -n '1p' "$file" | sed 's/#//')
-      if [[ $max_menu_number -lt $menu_number ]]; then
-        max_menu_number=$menu_number
-      fi
-      menu_name=$(sed -n '2p' "$file" | sed 's/#//')
+      menu_number=$(( ${menu_number}+1 ))
+      menu_name=$(sed -n '1p' "$file" | sed 's/# *//')
       eval "menu_name=\"$menu_name\""
       menu_numbers["$menu_number"]="$menu_name"
-#     echo "$menu_number: $menu_name"
       menu_options["$menu_number"]="$file"
+      max_menu_number=$menu_number
     fi
   done
 
-# Sort the Array menu_numbers with the corresponding names to display it in ascending order
-  for key in $(printf "%s\n" "${!menu_numbers[@]}" | sort -n); do
+  for key in ${!menu_numbers[@]} ; do
     echo "$key: ${menu_numbers[$key]}"
   done
-
 }
 
 while true; do

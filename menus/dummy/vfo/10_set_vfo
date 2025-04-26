@@ -1,3 +1,2 @@
-#1
 # Set VFO - current = $(rigctl -m 2 -r $host:$port v)
 source $funcdir/vfo/vfo_toggle

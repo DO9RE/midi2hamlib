@@ -1,3 +1,2 @@
-#1
 # Start RIGCTL console
 source $basedir/additional_scripts/rigctl_console.sh
