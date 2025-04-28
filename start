@@ -57,7 +57,7 @@ Use 0 to return from a menu."
 cd $menudir
 
 # Function for Reading Folder Scripts and building Menu 
-function show_menu {
+function show_main_menu {
 # Resetting the menu arrays with every new menu to display
   unset menu_options
   unset menu_numbers
@@ -82,7 +82,7 @@ function show_menu {
 }
 
 while true; do
-  show_menu
+  show_main_menu
   if ! read_and_validate 'And now? ' $max_menu_number selection; then continue; fi
 
   if [[ $selection -eq "0" ]]; then
