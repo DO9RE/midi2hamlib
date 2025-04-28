@@ -1,13 +1,16 @@
+select_vfo() {
+  rigctl -m 2 -r $host:$port V ${vfos[$1]}
+  return 1
+}
+
 # get VFO list
-vfos=($(rigctl -m 2 -r $host:$port get_vfo_list))
+if [[ ! -v vfos ]]; then
+  vfos=($(rigctl -m 2 -r $host:$port V ?))
+fi
 if [[ $1 ]]; then #Triggered with parameter
 # Switch transceiver to selected VFO
-  rigctl -m 2 -r $host:$port V ${vfos[$1]}
+  select_vfo $1
+  rigctl -m 2 -r $host:$port v
 else #Called from keyboard, show VFOs list and ask for selection.
-  for index in "${!vfos[@]}"; do
-    echo "$index: ${vfos[$index]}"
-  done
-read -p 'VFO?: ' selection
-# Switch transceiver to selected VFO
-  rigctl -m 2 -r $host:$port V ${vfos[$selection]}
+  show_menu "Select VFO:" vfos "VFO?: " select_vfo
 fi

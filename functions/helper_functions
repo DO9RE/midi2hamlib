@@ -161,6 +161,8 @@ is_process_running_for_user() {
 # prompt: Menu prompt.
 # selection_handler: Name of a function that shall be called with the index of the selected entry.
 #   This is called, not sourced, as it is assumed to be a function.
+#   If the function returns 0, the menu keeps displayed and asks for selections.
+#   Otherwise the menu exits.
 # entry_text_handler: optional handler that gets the zero-based index as
 #   input and shall provide the entry text on stdout.
 # The function returns when 0 is entered to leave the menu.
@@ -201,11 +203,11 @@ show_menu() {
     if ! read_and_validate_arr_1 "$prompt" show_menu_entries selection; then
       continue;
     fi
-#   Exit functions menu when 0 is issued
+#   Exit functions menu when 0 is issued or if selection handler returns non-zero.
     if [[ $selection -eq 0 ]]; then
       break
-    else
-      ${selection_handler} $((${selection}-1))
+    elif ! ${selection_handler} $((${selection}-1)) ; then
+      break
     fi
   done
 }
