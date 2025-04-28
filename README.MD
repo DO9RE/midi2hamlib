@@ -191,21 +191,31 @@ The `menus/` folder contains the structure and logic for the user interface menu
 
 ## Menu Structure Details
 
-Each subfolder within a transceiver folder represents a **submenu**. The name of the submenu is defined by creating a file named `Name` inside that folder. The content of this file (plain text) will be used as the **title** of the submenu when it is displayed.
+Each subfolder within a transceiver folder represents a **submenu**. The name of the submenu is defined by creating a file named `name` inside that folder. The content of this file (plain text) will be used as the **title** of the submenu when it is displayed.
 
 ### Menu Entries
 
 Menu entries within a submenu are defined using individual script files placed in the respective folder. These scripts control both the display name and the action of the menu item.
 
-The **first two lines** of each script define the **order and label** of the menu item:
+The **filen name** of a menu entry file shall be formed in a way that
+sorting the files alphabetically results in the desired order in which the
+menu entries shall be displayed. This is acomplished easily by using a
+prefix that consists of two digits followed by an underscore.
+  Example: `10_tuning_menu`
 
-- **Line 1:** A hash (`#`) followed immediately (no space) by a number, which determines the order of the item in the menu.  
-  Example: `#1`
+Please note that the menu entry's number is not taken from the file name
+directly, menu entries are numbered sequencially starting from 1 regardless
+of their actual prefix of the file name. The file names are only important
+for deriving the menu entries order. That is why you should always use two
+digits and leave enough room for adding new menu entries, for example by
+numbering subsequent entries like `10_entry_x`, `20_entry_y`. Following this
+rule lets you easily add new entries in between or delete an entry later.
 
-- **Line 2:** Another hash (`#`) followed by the name of the menu item.  
+The **first line** of each script defines the **label** of the menu item:
+A hash (`#`) followed by the name of the menu item.  
   Example: `#Get frequency`
 
-Below these two lines, the actual shell commands are defined. A menu item can either:
+Below this line, the actual shell commands are defined. A menu item can either:
 
 1. **Execute a function**  
    Use the command `source` followed by the path to the desired function script.  
