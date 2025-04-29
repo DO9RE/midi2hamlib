@@ -1,18 +1,16 @@
-# Build an array from the transceiver models supported modes, using the --dump-caps flag.
-modes=($(rigctl -m $model --dump-caps | grep "Mode list:" | head -n 1 | sed 's/Mode list://g'))
-if [[ $1 ]]; then #Triggered with parameter
-# echo ${modes[$1]} 
-# echo $(rigctl -m 2 -r $host:$port m | tail -n 1)
+switch_to_mode() {
 # Switch transceiver to selected mode, passing 0 as second parameter, device default bandwidth
   rigctl -m 2 -r $host:$port M ${modes[$1]} 0
+  return 1 # leave menu
+}
+# Build an array from the transceiver models supported modes, using the --dump-caps flag.
+if [[ ! -v modes ]]; then
+  modes=($(rigctl -m $model --dump-caps | grep "Mode list:" | head -n 1 | sed 's/Mode list://g'))
+fi
+if [[ $1 ]]; then #Triggered with parameter
+  switch_to_mode $1
 else #Called from keyboard, show modes list and ask for selection.
-  for index in "${!modes[@]}"; do
-  echo "$index: ${modes[$index]}"
-done
-read -p 'Mode?: ' selection
-# Switch transceiver to selected mode, passing 0 as second parameter, device default bandwidth
-  rigctl -m 2 -r $host:$port M ${modes[$selection]} 0
+  show_menu "Set mode:" modes 'Mode?: ' switch_to_mode
 fi
 # Show mode and passband in one line by removing \n from the string
 rigctl -m 2 -r $host:$port m | sed ':a;N;$!ba;s/\n/ /g'
-

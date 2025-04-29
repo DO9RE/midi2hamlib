@@ -9,6 +9,7 @@ main_menu_handler() {
   # menu exit is already handled in show_menu.
   # Keep demo simple, just source a script that is named like the menu entry.
   source ${main_menu_entries[$1]}
+  return 0
 }
 
 # We consistently use zero-based arrays for those menus. Indices are shifted inside to get 0 for "go back".

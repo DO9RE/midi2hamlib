@@ -1,5 +1,6 @@
 announce_level() {
   echo "${levels[$1]} = $(rigctl -m $model -r $host:$port l ${levels[$1]})"
+  return 0
 }
 
 if [[ ! -v levels ]]; then

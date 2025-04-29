@@ -1,5 +1,28 @@
 # Build the functions list by querying the backend for supported functions. 
-functions=($(rigctl -m 2 -r $host:$port U ?))
+if [[ ! -v functions ]]; then
+  functions=($(rigctl -m 2 -r $host:$port U ?))
+fi
+
+function_select_entry() {
+# Do not show the 0 index, cause its not a function, its the go back feature.
+# Show number, name and status of selected function
+  local funcstat=$(rigctl -m 2 -r $host:$port u ${functions[$1]})
+  echo "${functions[$1]} is $(humanize_status $funcstat)"
+}
+
+function_select_handler() {
+# toggle function on or off, according to its current status:
+  if [[ $(rigctl -m 2 -r $host:$port u ${functions[$1]}) == 0 ]]; then
+    rigctl -m 2 -r $host:$port U ${functions[$1]} 1
+  else
+    rigctl -m 2 -r $host:$port U ${functions[$1]} 0
+  fi
+# Show function status
+  local funcstat=$(rigctl -m 2 -r $host:$port u ${functions[$1]})
+  echo "${functions[$1]} is $(humanize_status $funcstat)"
+  return 0
+}
+
 if [[ $1 ]]; then #Triggered with parameter
 # We assume that the user selects the desired function with a rotary encoder.
 # So we put name and status of the function in charge into two variables
@@ -8,31 +31,5 @@ if [[ $1 ]]; then #Triggered with parameter
   status_last_function=$(rigctl -m 2 -r $host:$port u ${functions[$1]})
   echo "$last_function is $(humanize_status "$status_last_function")"
 else # Called from keyboard, show functions list and ask for selection.
-# Add an element called goback at index 0, to give a possibility to back out of the menu.
-  functions=("goback" "${functions[@]}")
-  while [[ ! $selection == 0 ]]; do
-    for index in "${!functions[@]}"; do
-#     Do not show the 0 index, cause its not a function, its the go back feature.
-      if [[ ${functions[$index]} == "goback" ]]; then
-        continue
-      fi
-#     Show number, name and status of selected function
-      funcstat=$(rigctl -m 2 -r $host:$port u ${functions[$index]})
-      echo "$index: ${functions[$index]} is $(humanize_status $funcstat)"
-    done
-    if ! read_and_validate_arr_0 'Function?: ' functions selection; then continue; fi
-#   Exit functions menu when 0 is issued
-    if [[ $selection -eq 0 ]]; then
-      break
-    fi
-#   toggle function on or off, according to its current status:
-    if [[ $(rigctl -m 2 -r $host:$port u ${functions[$selection]}) == 0 ]]; then
-      rigctl -m 2 -r $host:$port U ${functions[$selection]} 1
-    elif [[ $(rigctl -m 2 -r $host:$port u ${functions[$selection]}) == 1 ]]; then
-      rigctl -m 2 -r $host:$port U ${functions[$selection]} 0
-    fi
-#   Show function status
-    funcstat=$(rigctl -m 2 -r $host:$port u ${functions[$selection]})
-    echo "${functions[$selection]} is $(humanize_status $funcstat)"
-  done
+  show_menu "Functions:" functions 'Function?: ' function_select_handler function_select_entry
 fi

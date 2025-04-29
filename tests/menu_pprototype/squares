@@ -1,5 +1,7 @@
 square_handler() {
   echo "You will not get far from here, this is just a demo. Sorry."
+  echo "Leaving this menu and going up one level by returning a non-zero value."
+  return 1
 }
 square_entry_text() {
   echo "${squares_menu_entries[$1]} has square $(( ($1+1)**2 ))"

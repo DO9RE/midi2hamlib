@@ -28,16 +28,17 @@ done
 # Turn our formatted list into an array
 bandwidths=($processed_bandwidths_string)
 # echo $processed_bandwidths_string
-if [[ $1 ]]; then # called with midi parameter
+
+set_bandwidth() {
   rigctl -m 2 -r $host:$port M $(rigctl -m 2 -r $host:$port m | head -n 1) ${bandwidths[$1]}
+  return 1 # leave menu
+}
+
+if [[ $1 ]]; then # called with midi parameter
+  set_bandwidth $1
 else # Called from keyboard
 # Show the bandwidths menu
-  echo 'Bandwith selection; ' $(get_current_mode)
-  for index in "${!bandwidths[@]}"; do
-    echo "$index: ${bandwidths[$index]}" Hz
-  done
-  read -p 'Bandwidth?: ' selection
-  rigctl -m 2 -r $host:$port M $(rigctl -m 2 -r $host:$port m | head -n 1) ${bandwidths[$selection]}
+  show_menu "Bandwith selection; $(get_current_mode)" bandsidths 'Bandwidth?: ' set_bandwidth
 fi
 # Show mode and bandwidth in one line, remove \n from string
 echo $(rigctl -m 2 -r $host:$port m | sed ':a;N;$!ba;s/\n/ /g') Hz

@@ -76,19 +76,9 @@
 
 - [ ] Validate all user inputs in text fields and all settings via knobs or sliders to prevent meaningless or out-of-range values.
 
-## **Note by DK7STJ – 2025-04-19:**  
-  Not all files are using the new read_and_validat and read_and_validate_arr functions.
-  Here is a list that needs still to be processed:
-  - functions/vfo/vfo_toggle
-  - functions/ctcss/set_ctcss
-  - functions/levels/level_toggle: not fully implemented anyway, nut used in   menu currently.
-  - functions/modes/mode_toggle
-  - functions/modes/bandwidth_toggle
-  - functions/file_picker.sh:
-  - functions/tuning/vfo/vfo_toggle
-  - functions/tuning/set_frequency
-  - functions/tuning/tuning_step/tuning_step_toggle
-  - midi/editor.sh
+## **Note by DK7STJ – 2025-04-29:**  
+  Not all files are using the new show_menu functions.
+  Also, MIDI input shall be mapped to zones or shall wrap-around. This is still to be implemented.
 
 - [ ] Decide on a method for setting the frequency. None of the currently available hardware interfaces provide continuous data from rotary knobs (limited to 0–127 range). Pending: test DJ controller functionality. Interim solution:  
   - Use one rotary control to set the frequency step size (in Hz).  
