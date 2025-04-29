@@ -151,6 +151,32 @@ is_process_running_for_user() {
   fi
 }
 
+# Data and basic calculations for multi-column menus.
+screen_columns=$(tput cols)
+if [[ ! -v show_menu_columns || $show_menu_columns -lt 1 ]]; then
+  show_menu_columns=2
+fi
+if [[ ! -v show_menu_min_width || $show_menu_min_width -lt 20 ]]; then
+  show_menu_min_width=20
+fi
+mcols=$((${screen_columns}/${show_menu_min_width}))
+if [[ $show_menu_columns -gt $mcols ]]; then
+  show_menu_columns=$mcols
+fi
+unset mcols
+if [[ ! -v show_menu_max_width ]]; then
+  show_menu_max_width=$((${screen_columns}/${show_menu_columns}))
+fi
+show_menu_width=$((${screen_columns}/${show_menu_columns}))
+if [[ $show_menu_width -gt $show_menu_max_width ]]; then
+  show_menu_width=$show_menu_max_width
+fi
+if [[ $show_menu_width -lt $show_menu_min_width ]]; then
+  show_menu_width=$show_menu_min_width
+fi
+show_menu_format="%-${show_menu_width}s"
+#echo "SC: $screen_columns; MC: $show_menu_columns; MinW: $show_menu_min_width; MaxW: $show_menu_max_width; MW: $show_menu_width"
+
 # Display a menu with title and elements from an array.
 # the elements from the zero-based array are numbered beginning with 1.
 # Index shifting is performed transparently, so the selection is again zero-based and can 
@@ -170,6 +196,14 @@ is_process_running_for_user() {
 #   input and shall provide the entry text on stdout.
 # The function returns when 0 is entered to leave the menu.
 show_menu() {
+  if [[ "$show_menu_columns" -lt "1" ]]; then
+    echo "Set show_menu_columns before calling show_menu."
+    exit 1
+  fi
+  if [[ ! -v show_menu_format ]]; then
+    echo "Set show_menu_format before calling show_menu."
+    exit 1
+  fi
   local is_vartitle=0
   if [[ "$1" == "--vartitle" ]]; then
     is_vartitle=1
@@ -210,6 +244,10 @@ show_menu() {
   shift $#
   # start with actual menu
   local selection
+  local entry_text
+  local index
+  local idx
+  local last_was_printf=0
   while true; do
     if [[ -n "$title" ]]; then
       echo -e "\n${title}"
@@ -217,12 +255,23 @@ show_menu() {
       echo ""
     fi
     for index in "${!show_menu_entries[@]}"; do
+      idx=$(($index+1))
       if [[ -z $entry_text_handler ]]; then
-        echo "$(($index+1)): ${show_menu_entries[$index]}"
+        entry_text="$idx: ${show_menu_entries[$index]}"
       else
-        echo "$(($index+1)): $(${entry_text_handler} $index)"
+        entry_text="$idx: $(${entry_text_handler} $index)"
+      fi
+      if [[ $(((${idx})%${show_menu_columns})) -eq 0 ]]; then
+        echo "$entry_text"
+        last_was_printf=0
+      else
+        printf "$show_menu_format" "$entry_text"
+        last_was_printf=1
       fi
     done
+    if [[ $last_was_printf -gt 0 ]]; then
+      echo # print additional newline
+    fi
     if ! read_and_validate_arr_1 "$prompt" show_menu_entries selection; then
       continue;
     fi

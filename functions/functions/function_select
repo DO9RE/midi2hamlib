@@ -7,7 +7,7 @@ function_select_entry() {
 # Do not show the 0 index, cause its not a function, its the go back feature.
 # Show number, name and status of selected function
   local funcstat=$(rigctl -m 2 -r $host:$port u ${functions[$1]})
-  echo "${functions[$1]} is $(humanize_status $funcstat)"
+  echo "${functions[$1]} ($(humanize_status $funcstat))"
 }
 
 function_select_handler() {
