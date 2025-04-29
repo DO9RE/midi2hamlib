@@ -48,8 +48,8 @@ fi
   rigctld -m $model -t $port &
 # rigctld -m $model -r $device_path -t $port &
 
-declare -a menu_options
-declare -a menu_numbers
+declare -a file_menu_entries
+declare -a file_menu_actions
 
 # clear
 echo -e "$greeting \n
@@ -57,46 +57,47 @@ Use 0 to return from a menu."
 cd $menudir
 
 # Function for Reading Folder Scripts and building Menu 
-function show_main_menu {
+build_menu_from_files() {
 # Resetting the menu arrays with every new menu to display
-  unset menu_options
-  unset menu_numbers
+  unset file_menu_entries
+  unset file_menu_actions
 # Display the Menu Name from its name file
-  cat $(pwd)/name
+  file_menu_title=$(cat $(pwd)/name)
 # Walk through the menu folder and build the menu from line 2 and 3 of each file
-  menu_number=0
+  local menu_name
+  local file
+  local menu_number=0
   for file in $(ls | sort) ; do
     if [[ -f $file && ! $file == "name" ]]; then
-      menu_number=$(( ${menu_number}+1 ))
       menu_name=$(sed -n '1p' "$file" | sed 's/# *//')
       eval "menu_name=\"$menu_name\""
-      menu_numbers["$menu_number"]="$menu_name"
-      menu_options["$menu_number"]="$file"
-      max_menu_number=$menu_number
+      file_menu_entries["$menu_number"]="$menu_name"
+      file_menu_actions["$menu_number"]="$file"
+      menu_number=$(( ${menu_number}+1 ))
     fi
-  done
-
-  for key in ${!menu_numbers[@]} ; do
-    echo "$key: ${menu_numbers[$key]}"
   done
 }
 
-while true; do
-  show_main_menu
-  if ! read_and_validate 'And now? ' $max_menu_number selection; then continue; fi
+file_menu_select() {
+  local cmd=${file_menu_actions[$1]}
+  shift $# # Clear all positional parameters to avoid passing them further on.
+  source $cmd
+  build_menu_from_files
+  return 0
+}
 
-  if [[ $selection -eq "0" ]]; then
-    if [[ $(pwd) == "$menudir" ]]; then
-      echo "Already at top level."
-    elif [[ $(pwd) == "$basedir/menus/options" ]]; then
-      cd $menudir
-    else
-      cd ..
-    fi
-  elif [[ ${menu_options[$selection]} ]]; then
-    source ${menu_options[$selection]}
+build_menu_from_files
+while true; do
+  show_menu --vartitle file_menu_title file_menu_entries 'And now? ' file_menu_select
+# Menu was left with 0, so go up one level if possible.
+  if [[ $(pwd) == "$menudir" ]]; then
+    echo "Already at top level."
+  elif [[ $(pwd) == "$basedir/menus/options" ]]; then
+    cd $menudir
+    build_menu_from_files
   else
-    echo "Not a valid option"
+    cd ..
+    build_menu_from_files
   fi
 done
 

@@ -156,7 +156,10 @@ is_process_running_for_user() {
 # Index shifting is performed transparently, so the selection is again zero-based and can 
 # directly be used to point into the array.
 # parameters:
-# title: The menu title that is displayed above.
+# --vartitle: If set as first parameter, the title is interpreted as a 
+#   variable containing the actual menu title text. So you can change the
+#   menu title dynamically on every menu chycle. Used for main menu.
+# title: The menu title that is displayed above. Either a variable or string.
 # entries: The name of the array that holds the menu entries.
 # prompt: Menu prompt.
 # selection_handler: Name of a function that shall be called with the index of the selected entry.
@@ -167,9 +170,22 @@ is_process_running_for_user() {
 #   input and shall provide the entry text on stdout.
 # The function returns when 0 is entered to leave the menu.
 show_menu() {
-  local title="$1"
+  local is_vartitle=0
+  if [[ "$1" == "--vartitle" ]]; then
+    is_vartitle=1
+    shift 1
+  fi
+  if [[ -z $1 ]]; then
+    echo "No menu title given in show_menu."
+    exit 1
+  fi
+  if [[ $is_vartitle -eq 1 ]]; then
+    local -n title=$1
+  else
+    local title="$1"
+  fi
   if [[ ! -v $2 ]]; then
-    echo "No variable with entries given in show_menu."
+    echo "No variable with menu entries given in show_menu."
     exit 1
   fi
   local -n show_menu_entries=$2
@@ -181,15 +197,22 @@ show_menu() {
     echo "No selection handler given in show_menu."
     exit 1
   fi
+  local selection_handler=$4
   local entry_text_handler
   if [[ -n $5 ]]; then
     entry_text_handler=$5
   fi
-  local selection_handler=$4
+  if [[ $# -gt 5 ]]; then
+    echo "Too many parameters given to show_menu."
+    exit 1
+  fi
+  # remove all positional parameters to avoid passing them accidentally to sourced scripts or functions.
+  shift $#
+  # start with actual menu
   local selection
   while true; do
     if [[ -n "$title" ]]; then
-      echo -e "\n$1"
+      echo -e "\n${title}"
     else
       echo ""
     fi

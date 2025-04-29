@@ -1,4 +1,4 @@
-#!/bin/basH
+#!/bin/bash
 file_picker_result=""
 # Do we have a directory?
 if [ -z "$1" ]; then
