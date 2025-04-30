@@ -46,7 +46,7 @@ if [[ $use_midi_device == "TRUE" ]]; then
 fi
 
   rigctld -m $model -t $port &
-# rigctld -m $model -r $device_path -t $port &
+# rigctld -m $model -r $device_path -s $serial_speed -t $port &
 
 declare -a file_menu_entries
 declare -a file_menu_actions
