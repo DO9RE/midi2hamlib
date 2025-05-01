@@ -1,4 +1,3 @@
-# midi2hamlib
 
 **midi2hamlib** is an experimental project that explores the possibility of controlling amateur radio transceivers using the [Hamlib](https://github.com/Hamlib/Hamlib)
  library, with input from external devices such as a MIDI controller, a USB numeric keypad, and a Raspberry Pi.
@@ -271,7 +270,7 @@ To map MIDI events to specific functions or scripts, define your control mapping
 Each mapping occupies a **single line**, with all fields separated by a **space**. Here's the structure of each line:
 
 ```
-DEVICE TYPE CHAN NUM VAL SCRIPT
+DEVICE TYPE CHAN NUM VAL SCRIPT MODE
 ```
 
 #### Field Breakdown:
@@ -295,11 +294,25 @@ DEVICE TYPE CHAN NUM VAL SCRIPT
 - **VAL**  
   The velocity or value associated with the event:
   - For notes, this is the velocity (e.g., how hard the button was pressed).
-  - For Control Change events, it represents the current value of the control.
+  - For Control Change events, it represents the current value of the control. The letter `n` indicates that
+  the controller value shall be ignored when searching for the mapping
+  entry, so this mapping applies to all controller values.
 
 - **SCRIPT**  
   The script or function to execute when the event occurs.  
   If a field is not relevant for your use case, enter the letter **`N`** to mark it as ignored.
+
+- **MODE**
+  The evaluation mode that shall be used to map event values to parameters, values or functions of your transceiver. This currently applies only to Controller Change events. Possible values are:
+  - **abs**: Controller values shall be used unmodified by the mapped function or script.
+  - **mod**: The mapped function or script shall map the controller values repeatedly to the available options. this will cycle through the avalable options again and again when the controller values increase.
+  - **zone**: This will map the complete value range of the controller or fader, typically 0 to 127, to the available options in zones. So if you have four options, a fadder would be mapped as follows:
+    - Values 0 to 31 to option 1.
+    - values 32 to 63 to option 2,
+    - values 64 to 95 to option 3,
+    - and finally, values 96 to 127 to option 4.
+    So the fader will be split into four zones, mapping each zone to one of
+    the four options.
 
 #### Example:
 
