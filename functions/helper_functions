@@ -165,7 +165,8 @@ if [[ $show_menu_columns -gt $mcols ]]; then
 fi
 unset mcols
 if [[ ! -v show_menu_max_width ]]; then
-  show_menu_max_width=$((${screen_columns}/${show_menu_columns}))
+# show_menu_max_width=$((${screen_columns}/${show_menu_columns}))
+  show_menu_max_width=40
 fi
 show_menu_width=$((${screen_columns}/${show_menu_columns}))
 if [[ $show_menu_width -gt $show_menu_max_width ]]; then

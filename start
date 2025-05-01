@@ -50,7 +50,7 @@ if [[ -v model ]]; then rigctldoptions+=(-m "$model"); fi
 if [[ -v port ]]; then rigctldoptions+=(-t "$port"); fi
 if [[ -v device_path ]]; then rigctldoptions+=(-r "$device_path"); fi
 if [[ -v serial_speed ]]; then rigctldoptions+=(-s "$serial_speed"); fi
-rigctld "$rigctldoptions[@]}"
+rigctld "${rigctldoptions[@]}" &
 unset rigctldoptions
 
 # switch numpad to numbers
