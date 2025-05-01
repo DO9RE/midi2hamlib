@@ -34,7 +34,7 @@ format_frequency() {
   echo "$(strip_trailing_zeros $frequency) $power"
 }
 
-function multiply_and_format { # expects a number and its multiplier. Returns the Number without the decimal point.
+multiply_and_format() { # expects a number and its multiplier. Returns the Number without the decimal point.
   local number=$1
   local multiplier=$2
   local result=$(echo "$number * $multiplier" | bc)
@@ -44,7 +44,7 @@ function multiply_and_format { # expects a number and its multiplier. Returns th
 
 # ${#array[@]} to determine an arrays length in elements.
 # Use this to restrict a midi controllers range to the given range of an options array for example.
-function apply_modulo {
+apply_modulo() {
   local value=$1
   local max_value=$2
   local result=$((value % max_value))
@@ -52,7 +52,7 @@ function apply_modulo {
 }
 
 # Use this for example, if you have a long fader path and a little list of possible values. The overall maximum fader value is divided by the possible options to create zones. Then, each fader value is checked, in which zone it is.
-function fader_to_zones {
+fader_to_zones() {
   local fader_value=$1
   local num_states=$2
   local zone_size=$((128 / num_states)) # we say, the fader has 128 possible values, maybe this changes later.
@@ -60,7 +60,22 @@ function fader_to_zones {
   echo $state
 }
 
-function get_current_mode {
+# Function to validate midi input and map it to a given range according to the mapping mode.
+# Parameters:
+# value:
+# mode:
+# range:
+# zonevar:
+# errormsg:
+validate_midi_value() {
+  if [[ ($# -lt 4) || ($# -gt 5) ]]; then
+    echo "validate_midi_value must be called with either 4 or 5 parameters. Invalid mapping."
+    return 1
+  fi
+  return 0
+}
+
+get_current_mode() {
 # Return only the mode name without the passband
   echo $(rigctl -m 2 -r $host:$port m | head -n 1)
 }

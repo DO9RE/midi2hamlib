@@ -1,4 +1,4 @@
-#DEVICE TYPE     CHAN NUM VAL script
+#DEVICE TYPE     CHAN NUM VAL SCRIPT MODE
 0       note_on  0    40   127 modes/get_mode
 0       control  0    10   n   modes/mode_toggle
 0       control  0    11   n   modes/bandwidth_toggle

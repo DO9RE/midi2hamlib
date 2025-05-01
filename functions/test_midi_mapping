@@ -1,0 +1,5 @@
+if [[ $1 ]]; then #Triggered with parameter
+  echo "test_midi_mapping called with $# parameters: $@"
+else #Called from keyboard, show VFOs list and ask for selection.
+  echo "test_midi_mapping was called with no or empty parameters. Normally only done from within menus."
+fi
