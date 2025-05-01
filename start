@@ -9,7 +9,6 @@ cleanup() {
   exit 1
 }
 
-setleds +num
 default_config_file="./settings/settings.conf"
 funcdir="$(pwd)/functions"
 source $funcdir/helper_functions
@@ -45,8 +44,17 @@ if [[ $use_midi_device == "TRUE" ]]; then
   source $basedir/midi/reader &
 fi
 
-  rigctld -m $model -t $port &
-# rigctld -m $model -r $device_path -s $serial_speed -t $port &
+# Process rigctld options
+declare -a rigctldoptions
+if [[ -v model ]]; then rigctldoptions+=(-m "$model"); fi
+if [[ -v port ]]; then rigctldoptions+=(-t "$port"); fi
+if [[ -v device_path ]]; then rigctldoptions+=(-r "$device_path"); fi
+if [[ -v serial_speed ]]; then rigctldoptions+=(-s "$serial_speed"); fi
+rigctld "$rigctldoptions[@]}"
+unset rigctldoptions
+
+# switch numpad to numbers
+setleds +num
 
 declare -a file_menu_entries
 declare -a file_menu_actions
