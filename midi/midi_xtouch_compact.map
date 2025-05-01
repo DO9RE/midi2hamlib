@@ -4,7 +4,7 @@
 0       control  0    11   n   modes/bandwidth_toggle
 0       note_on  10   2   127 ctcss/get_ctcss
 0       control  0   12   n   ctcss/set_ctcss
-0       control  0   13   n   tuning/vfo/vfo_toggle
+0       control  0   13   n   vfo/vfo_toggle
 0       control  0   14   n   functions/function_select
 0       note_on  0   19   127 functions/function_toggle
 0       control  0   15   n   levels/level_toggle

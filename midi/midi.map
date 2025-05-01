@@ -1,7 +1,7 @@
 #DEVICE TYPE    CHAN NUM VAL SCRIPT
 0       note_on 0    44  64  modes/get_mode
 0 note_on  0 36 64 ctcss/get_ctcss
-0 control  0 19 n tuning/vfo/vfo_toggle
+0 control  0 19 n vfo/vfo_toggle
 0 control  0 74 n modes/bandwidth_toggle
 0 control  0 71 n levels/level_toggle
 0 control  0 114 n modes/mode_toggle
