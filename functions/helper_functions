@@ -56,23 +56,73 @@ fader_to_zones() {
   local fader_value=$1
   local num_states=$2
   local zone_size=$((128 / num_states)) # we say, the fader has 128 possible values, maybe this changes later.
+  if [[ $zone_size -lt 1 ]]; then
+    zone_size=1 # minimal zone size shall be 1. otherwise nothing will happen ata ll.
+  fi
   local state=$((fader_value / zone_size))
+  if [[ $state -ge $num_states ]]; then
+    state=$((num_states - 1)) # restrict to valid range because of integer arithmetic issues.
+  fi
   echo $state
 }
 
 # Function to validate midi input and map it to a given range according to the mapping mode.
 # Parameters:
-# value:
-# mode:
-# range:
-# zonevar:
-# errormsg:
+# value: controller value as passed in from MIDI mapper.
+# mode: MIDI mapping mode, default is 'abs'.
+# range: Either a positive integer value or the name of an array variable, which is used to get the number of elements from. 
+# result: Name of variable to which the result result shall be passed.
+# errormsg: Optional error message that is printed if the value cannot be mapped into the valid range.
 validate_midi_value() {
+  local valmidirange=0
   if [[ ($# -lt 4) || ($# -gt 5) ]]; then
     echo "validate_midi_value must be called with either 4 or 5 parameters. Invalid mapping."
     return 1
   fi
-  return 0
+  if [[ -v $3 ]]; then
+    local -n valmidiarr=$3
+    valmidirange=${#valmidiarr[@]}
+  else
+    valmidirange=$3
+  fi  
+  if [[ $valmidirange -lt 1 ]]; then
+    echo "No valid range parameter given to validate_midi_value."
+    return 1
+  fi
+  if [[ -z "$4" ]]; then
+    echo "No result variable given to validate_midi_value."
+    return 1
+  fi
+  local -n valmidiresult=$4
+  case "$2" in
+    "zone")
+      local newvalmidiresult=$(fader_to_zones $1 $valmidirange)
+      if [[ -z "$valmidiresult" || ( ! "$valmidiresult" -eq "$newvalmidiresult" ) ]]; then
+        valmidiresult=$newvalmidiresult
+        return 0
+      else
+        # value is mapped to the same zone as last value, so return 1 to prevent repeatedly triggering the same action.
+        return 1
+      fi
+      ;;
+    "mod")
+      valmidiresult=$(apply_modulo $1 $valmidirange)
+      return 0
+      ;;
+    *) # default, "abs"
+      if [[ "$1" -lt "0" || "$1" -ge "$valmidirange" ]]; then
+        if [[ -n "$5" ]]; then
+          echo "$5"
+        fi
+        return 1
+      else
+        valmidiresult=$1
+        return 0
+      fi
+      ;;
+  esac
+  echo "validate_midi_value: This code block sould never be executed."
+  return 1
 }
 
 get_current_mode() {
