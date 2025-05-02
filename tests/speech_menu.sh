@@ -41,14 +41,26 @@ while true; do
   wait_for_keypress
   kill $RECORD_PID
   echo "Aufnahme beendet."
-
   echo "Verarbeite die Audioeingabe..."
+# 150 Millisekunden Fading am Anfang einfügen. Tastendruck hallt noch im Raum nach.
+  sox input.wav processed.wav fade t 0:0:0.150
+# Nutzung einer Schlüsselwort-Datei, die die statistische Häufigkeit der Erkennung im Kontext erhöht
   pocketsphinx_continuous \
-        -hmm "$ACOUSTIC_MODEL" \
-        -lm "$LANGUAGE_MODEL" \
-        -dict "$DICTIONARY" \
-        -infile input.wav -logfn logs.txt > result.txt
+      -hmm "$ACOUSTIC_MODEL" \
+      -lm "$LANGUAGE_MODEL" \
+      -dict "$DICTIONARY" \
+      -kws_threshold 1e-20 \
+      -kws "keywords.txt" \
+      -infile processed.wav -logfn logs.txt > result_raw.txt
 
+# Automatische Korrektur anwenden: Wir haben ein Mapping File für häufige Verhörer und deren richtige Entsprechung
+  while IFS=" " read -r wrong correct; do
+    sed -i "s/\b$wrong\b/$correct/g" result_raw.txt
+  done < mapping.txt
+
+# Endgültiges Ergebnis
+cat result_raw.txt > result.txt
+ 
 # Ergebnis auslesen
   RECOGNIZED=$(grep -oE "mode fm|one|two|three|four|five|quit" result.txt)
   echo "Debug: Result - $(cat result.txt)"
