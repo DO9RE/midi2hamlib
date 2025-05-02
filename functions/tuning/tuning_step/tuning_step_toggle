@@ -13,7 +13,9 @@ tuning_step_select() {
 }
 
 if [[ $1 ]]; then #Triggered with parameter
-  tuning_step=${tuning_steps[$1]}
+  if validate_midi_value $@ tuning_steps tuning_step_midi_result
+    tuning_step=${tuning_steps[$tuning_step_midi_result]}
+  fi
 else #Called from keyboard, show tuning steps list
   show_menu "Tuning step:" tuning_steps tuning_step_select tuing_step_entry
 fi
