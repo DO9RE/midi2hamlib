@@ -53,17 +53,14 @@ apply_modulo() {
 
 # Use this for example, if you have a long fader path and a little list of possible values. The overall maximum fader value is divided by the possible options to create zones. Then, each fader value is checked, in which zone it is.
 fader_to_zones() {
-  local fader_value=$1
-  local num_states=$2
-  local zone_size=$((128 / num_states)) # we say, the fader has 128 possible values, maybe this changes later.
-  if [[ $zone_size -lt 1 ]]; then
-    zone_size=1 # minimal zone size shall be 1. otherwise nothing will happen ata ll.
-  fi
-  local state=$((fader_value / zone_size))
-  if [[ $state -ge $num_states ]]; then
-    state=$((num_states - 1)) # restrict to valid range because of integer arithmetic issues.
-  fi
-  echo $state
+# we say, the fader has 128 possible values, maybe this changes later.
+  echo "scale=9 
+    fader_value=$1
+    num_states=$2
+    zone_size=(128 / num_states)
+    state=(fader_value / zone_size)
+    scale=0
+    state/1" | bc
 }
 
 # Function to validate midi input and map it to a given range according to the mapping mode.
