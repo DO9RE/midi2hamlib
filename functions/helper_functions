@@ -69,6 +69,23 @@ fader_to_zones() {
     state/1" | bc
 }
 
+# Unify relative MIDI controller input.
+unify_rel_midi() {
+  if [[ ($1 -eq 0) || ($1 -eq 64) ]]; then
+    # control is not turned
+    echo "0"
+  elif [[ ($1 -ge 32) && ($1 -le 95) ]]; then
+    # reference is 64, turned left or right
+    echo "$(( $1 - 64 ))"
+  elif [[ $1 -ge 96 ]]; then
+    # reference 0, turned left
+    echo "$(( $1 - 128 ))"
+  else
+    # reference 0, turned right
+    echo "$1"
+  fi
+}
+
 # Function to validate midi input and map it to a given range according to the mapping mode.
 # Parameters:
 # value: controller value as passed in from MIDI mapper.
@@ -98,6 +115,14 @@ validate_midi_value() {
   fi
   local -n valmidiresult=$4
   case "$2" in
+    "abs_r")
+      local unified_value=$(unify_rel_midi $1)
+      validate_midi_value $(( valmidiresult + unified_value )) abs $3 $4 "5
+      ;;
+    "mod_r")
+      local unified_value=$(unify_rel_midi $1)
+      validate_midi_value $(( valmidiresult + unified_value )) mod $3 $4 "5
+      ;;
     "zone")
       local newvalmidiresult=$(fader_to_zones $1 $valmidirange)
       if [[ -z "$valmidiresult" || ( ! "$valmidiresult" -eq "$newvalmidiresult" ) ]]; then

@@ -313,6 +313,12 @@ DEVICE TYPE CHAN NUM VAL SCRIPT MODE
     - and finally, values 96 to 127 to option 4.
     So the fader will be split into four zones, mapping each zone to one of
     the four options.
+  - **abs_r**: like **abs**, but for controls that are in **relative** mode.
+  - **mod_r**: like **mod** but for controls that are in **relative** mode.
+  **relative mode** means that a knob doesn't send plain numbers between 0
+  and 127, but:
+  - Either 64 if not turned, 63 or less if turned left and 65 or more if turned right,
+  - or 0 if not turned, 127 or less if turned left and 1 or more if turned right,
 
 #### Example:
 

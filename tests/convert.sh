@@ -40,3 +40,8 @@ for i in 0 1 2 3 4 5 6 7 8 9 10 118 119 120 121 122 123 124 125 126 127; do
     echo "$i mapped to $result."
   fi
 done
+echo -n "Testing unify_midi: "
+for i in 126 127 0 1 2 62 63 64 65 66; do
+  echo -n "$(unify_rel_midi $i) "
+done
+echo

@@ -128,6 +128,8 @@ function edit_field {
       echo "1 = absolute mapping"
       echo "2 = modulo mapping"
       echo "3 = zone mapping"
+      echo "4 = absolute, control in rel ode"
+      echo "5 = modulo mapping, control in relative mode"
       echo "0 = go back"
       read -p "Your choice: " choice
 
@@ -135,6 +137,8 @@ function edit_field {
         1) new_value="abs"; break ;;
         2) new_value="mod"; break ;;
         3) new_value="zone"; break ;;
+        4) new_value="abs_r"; break ;;
+        5) new_value="mod_r"; break ;;
         0) return ;;
         *) echo "Invalid option. Please try again." ;;
       esac
