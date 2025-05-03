@@ -48,6 +48,12 @@ apply_modulo() {
   local value=$1
   local max_value=$2
   local result=$((value % max_value))
+# Shell and bc yield negative modulo for negative numbers. this is one of two
+# valid definitions, but it not useful for us for MIDI mapping.
+# So use the other definition with positive modulo values.
+  if [[ $result -lt 0 ]]; then
+    result=$((max_value - result))
+  fi
   echo $result
 }
 
@@ -112,6 +118,9 @@ validate_midi_value() {
           echo "$5"
         fi
         return 1
+      elif [[ -n "$valmidiresult" && ("$1" -eq "$valmidiresult") ]]; then
+        # Value is the same as last time. Especially occurs when at 0 and turning further left.
+        return 1 # to stop further evaluation.
       else
         valmidiresult=$1
         return 0

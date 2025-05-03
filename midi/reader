@@ -79,6 +79,9 @@ stdbuf -oL aseqdump -p "$ports" 2>/dev/null | while read -r line; do
     mapping=($(echo "$midi_mapping" | awk -v device=$device -v channel=$channel -v controller=$controller -v value=$value '$1 == device && $3 == channel && $4 == controller && $2 == "control" && ($5=="n" || $5==value) {print $6 " " $7}'))
     # Caution, mapping is an array!
     if [[ -n "$mapping" ]]; then
+      if [[ -z "${mapping[1]}" ]]; then
+        mapping[1]="abs"
+      fi
 #     echo "control $controller $value; script ${mapping[0]} mode ${mapping[1]}"
       source $funcdir/${mapping[0]} $value "${mapping[1]}"
     fi

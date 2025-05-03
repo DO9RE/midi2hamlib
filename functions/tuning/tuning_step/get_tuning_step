@@ -1,2 +1,6 @@
 # Output Mode and passband in one line by removing \n from the string
-echo $tuning_step"
+if [[ -z "$tuning_step" ]]; then
+  echo "Select a tuning step first."
+else
+  format_frequency $tuning_step
+fi
