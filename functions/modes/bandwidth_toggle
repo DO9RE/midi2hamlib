@@ -35,10 +35,14 @@ set_bandwidth() {
 }
 
 if [[ $1 ]]; then # called with midi parameter
-  set_bandwidth $1
+  if validate_midi_value $@ bandwidths bandwidth_midi_result; then
+    set_bandwidth $bandwidth_midi_result
+  else
+    return 0
+  fi
 else # Called from keyboard
 # Show the bandwidths menu
-  show_menu "Bandwith selection; $(get_current_mode)" bandsidths 'Bandwidth?: ' set_bandwidth
+  show_menu "Bandwith selection; $(get_current_mode)" bandwidths 'Bandwidth?: ' set_bandwidth
 fi
 # Show mode and bandwidth in one line, remove \n from string
 echo $(rigctl -m 2 -r $host:$port m | sed ':a;N;$!ba;s/\n/ /g') Hz

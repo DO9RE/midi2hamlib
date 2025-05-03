@@ -1,4 +1,4 @@
-#DEVICE TYPE    CHAN NUM VAL SCRIPT
+#DEVICE TYPE    CHAN NUM VAL SCRIPT MODE
 0       note_on 0    44  64  modes/get_mode
 0 note_on  0 36 64 ctcss/get_ctcss
 0 control  0 19 n vfo/vfo_toggle

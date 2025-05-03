@@ -12,7 +12,9 @@ if [[ ! -v levels ]]; then
   #levels=($(rigctl -m 2 -r $host:$port L ?))
 fi
 if [[ $1 ]]; then #Triggered with parameter
-  announce_level $1
+  if validate_midi_value $@ levels level_midi_result; then
+    announce_level $level_midi_result
+  fi
 else #Called from keyboard, show modes list and ask for selection.
   show_menu "Other levels:" levels 'Level?: ' announce_level
 fi

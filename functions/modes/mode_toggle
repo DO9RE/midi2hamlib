@@ -8,7 +8,11 @@ if [[ ! -v modes ]]; then
   modes=($(rigctl -m $model --dump-caps | grep "Mode list:" | head -n 1 | sed 's/Mode list://g'))
 fi
 if [[ $1 ]]; then #Triggered with parameter
-  switch_to_mode $1
+  if validate_midi_value $@ modes mode_midi_result; then
+    switch_to_mode $mode_midi_result
+  else
+    return 0
+  fi
 else #Called from keyboard, show modes list and ask for selection.
   show_menu "Set mode:" modes 'Mode?: ' switch_to_mode
 fi

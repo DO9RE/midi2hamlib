@@ -34,7 +34,7 @@ format_frequency() {
   echo "$(strip_trailing_zeros $frequency) $power"
 }
 
-function multiply_and_format { # expects a number and its multiplier. Returns the Number without the decimal point.
+multiply_and_format() { # expects a number and its multiplier. Returns the Number without the decimal point.
   local number=$1
   local multiplier=$2
   local result=$(echo "$number * $multiplier" | bc)
@@ -44,23 +44,119 @@ function multiply_and_format { # expects a number and its multiplier. Returns th
 
 # ${#array[@]} to determine an arrays length in elements.
 # Use this to restrict a midi controllers range to the given range of an options array for example.
-function apply_modulo {
+apply_modulo() {
   local value=$1
   local max_value=$2
   local result=$((value % max_value))
+# Shell and bc yield negative modulo for negative numbers. this is one of two
+# valid definitions, but it not useful for us for MIDI mapping.
+# So use the other definition with positive modulo values.
+  if [[ $result -lt 0 ]]; then
+    result=$((max_value - result))
+  fi
   echo $result
 }
 
 # Use this for example, if you have a long fader path and a little list of possible values. The overall maximum fader value is divided by the possible options to create zones. Then, each fader value is checked, in which zone it is.
-function fader_to_zones {
-  local fader_value=$1
-  local num_states=$2
-  local zone_size=$((128 / num_states)) # we say, the fader has 128 possible values, maybe this changes later.
-  local state=$((fader_value / zone_size))
-  echo $state
+fader_to_zones() {
+# we say, the fader has 128 possible values, maybe this changes later.
+  echo "scale=9 
+    fader_value=$1
+    num_states=$2
+    zone_size=(128 / num_states)
+    state=(fader_value / zone_size)
+    scale=0
+    state/1" | bc
 }
 
-function get_current_mode {
+# Unify relative MIDI controller input.
+unify_rel_midi() {
+  if [[ ($1 -eq 0) || ($1 -eq 64) ]]; then
+    # control is not turned
+    echo "0"
+  elif [[ ($1 -ge 32) && ($1 -le 95) ]]; then
+    # reference is 64, turned left or right
+    echo "$(( $1 - 64 ))"
+  elif [[ $1 -ge 96 ]]; then
+    # reference 0, turned left
+    echo "$(( $1 - 128 ))"
+  else
+    # reference 0, turned right
+    echo "$1"
+  fi
+}
+
+# Function to validate midi input and map it to a given range according to the mapping mode.
+# Parameters:
+# value: controller value as passed in from MIDI mapper.
+# mode: MIDI mapping mode, default is 'abs'.
+# range: Either a positive integer value or the name of an array variable, which is used to get the number of elements from. 
+# result: Name of variable to which the result result shall be passed.
+# errormsg: Optional error message that is printed if the value cannot be mapped into the valid range.
+validate_midi_value() {
+  local valmidirange=0
+  if [[ ($# -lt 4) || ($# -gt 5) ]]; then
+    echo "validate_midi_value must be called with either 4 or 5 parameters. Invalid mapping."
+    return 1
+  fi
+  if [[ -v $3 ]]; then
+    local -n valmidiarr=$3
+    valmidirange=${#valmidiarr[@]}
+  else
+    valmidirange=$3
+  fi  
+  if [[ $valmidirange -lt 1 ]]; then
+    echo "No valid range parameter given to validate_midi_value."
+    return 1
+  fi
+  if [[ -z "$4" ]]; then
+    echo "No result variable given to validate_midi_value."
+    return 1
+  fi
+  local -n valmidiresult=$4
+  case "$2" in
+    "abs_r")
+      local unified_value=$(unify_rel_midi $1)
+      validate_midi_value $(( valmidiresult + unified_value )) abs $3 $4 "5
+      ;;
+    "mod_r")
+      local unified_value=$(unify_rel_midi $1)
+      validate_midi_value $(( valmidiresult + unified_value )) mod $3 $4 "5
+      ;;
+    "zone")
+      local newvalmidiresult=$(fader_to_zones $1 $valmidirange)
+      if [[ -z "$valmidiresult" || ( ! "$valmidiresult" -eq "$newvalmidiresult" ) ]]; then
+        valmidiresult=$newvalmidiresult
+        return 0
+      else
+        # value is mapped to the same zone as last value, so return 1 to prevent repeatedly triggering the same action.
+        return 1
+      fi
+      ;;
+    "mod")
+      valmidiresult=$(apply_modulo $1 $valmidirange)
+      return 0
+      ;;
+    *) # default, "abs"
+      if [[ "$1" -lt "0" || "$1" -ge "$valmidirange" ]]; then
+        if [[ -n "$5" ]]; then
+          echo "$5"
+        fi
+        return 1
+      elif [[ -n "$valmidiresult" && ("$1" -eq "$valmidiresult") ]]; then
+        # Value is the same as last time. Especially occurs when at 0 and turning further left.
+        return 1 # to stop further evaluation.
+      else
+        valmidiresult=$1
+        return 0
+      fi
+      ;;
+  esac
+  echo "validate_midi_value: This code block sould never be executed."
+  return 1
+}
+
+get_current_mode() {
 # Return only the mode name without the passband
   echo $(rigctl -m 2 -r $host:$port m | head -n 1)
 }

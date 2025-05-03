@@ -21,8 +21,7 @@ function main_menu {
     show_file
     echo "midi map editor menu"
     echo "0 = exit editor."
-    echo "enter line number to edit:"
-    read -r menu_index
+    read -rp "enter line number to edit: " menu_index
 
     if [[ "$menu_index" == "0" ]]; then
       echo "leaving editor"
@@ -66,7 +65,7 @@ function edit_menu {
     done
 
     echo "$(( ${#fields[@]} + 1 )) = delete whole mapping."
-    read -r field_choice
+    read -rp "Field choice: " field_choice
 
     if [[ "$field_choice" == "0" ]]; then
       return
@@ -96,7 +95,7 @@ function edit_field {
   line=$(sed -n "${line_number}p" "$file") 
   ifs=' ' read -r -a fields <<< "$line"    
 
-  echo "current value of ${headers[field_index]} (feld $((field_index + 1))): ${fields[field_index]}"
+  echo "current value of ${headers[field_index]} (field $((field_index + 1))): ${fields[field_index]}"
 
   # Check for special case: editing "Field 2", TYPE
   if [[ $field_index -eq 1 ]]; then
@@ -122,6 +121,28 @@ function edit_field {
   elif [[ $field_index -eq 5 ]]; then
     source $funcdir/file_picker.sh $funcdir
     new_value=$(echo "$file_picker_result" | sed "s#${funcdir}/##g")
+# Check for special case: editing "Field 6", MODE
+  elif [[ $field_index -eq 6 ]]; then
+    while true; do
+      echo "Select a new value for ${headers[field_index]}:"
+      echo "1 = absolute mapping"
+      echo "2 = modulo mapping"
+      echo "3 = zone mapping"
+      echo "4 = absolute, control in rel ode"
+      echo "5 = modulo mapping, control in relative mode"
+      echo "0 = go back"
+      read -p "Your choice: " choice
+
+      case $choice in
+        1) new_value="abs"; break ;;
+        2) new_value="mod"; break ;;
+        3) new_value="zone"; break ;;
+        4) new_value="abs_r"; break ;;
+        5) new_value="mod_r"; break ;;
+        0) return ;;
+        *) echo "Invalid option. Please try again." ;;
+      esac
+    done
   else
     read -p "new value for ${headers[field_index]}: " new_value
   fi

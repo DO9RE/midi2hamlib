@@ -6,7 +6,11 @@ if [[ ! -v ctcss_range ]] ; then
 fi
 # Important! Not every transceiver supports querying.
 if [[ $1 ]]; then # Its been invoced by a MIDI action:
-  rigctl -m 2 -r $host:$port C ${ctcss_range[$1]}
+  if validate_midi_value $@ ctcss_range ctcss_midi_result; then
+    rigctl -m 2 -r $host:$port C ${ctcss_range[$ctcss_midi_result]}
+  else
+    return 0
+  fi
 else # Triggered from keyboard
   read -p 'Enter CTCSS-Tone: ' ctcss
   ctcss=$(echo ${ctcss} | sed 's/[^0-9]//g')

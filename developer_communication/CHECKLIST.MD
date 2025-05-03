@@ -80,6 +80,11 @@
   Not all files are using the new show_menu functions.
   Also, MIDI input shall be mapped to zones or shall wrap-around. This is still to be implemented.
 
+## **Note by DK7STJ – 2025-05-03:**
+  - All script files except file_picker and MIDI mapping editor use show_menu, which includes input validation.  
+  - MIMI maping modes **abs**, **mod**, **zone**, **abs_r** and **mod_r** provide different ways of mapping absolute or relative controller values to a range of values. Error messages can be provided if a knob is turned out of range, especially for mode **abs**, but currently, no error messages are given to avoid additional output.  
+  - See README for details on MIDI mapping modes.
+
 - [ ] Decide on a method for setting the frequency. None of the currently available hardware interfaces provide continuous data from rotary knobs (limited to 0–127 range). Pending: test DJ controller functionality. Interim solution:  
   - Use one rotary control to set the frequency step size (in Hz).  
   - Use two buttons to increase or decrease the frequency based on the step size.
