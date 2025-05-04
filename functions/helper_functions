@@ -383,7 +383,7 @@ show_menu() {
 
 # Check_environment: If we are on Mac OS, prepare the system accordingly
 check_environment() {
-    # Basispfade für mac_midi_monitor
+    # Basispfad für mac_midi_monitor
     midi_monitor_source="$basedir/midi/mac_midi_monitor/mac_midi_monitor.c"
     midi_monitor_binary="$basedir/midi/mac_midi_monitor/mac_midi_monitor"
 
@@ -439,7 +439,7 @@ check_environment() {
         if [ ! -f "$midi_monitor_binary" ]; then
             echo "MIDI monitor binary not found. Compiling midi_monitor..."
             gcc -o "$midi_monitor_binary" "$midi_monitor_source" -framework CoreMIDI -framework CoreFoundation
-            if [ -f $midi_monitor_binary]; then
+            if [ $? -ne 0 ]; then
                 echo "Compilation of midi_monitor failed. Please check the source file."
                 exit 1
             fi
@@ -447,6 +447,11 @@ check_environment() {
         else
             echo "MIDI monitor binary already exists at $midi_monitor_binary"
         fi
+
+        # Alias für aseqdump erstellen
+        echo "Setting up alias for aseqdump..."
+        alias aseqdump="$midi_monitor_binary"
+        echo "Alias set: 'aseqdump' now points to '$midi_monitor_binary'"
     else
         echo "Running on a non-macOS system. No macOS-specific setup required."
     fi
