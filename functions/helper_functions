@@ -380,3 +380,66 @@ show_menu() {
     fi
   done
 }
+
+# Check_environment: If we are on Mac OS, prepare the system accordingly
+check_environment() {
+    # Basispfad für mac_midi_monitor
+    basedir=$(dirname "$0")
+    midi_monitor_source="$basedir/midi/mac_midi_monitor/midi_monitor.c"
+    midi_monitor_binary="$basedir/midi/mac_midi_monitor/midi_monitor"
+
+    # Betriebssystem erkennen
+    os_name=$(uname -s)
+    if [ "$os_name" = "Darwin" ]; then
+        echo "Running on macOS."
+
+        # Überprüfen, ob Homebrew installiert ist
+        if ! command -v brew &>/dev/null; then
+            echo "Homebrew not found. Please install Homebrew first from https://brew.sh/"
+            exit 1
+        fi
+
+        # Überprüfen, ob die benötigten Tools (grep, sed, awk) in GNU-Versionen installiert sind
+        tools=("grep" "sed" "awk")
+        for tool in "${tools[@]}"; do
+            if ! brew list gnu-"$tool" &>/dev/null; then
+                echo "Installing GNU $tool via Homebrew..."
+                brew install gnu-"$tool"
+            fi
+        done
+
+        # Aliase für GNU-Tools setzen
+        export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
+        export PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"
+        export PATH="/usr/local/opt/gawk/libexec/gnubin:$PATH"
+
+        # Überprüfen, ob die Xcode Command Line Tools installiert sind
+        if ! xcode-select -p &>/dev/null; then
+            echo "Xcode Command Line Tools not found. Installing..."
+            xcode-select --install
+            echo "Please rerun this script after the installation is complete."
+            exit 1
+        fi
+
+        # Überprüfen, ob die mac_midi_monitor-Datei vorhanden ist
+        if [ ! -f "$midi_monitor_source" ]; then
+            echo "Error: MIDI monitor source file not found at $midi_monitor_source"
+            exit 1
+        fi
+
+        # Überprüfen, ob das Kompilat existiert
+        if [ ! -f "$midi_monitor_binary" ]; then
+            echo "MIDI monitor binary not found. Compiling midi_monitor..."
+            gcc -o "$midi_monitor_binary" "$midi_monitor_source" -framework CoreMIDI -framework CoreFoundation
+            if [ $? -ne 0 ]; then
+                echo "Compilation of midi_monitor failed. Please check the source file."
+                exit 1
+            fi
+            echo "Compilation successful. Binary created at $midi_monitor_binary"
+        else
+            echo "MIDI monitor binary already exists at $midi_monitor_binary"
+        fi
+    else
+        echo "Running on a non-macOS system. No macOS-specific setup required."
+    fi
+}

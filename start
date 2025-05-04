@@ -13,6 +13,9 @@ default_config_file="./settings/settings.conf"
 funcdir="$(pwd)/functions"
 source $funcdir/helper_functions
 
+# check, if we are on Linux or Mac OS
+check_environment
+
 # Process command line arguments
 config_file=$default_config_file
 while [[ $# -gt 0 ]]; do
