@@ -383,10 +383,16 @@ show_menu() {
 
 # Check_environment: If we are on Mac OS, prepare the system accordingly
 check_environment() {
-    # Basispfad für mac_midi_monitor
-    basedir=$(dirname "$0")
-    midi_monitor_source="$basedir/midi/mac_midi_monitor/midi_monitor.c"
-    midi_monitor_binary="$basedir/midi/mac_midi_monitor/midi_monitor"
+    # Basispfade für mac_midi_monitor
+    midi_monitor_source="$basedir/midi/mac_midi_monitor/mac_midi_monitor.c"
+    midi_monitor_binary="$basedir/midi/mac_midi_monitor/mac_midi_monitor"
+
+    # Überprüfen, ob das Skript in Bash ausgeführt wird
+    if [ -z "$BASH_VERSION" ]; then
+        echo "Error: This script must be run in Bash."
+        echo "Please restart the script using Bash."
+        exit 1
+    fi
 
     # Betriebssystem erkennen
     os_name=$(uname -s)
@@ -396,6 +402,14 @@ check_environment() {
         # Überprüfen, ob Homebrew installiert ist
         if ! command -v brew &>/dev/null; then
             echo "Homebrew not found. Please install Homebrew first from https://brew.sh/"
+            exit 1
+        fi
+
+        # Überprüfen, ob Bash installiert ist
+        if ! brew list bash &>/dev/null; then
+            echo "GNU Bash not found. Installing Bash via Homebrew..."
+            brew install bash
+            echo "Please restart the script using the newly installed Bash."
             exit 1
         fi
 
