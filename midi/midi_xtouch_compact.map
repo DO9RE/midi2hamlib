@@ -1,13 +1,25 @@
 #DEVICE TYPE     CHAN NUM VAL SCRIPT MODE
-0       note_on  0    40   127 modes/get_mode
-0       control  0    10   n   modes/mode_toggle
-0       control  0    11   n   modes/bandwidth_toggle
-0       note_on  10   2   127 ctcss/get_ctcss
-0       control  0   12   n   ctcss/set_ctcss
-0       control  0   13   n   vfo/vfo_toggle
-0       control  0   14   n   functions/function_select
-0       note_on  0   19   127 functions/function_toggle
-0       control  0   15   n   levels/level_toggle
-0       control  10   8   1   dummy_function
-0       note_on  10   7   127 dummy_function
-0       note_off 10   7   0   dummy_function
+# Tuning (1)
+0       control   0   10   n   tuning/tuning_step/tuning_step_toggle
+0       note_on   0   16  n   tuning/tuning_step/tuning_step_tune_up
+0       note_on   0   24  n   tuning/tuning_step/tuning_step_tune_down
+0       note_on   0   32   n   tuning/tuning_step/get_tuning_step
+0       note_on   0   40  n   tuning/get_frequency
+# Modes (2)
+0       control   0   11   n   modes/mode_toggle
+0       control   0   2   n   modes/bandwidth_toggle
+0       note_on   0   41   n modes/get_mode
+# Levels (3)
+0       control   0   12   n   levels/level_toggle
+0       note_on   0   42   n   levels/get_strength
+# VFO (4)
+0       control   0   13   n   vfo/vfo_toggle
+0       note_on   0   43   n   vfo/get_vfo
+# Functions (5)
+0       control   0   14   n   functions/function_select
+0       note_on   0   36   n functions/function_toggle
+# CTCSS (6)
+0       control   0   15   n   ctcss/set_ctcss
+0       note_on   0   45   n ctcss/get_ctcss
+# tests
+0       control   0   9   n   test_midi_mapping zone
