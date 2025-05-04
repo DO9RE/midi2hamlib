@@ -12,10 +12,6 @@ cleanup() {
 default_config_file="./settings/settings.conf"
 funcdir="$(pwd)/functions"
 source $funcdir/helper_functions
-
-# check, if we are on Linux or Mac OS
-check_environment
-
 # Process command line arguments
 config_file=$default_config_file
 while [[ $# -gt 0 ]]; do
@@ -43,6 +39,8 @@ if [[ ! -f "$config_file" ]]; then
 else
   source $config_file
 fi
+# Check environment (Operating system)
+check_environment
 # Use MIDI devices?
 if [[ $use_midi_device == "TRUE" ]]; then
   source $basedir/midi/reader &
