@@ -448,10 +448,11 @@ check_environment() {
       echo "MIDI monitor binary already exists at $midi_monitor_binary"
 #     Alias für aseqdump erstellen
       echo "Setting up alias for aseqdump..."
-      alias aseqdump="$midi_monitor_binary"
+      export ASEQDUMP_CMD="$midi_monitor_binary"
       echo "Alias set: 'aseqdump' now points to '$midi_monitor_binary'"
     fi
   else
-    echo "Running on a non-macOS system. No macOS-specific setup required."
+#   use linux native aseqdump
+    export ASEQDUMP_CMD="aseqdump"
   fi
 }
