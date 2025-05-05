@@ -85,6 +85,10 @@
   - MIMI maping modes **abs**, **mod**, **zone**, **abs_r** and **mod_r** provide different ways of mapping absolute or relative controller values to a range of values. Error messages can be provided if a knob is turned out of range, especially for mode **abs**, but currently, no error messages are given to avoid additional output.  
   - See README for details on MIDI mapping modes.
 
+## **Note by DK7STJ – 2025-05-05:**
+  Implemented new MIDI mapping modes for keys: up, down, up_r, down_r.
+  See README for details.
+
 - [ ] Decide on a method for setting the frequency. None of the currently available hardware interfaces provide continuous data from rotary knobs (limited to 0–127 range). Pending: test DJ controller functionality. Interim solution:  
   - Use one rotary control to set the frequency step size (in Hz).  
   - Use two buttons to increase or decrease the frequency based on the step size.
