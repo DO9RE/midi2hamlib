@@ -383,76 +383,75 @@ show_menu() {
 
 # Check_environment: If we are on Mac OS, prepare the system accordingly
 check_environment() {
-    # Basispfad für mac_midi_monitor
-    midi_monitor_source="$basedir/midi/mac_midi_monitor/mac_midi_monitor.c"
-    midi_monitor_binary="$basedir/midi/mac_midi_monitor/mac_midi_monitor"
+# Basispfad für mac_midi_monitor
+  midi_monitor_source="$basedir/midi/mac_midi_monitor/mac_midi_monitor.c"
+  midi_monitor_binary="$basedir/midi/mac_midi_monitor/mac_midi_monitor"
 
-    # Überprüfen, ob das Skript in Bash ausgeführt wird
-    if [ -z "$BASH_VERSION" ]; then
-        echo "Error: This script must be run in Bash."
-        echo "Please restart the script using Bash."
+# Überprüfen, ob das Skript in Bash ausgeführt wird
+  if [ -z "$BASH_VERSION" ]; then
+    echo "Error: This script must be run in Bash."
+    echo "Please restart the script using Bash."
+    exit 1
+  fi
+
+# Betriebssystem erkennen
+  os_name=$(uname -s)
+  if [ "$os_name" = "Darwin" ]; then
+    echo "Running on macOS."
+
+#   Überprüfen, ob Homebrew installiert ist
+    if ! command -v brew &>/dev/null; then
+      echo "Homebrew not found. Please install Homebrew first from https://brew.sh/"
+      exit 1
+    fi
+
+#   Überprüfen, ob GNU-Grep installiert ist
+    if ! brew list grep &>/dev/null; then
+      echo "GNU Grep not found. Installing grep via Homebrew..."
+      brew install grep
+    fi
+
+#   Überprüfen, ob GNU-Awk installiert ist
+    if ! brew list awk &>/dev/null; then
+      echo "GNU Awk not found. Installing awk via Homebrew..."
+      brew install awk
+    fi
+
+#   Aliase für GNU-Tools setzen
+    export PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"
+    export PATH="/usr/local/opt/gawk/libexec/gnubin:$PATH"
+
+#   Überprüfen, ob die Xcode Command Line Tools installiert sind
+    if ! xcode-select -p &>/dev/null; then
+      echo "Xcode Command Line Tools not found. Installing..."
+      xcode-select --install
+      echo "Please rerun this script after the installation is complete."
+      exit 1
+    fi
+
+#   Überprüfen, ob die mac_midi_monitor-C-Datei vorhanden ist
+    if [ ! -f "$midi_monitor_source" ]; then
+      echo "Error: MIDI monitor source file not found at $midi_monitor_source"
+      exit 1
+    fi
+
+#   Überprüfen, ob das Kompilat existiert
+    if [ ! -f "$midi_monitor_binary" ]; then
+      echo "MIDI monitor binary not found. Compiling midi_monitor..."
+      gcc -o "$midi_monitor_binary" "$midi_monitor_source" -framework CoreMIDI -framework CoreFoundation
+      if [ $? -ne 0 ]; then
+        echo "Compilation of midi_monitor failed. Please check the source file."
         exit 1
-    fi
-
-    # Betriebssystem erkennen
-    os_name=$(uname -s)
-    if [ "$os_name" = "Darwin" ]; then
-        echo "Running on macOS."
-
-        # Überprüfen, ob Homebrew installiert ist
-        if ! command -v brew &>/dev/null; then
-            echo "Homebrew not found. Please install Homebrew first from https://brew.sh/"
-            exit 1
-        fi
-
-        # Überprüfen, ob GNU-Grep installiert ist
-        if ! brew list grep &>/dev/null; then
-            echo "GNU Grep not found. Installing grep via Homebrew..."
-            brew install grep
-        fi
-
-        # Überprüfen, ob GNU-Awk installiert ist
-        if ! brew list awk &>/dev/null; then
-            echo "GNU Awk not found. Installing awk via Homebrew..."
-            brew install awk
-        fi
-
-        # Aliase für GNU-Tools setzen
-        export PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"
-        export PATH="/usr/local/opt/gawk/libexec/gnubin:$PATH"
-
-        # Überprüfen, ob die Xcode Command Line Tools installiert sind
-        if ! xcode-select -p &>/dev/null; then
-            echo "Xcode Command Line Tools not found. Installing..."
-            xcode-select --install
-            echo "Please rerun this script after the installation is complete."
-            exit 1
-        fi
-
-        # Überprüfen, ob die mac_midi_monitor-Datei vorhanden ist
-        if [ ! -f "$midi_monitor_source" ]; then
-            echo "Error: MIDI monitor source file not found at $midi_monitor_source"
-            exit 1
-        fi
-
-        # Überprüfen, ob das Kompilat existiert
-        if [ ! -f "$midi_monitor_binary" ]; then
-            echo "MIDI monitor binary not found. Compiling midi_monitor..."
-            gcc -o "$midi_monitor_binary" "$midi_monitor_source" -framework CoreMIDI -framework CoreFoundation
-            if [ $? -ne 0 ]; then
-                echo "Compilation of midi_monitor failed. Please check the source file."
-                exit 1
-            fi
-            echo "Compilation successful. Binary created at $midi_monitor_binary"
-        else
-            echo "MIDI monitor binary already exists at $midi_monitor_binary"
-        fi
-
-        # Alias für aseqdump erstellen
-        echo "Setting up alias for aseqdump..."
-        alias aseqdump="$midi_monitor_binary"
-        echo "Alias set: 'aseqdump' now points to '$midi_monitor_binary'"
+      fi
+      echo "Compilation successful. Binary created at $midi_monitor_binary"
     else
-        echo "Running on a non-macOS system. No macOS-specific setup required."
+      echo "MIDI monitor binary already exists at $midi_monitor_binary"
+#     Alias für aseqdump erstellen
+      echo "Setting up alias for aseqdump..."
+      alias aseqdump="$midi_monitor_binary"
+      echo "Alias set: 'aseqdump' now points to '$midi_monitor_binary'"
     fi
+  else
+    echo "Running on a non-macOS system. No macOS-specific setup required."
+  fi
 }
