@@ -11,6 +11,9 @@ function show_file {
 # function to get the field headers
 function get_headers {
   read -r header_line < "$file"
+  if [[ ${header_line:0:1} == "#" ]]; then
+    header_line=${header_line:1}
+  fi
   ifs=' ' read -r -a headers <<< "$header_line"
 }
 
@@ -26,16 +29,15 @@ function main_menu {
     if [[ "$menu_index" == "0" ]]; then
       echo "leaving editor"
       return 0
-    fi
-
-    if ! [[ "$menu_index" =~ ^[0-9]+$ ]] || (( menu_index < 1 )); then
+    elif ! [[ "$menu_index" =~ ^[0-9]+$ ]] || (( menu_index < 1 )); then
       echo "invalid line number."
       read -p "press enter to continue."
       continue
+    else
+#     skip header line
+      line_number=$((menu_index + 1))
+      edit_menu "$line_number"
     fi
-#   skip header line
-    line_number=$((menu_index + 1))
-    edit_menu "$line_number"
   done
 }
 
@@ -47,6 +49,10 @@ function edit_menu {
 
   if [[ -z "$line" ]]; then
     echo "invalid line number."
+    read -p "press enter to go back."
+    return
+  elif [[ "$line" =~ ^# ]]; then
+    echo "This line is a comment and cannot be edited."
     read -p "press enter to go back."
     return
   fi
@@ -104,7 +110,7 @@ function edit_field {
       echo "1 = note_on"
       echo "2 = note_off"
       echo "3 = control"
-      echo "4 = pitch"
+#      echo "4 = pitch"
       echo "0 = go back"
       read -p "Your choice: " choice
 
@@ -112,42 +118,80 @@ function edit_field {
         1) new_value="note_on"; break ;;
         2) new_value="note_off"; break ;;
         3) new_value="control"; break ;;
-        4) new_value="pitch"; break ;;
+#       4) new_value="pitch"; break ;;
         0) return ;;
         *) echo "Invalid option. Please try again." ;;
       esac
     done
-# Check for special case: editing "Field 5", SCRIPT
+# Check for special case: editing "Field 6", SCRIPT
   elif [[ $field_index -eq 5 ]]; then
     source $funcdir/file_picker.sh $funcdir
     new_value=$(echo "$file_picker_result" | sed "s#${funcdir}/##g")
-# Check for special case: editing "Field 6", MODE
+# Check for special case: editing "Field 7", MODE
   elif [[ $field_index -eq 6 ]]; then
     while true; do
       echo "Select a new value for ${headers[field_index]}:"
-      echo "1 = absolute mapping"
-      echo "2 = modulo mapping"
-      echo "3 = zone mapping"
-      echo "4 = absolute, control in rel ode"
-      echo "5 = modulo mapping, control in relative mode"
+      if [[ ${fields[1]} == "control" ]]; then
+        echo "1 = absolute mapping"
+        echo "2 = modulo mapping"
+        echo "3 = zone mapping"
+        echo "4 = absolute, control in rel ode"
+        echo "5 = modulo mapping, control in relative mode"
+      else
+        echo "1 = key, regular keystroke"
+        echo "2 = up, increment a value or select next option"
+        echo "3 = down, increment a value or select previous option"
+        echo "4 = up_r, like 'up' but with wrap-around"
+        echo "5 = down_r, like 'down' but with wrap-around"
+      fi
       echo "0 = go back"
       read -p "Your choice: " choice
 
-      case $choice in
-        1) new_value="abs"; break ;;
-        2) new_value="mod"; break ;;
-        3) new_value="zone"; break ;;
-        4) new_value="abs_r"; break ;;
-        5) new_value="mod_r"; break ;;
-        0) return ;;
-        *) echo "Invalid option. Please try again." ;;
-      esac
+      if [[ $choice -eq 0 ]]; then
+        return
+      elif [[ ${fields[1]} == "control" ]]; then
+        case $choice in
+          1) new_value="abs"; break ;;
+          2) new_value="mod"; break ;;
+          3) new_value="zone"; break ;;
+          4) new_value="abs_r"; break ;;
+          5) new_value="mod_r"; break ;;
+          *) echo "Invalid option. Please try again." ;;
+        esac
+      else
+        case $choice in
+          1) new_value="key"; break ;;
+          2) new_value="up"; break ;;
+          3) new_value="down"; break ;;
+          4) new_value="up_r"; break ;;
+          5) new_value="down_r"; break ;;
+          *) echo "Invalid option. Please try again." ;;
+        esac
+      fi
     done
   else
     read -p "new value for ${headers[field_index]}: " new_value
   fi
-
+  # store new value for currently edited field.
   fields[field_index]=$new_value
+  # If TYPE was changed and mode doesn't match, set it to a suitable default.
+  if [[ $field_index -eq 1 ]]; then
+    case ${fields[field_index]} in
+      "control")
+        if [[ ! " abs mod zone abs_r mod_r " =~ " ${fields[6]} " ]]; then
+          fields[6]='abs'
+          echo "${headers[6]} has been set to '${fields[6]}' for consistency with TYPE field."
+        fi
+        ;;
+      *)
+        if [[ ! " key up down up_r down_r " =~ " ${fielda[6]} " ]]; then
+          fields[6]='key'
+          echo "${headers[6]} has been set to '${fields[6]}' for consistency with TYPE field."
+        fi
+        ;;
+    esac
+  fi
+  # re-read currently edited line.
   new_line=$(ifs=' '; echo "${fields[*]}")
 
   # Escape slashes for sed

@@ -303,7 +303,8 @@ DEVICE TYPE CHAN NUM VAL SCRIPT MODE
   If a field is not relevant for your use case, enter the letter **`N`** to mark it as ignored.
 
 - **MODE**
-  The evaluation mode that shall be used to map event values to parameters, values or functions of your transceiver. This currently applies only to Controller Change events. Possible values are:
+  The evaluation mode that shall be used to map event values to parameters, values or functions of your transceiver.
+  For Controller Change events, possible values are:
   - **abs**: Controller values shall be used unmodified by the mapped function or script.
   - **mod**: The mapped function or script shall map the controller values repeatedly to the available options. this will cycle through the avalable options again and again when the controller values increase.
   - **zone**: This will map the complete value range of the controller or fader, typically 0 to 127, to the available options in zones. So if you have four options, a fadder would be mapped as follows:
@@ -319,6 +320,10 @@ DEVICE TYPE CHAN NUM VAL SCRIPT MODE
   and 127, but:
   - Either 64 if not turned, 63 or less if turned left and 65 or more if turned right,
   - or 0 if not turned, 127 or less if turned left and 1 or more if turned right,
+  For note_on and note_off, possible values are:
+  - **key**: Invoke a script without any parameters. This is used for regular keystrokes that just trigger an action.
+  - **up**, **down**: Increment or decrement a value or select the previous or next option in a list. This is used whenever keys shall invoke a script that also can be used with a controllerknob or fader.
+  - **up_r**, **down_r**: Like **up** and **down**, but with wrap-around.
 
 #### Example:
 

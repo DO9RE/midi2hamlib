@@ -52,7 +52,7 @@ apply_modulo() {
 # valid definitions, but it not useful for us for MIDI mapping.
 # So use the other definition with positive modulo values.
   if [[ $result -lt 0 ]]; then
-    result=$((max_value - result))
+    (( result += max_value ))
   fi
   echo $result
 }
@@ -115,13 +115,11 @@ validate_midi_value() {
   fi
   local -n valmidiresult=$4
   case "$2" in
-    "abs_r")
+    "abs_r"|"mod_r")
+      local m=$2
       local unified_value=$(unify_rel_midi $1)
-      validate_midi_value $(( valmidiresult + unified_value )) abs $3 $4 "5
-      ;;
-    "mod_r")
-      local unified_value=$(unify_rel_midi $1)
-      validate_midi_value $(( valmidiresult + unified_value )) mod $3 $4 "5
+      validate_midi_value $(( valmidiresult + unified_value )) ${m:0:3} $3 $4 "$5"
+      return # use exit status from call to validate_midi_value in line above.
       ;;
     "zone")
       local newvalmidiresult=$(fader_to_zones $1 $valmidirange)

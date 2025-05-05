@@ -1,9 +1,9 @@
 weekdays=(Monday Tuesday Wednesday Thursday Friday Saturday Sunday)
 if [[ $1 ]]; then #Triggered with parameter
 # echo "test_midi_mapping called with $# parameters: $@"
-  if validate_midi_value "$@" weekdays test_result "test_midi_mapping: $1 is out of range." ; then
+  if validate_midi_value "$@" weekdays test_result "test_midi_mapping: Boundary reached." ; then
     echo "test_midi_mapping: ${weekdays[$test_result]}"
   fi
 else #Called from keyboard, show VFOs list and ask for selection.
-  echo "test_midi_mapping was called with no or empty parameters. Normally only done from within menus."
+  echo "test_midi_mapping was called with no or empty parameters. Normally only done for simple keys or from within menus."
 fi

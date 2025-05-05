@@ -61,19 +61,22 @@ stdbuf -oL $ASEQDUMP_CMD -p "$ports" 2>/dev/null | while read -r line; do
 
   # Search MIDI map for the event definition and execute the corresponding function
   unset mapping
-  if [[ $type == "Note" && $on_off == "on" ]]; then
+  if [[ $type == "Note" && ( $on_off == "on" || $on_off == "off" ) ]]; then
     # Velocity is currently not used.
-    mapping=$(echo "$midi_mapping" | awk -v device=$device -v channel=$channel -v note=$note '$1 == device && $3 == channel && $4 == note && $2 == "note_on" {print $6}')
+    mapping=($(echo "$midi_mapping" | awk -v device=$device -v channel=$channel -v evtype=note_${on_off} -v note=$note '$1 == device && $3 == channel && $4 == note && $2 == evtype {print $6 " " $7}'))
+    # Caution, mapping is an array!
     if [[ -n "$mapping" ]]; then
-#     echo "note_on $note"
-      source $funcdir/$mapping
-    fi
-  elif [[ $type == "Note" && $on_off == "off" ]]; then
-    # Velocity is currently not used.
-    mapping=$(echo "$midi_mapping" | awk -v device=$device -v channel=$channel -v note=$note '$1 == device && $3 == channel && $4 == note && $2 == "note_off" {print $6}')
-    if [[ -n "$mapping" ]]; then
-#     echo "note_off $note"
-      source $funcdir/$mapping
+      if [[ -z "${mapping[1]}" ]]; then
+        mapping[1]="key"
+      fi
+#     echo "note_${on_off} $note; script ${mapping[0]} mode ${mapping[1]}"
+      case ${mapping[1]} in
+        "up") source $funcdir/${mapping[0]} 65 abs_r ;;
+        "down") source $funcdir/${mapping[0]} 63 abs_r ;;
+        "up_r") source $funcdir/${mapping[0]} 65 mod_r ;;
+        "down_r") source $funcdir/${mapping[0]} 63 mod_r ;;
+        *) source $funcdir/${mapping[0]} ;;
+      esac
     fi
   elif [[ $type == "Control" ]]; then
     mapping=($(echo "$midi_mapping" | awk -v device=$device -v channel=$channel -v controller=$controller -v value=$value '$1 == device && $3 == channel && $4 == controller && $2 == "control" && ($5=="n" || $5==value) {print $6 " " $7}'))

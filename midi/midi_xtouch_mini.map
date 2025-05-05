@@ -1,18 +1,29 @@
 #DEVICE TYPE     CHAN NUM VAL SCRIPT MODE
+# Mode and bandwidth selection with firt and second knob.
 0       note_on  10   0   127 modes/get_mode
 0       control  10   1   n   modes/mode_toggle
 0       control  10   2   n   modes/bandwidth_toggle
+# CTCSS with 3rd knob
 0       note_on  10   2   127 ctcss/get_ctcss
 0       control  10   3   n   ctcss/set_ctcss
+# VFO selection with 4th knob
 0       note_on  10   3   n   vfo/get_vfo
 0       control  10   4   n   vfo/vfo_toggle
+# Function selection and toggling with 5th knob
 0       note_on  10   4   127 functions/function_toggle
 0       control  10   5   n   functions/function_select
+# Get signal strength, level selection with 6th knob
 0       note_on  10   5   n   levels/get_strength
 0       control  10   6   n   levels/level_toggle
+# Tuning up/down and tuning step selection with 8th knob and keys below knob 7 and 8
 0       note_on  10   7   n   tuning/tuning_step/get_tuning_step
 0       control  10   8   n   tuning/tuning_step/tuning_step_toggle
 0       note_on  10   15  n   tuning/tuning_step/tuning_step_tune_up
 0       note_on  10   23  n   tuning/tuning_step/tuning_step_tune_down
 0       note_on  10   22  n   tuning/get_frequency
+# Test MIDI mapping for fader and keys
 0       control  10   9   n   test_midi_mapping zone
+0       note_on  10   8   n   test_midi_mapping up
+0       note_on  10   16  n   test_midi_mapping down
+0       note_on  10   9   n   test_midi_mapping up_r
+0       note_on  10   17  n   test_midi_mapping down_r
