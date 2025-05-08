@@ -1,0 +1,15 @@
+#!/bin/bash
+SHELLCHECK=$(which shellcheck)
+if [[ -n "$SHELLCHECK" && -x $SHELLCHECK ]]; then
+  EXITCODE=0
+  for i in $(find ./ -type f | grep -v '\(/name$\)\|\(\.map\)\|\(\.txt$\)\|\(midi_monitor/\)\|\(\.git\)\|\(README\.MD\)\|\(/developer_communication/\)') ; do
+    if ! $SHELLCHECK -s bash "$i" ; then
+      EXITCODE=1
+      #break # end after first script with errors or warnings was found.
+    fi
+  done
+  exit $EXITCODE
+else
+  echo "Please install shellcheeck."
+  exit 1
+fi
