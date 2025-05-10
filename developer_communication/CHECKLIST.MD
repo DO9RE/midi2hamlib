@@ -1,5 +1,14 @@
 # Checklist, Todo and ideas
 
+- [ ] Improve bandwidth selection.
+
+## **Note by DK7STJ – 2025-05-10:**  
+  Transceiver capabilities seem to return three bandwidth settings for each mode: normal, narrow and wide. Settings that are not supported seem to return a bandwidth of 0.
+  Questions / ToDos:
+  - Should we try to name the settings like "normal", "narrow" and "wide"?
+  - Shall we ignore bandwith settings with value 0?
+  - We shall adapt our bandwidth_toggle script to work even if no bandwidth can be selected.  
+
 - [ ] Rework function selection / toggling.
 
 ## **Note by DK7STJ – 2025-04-18:**  
