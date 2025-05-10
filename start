@@ -1,4 +1,9 @@
 #!/bin/bash
+# First, check if hamlib is available
+if [[ -z "$(command -v rigctl)" || -z "$(command -v rigctld)" ]]; then
+  echo "rigctl or rigctld not found. Please install hamlib."
+  exit 1
+fi
 # We have a few background processes running, exit these when CTRL+C is pressed
 trap 'cleanup' INT TERM
 
