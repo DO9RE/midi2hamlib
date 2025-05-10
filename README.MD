@@ -30,17 +30,141 @@ This project was created with accessibility in mind. When run on a Raspberry Pi 
 
 # Installation
 
+## First things first
+
 Flash an SD card with a Raspbian OS, preferably a minimal version without a desktop. I used Raspbian Lite 64 Bit from the Raspberry Imager.
 
-First, we need to download this wonderful package. We do this with the following command:
+We assume that you start from a fresh image. If you don't, some of the
+described steps may not work as expected or may need to be adapted because
+of differences in your setup.
+
+First, install necessary packages via apt: build essentials, bc, pip, sox, git,
+Speech-dispatcher, and espeak:
+```
+sudo apt install sox espeak espeak-ng speech-dispatcher build-essential libdbus-glib-1-dev libgirepository1.0-dev libpython3-dev libdbus-1-dev git python3-pip bc
+```
+
+## Hamlib
+
+Second, we need to decide if we want to build hamlib ourselves or if we use
+a prepared package. Prebuilt packages have the advantage of working most
+likely out of the box, whereas building hamlib ourselves might be kind of
+challenging for the unexperienced user. However, we get the latest and
+greatest hamlib, which might unlock some features that prebuilt packages may
+not include.
+
+Please follow the steps described in one of the following subsections
+according to your decision.
+
+## Install hamlib via apt
+
+If you want to install hamlib from the package repository, do:
+
+```
+sudo apt install libhamlib libhamlib-utils
+```
+
+## Building hamlib
+
+In order to build hamlib, we need to install still some tools:
+
+```
+sudo apt install autoconf automake libtool libreadline-dev
+```
+
+From within the home folder, Clone the hamlib repository from github:
+
+```
+git clone https://github.com/hamlib/hamlib
+cd hamlib
+```
+
+We can now either directly proceed with building hamlib, or choose to build
+a specific release. If you tant the bleeding edge of hamlib, just stick with
+the head of the master branch. This is what you currently have. Otherwise,
+list all available releases:
+
+```
+git tag
+```
+
+This will display all tagged versions of hamlib, each tag in aline, like
+**3.0**, **3.1**, **4.0**, **4.1**, **4.6**. Hit space bar to see the next
+page or `q` to exit the pager.
+
+Choose one of the listed releases, replacing the `4.6`  in the command below with
+the version you want:
+
+```
+git checkout 4.6
+```
+
+To return to the tip of the master branch, just checkout `master` again.
+
+As we just cloned the repository, we need to bootstrap. This creates the
+configuration script. You only need to do that once, even if you later do an
+update.
+
+```
+./bootstrap
+```
+
+The bootstrap script will tell you if some essential packages are missing.
+So please have a look at its output.
+
+To see all bells and whistles of hamlib that you can tweak, run the
+following command.
+
+```
+./configure --help | more
+```
+
+Otherwise, just use the defaults, they are
+fine for us:
+
+```
+./configure 
+```
+
+**configure** will print lots of messages for each check it is doing. At
+the end, it prints a summary of enabled and disabled options. Revise this
+section in order to detect major issues. We do not expect anything severe
+going wrong.
+
+If **configure** is done, finally build hamlib:
+
+```
+make
+```
+
+**Make** should run without any errors. this may take a while, so get
+yourself a cup of coffee. :-)
+
+After building, install hamlib into your system and update the library cache:
+
+```
+sudo make install
+sudo ldconfig
+```
+
+Now you can change back into your home directory and try to run **rigctl**
+in order to check if hamlib is ready:
+
+```
+cd
+rigctl --version
+```
+
+Congrats, you built hamlib!
+
+## Download midi2hamlib
+
+Now we need to download this wonderful package. We do this with the following command:
 ```
 git clone https://github.com/do9re/midi2hamlib
 ```
 
-Install the necessary packages via apt: build essentials, Hamlib, bc, pip, Sox, git, Speech-Dispatcher, and Espeak:
-```
-sudo apt install libhamlib-utils sox espeak espeak-ng speech-dispatcher build-essential libdbus-glib-1-dev libgirepository1.0-dev libpython3-dev libdbus-1-dev git python3-pip bc
-```
+## Fenrir
 
 Then, get the Fenrir package from Storm:
 ```
@@ -91,12 +215,16 @@ Fenrir should now start automatically.
 
 To avoid the spoken messages about started services during system startup and to have the speech output begin immediately upon reaching the user prompt and starting the Midi2Hamlib application, you can modify the approach. Instead of placing a @reboot call for fenrir in the root's crontab, you can insert the start_fenrir.sh script, located in the additional-scripts folder, into the user's .bashrc after a call to clear. This ensures that speech output only begins after login.
 
+## Autologin
+
 The user should be logged in automatically so that the system doesn't require entering a username and password to unlock. You can use the Raspi-Config tool for this:
 ```
 sudo raspi-config
 ```
 
 In the first category, System, you can set up a console login and ensure that the current user is logged in automatically.
+
+## Auto-starting midi2hamlib
 
 Finally, midi2hamlib should start automatically when the system boots. We achieve this by adjusting the user's .bashrc:
 
