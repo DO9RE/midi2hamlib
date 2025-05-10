@@ -20,6 +20,6 @@ if [[ -n "$SHELLCHECK" && -x $SHELLCHECK ]]; then
   fi
   exit $EXITCODE
 else
-  echo "Please install shellcheeck."
+  echo "Please install shellcheck."
   exit 1
 fi
