@@ -1,13 +1,13 @@
-declare -a bandwidths
 unset bandwidths
+declare -a bandwidths
 # get possible bandwidths for current mode
 # Filter the --dump-caps output to get the paragraph between "Bandwidths:" and "Spectrum scopes:". Filter for the current Mode using Grep. Build an array ready string without letters and cut to much spaces.
-bandwidths_string=$(rigctl -m $model --dump-caps |
-sed -n '/Bandwidths:/,/Spectrum scopes:/p' | # The part between Bandwidths: and Spectrum scopes:
-sed '$d' | # drop the last line, cause its already the next paragraph, but we need something to narrow down on our target.
-grep $(get_current_mode) | # Filter the list only for the line with the current mode.
-head -n 1 | # Just in case, there is more then one entry, fm and wfm for example.
-sed 's/,//g') # get rid of the commas.
+bandwidths_string=$(rigctl -m "$model" --dump-caps |
+  sed -n '/Bandwidths:/,/Spectrum scopes:/p' | # The part between Bandwidths: and Spectrum scopes:
+  sed '$d' | # drop the last line, cause its already the next paragraph, but we need something to narrow down on our target.
+  grep "$(get_current_mode)" | # Filter the list only for the line with the current mode.
+  head -n 1 | # Just in case, there is more then one entry, fm and wfm for example.
+  sed 's/,//g') # get rid of the commas.
 # Reformat numbers in accordance to their power of 10
 num_fields=$(echo "$bandwidths_string" | awk '{print NF}')
 processed_bandwidths_string=""
@@ -17,26 +17,32 @@ for ((i=1; i<=num_fields; i++)); do
     ((i++))
     power=$(echo "$bandwidths_string" | awk -v idx="$i" '{print $(idx)}')
     if [[ $power == "kHz" ]]; then
-      field=$(multiply_and_format $field 1000)
+      field=$(multiply_and_format "$field" 1000)
       processed_bandwidths_string="$field $processed_bandwidths_string"
     elif [[ $power == "Hz" ]]; then
-      field=$(multiply_and_format $field 1)
+      field=$(multiply_and_format "$field" 1)
       processed_bandwidths_string="$field $processed_bandwidths_string"
     fi
   fi
 done
 # Turn our formatted list into an array
+# Shellcheck doesn't like the next line of code because of missing quotes.
+# Missing quotes however are just what we want here.
+# shellcheck disable=SC2206
 bandwidths=($processed_bandwidths_string)
 # echo $processed_bandwidths_string
+unset bandwidths_string
+unset num_fields
+unset processed_bandwiths_string
 
 set_bandwidth() {
-  rigctl -m 2 -r $host:$port M $(rigctl -m 2 -r $host:$port m | head -n 1) ${bandwidths[$1]}
+  rigctl -m 2 -r "$host:$port" M "$(rigctl -m 2 -r "$host:$port" m | head -n 1)" "${bandwidths[$1]}"
   return 1 # leave menu
 }
 
 if [[ $1 ]]; then # called with midi parameter
-  if validate_midi_value $@ bandwidths bandwidth_midi_result; then
-    set_bandwidth $bandwidth_midi_result
+  if validate_midi_value "$@" bandwidths bandwidth_midi_result; then
+    set_bandwidth "$bandwidth_midi_result"
   else
     return 0
   fi
@@ -44,5 +50,4 @@ else # Called from keyboard
 # Show the bandwidths menu
   show_menu "Bandwith selection; $(get_current_mode)" bandwidths 'Bandwidth?: ' set_bandwidth
 fi
-# Show mode and bandwidth in one line, remove \n from string
-echo $(rigctl -m 2 -r $host:$port m | sed ':a;N;$!ba;s/\n/ /g') Hz
+source "$funcdir/modes/get_mode"

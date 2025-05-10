@@ -1,2 +1,2 @@
 # Start MIDI Map Editor
-source $basedir/midi/editor.sh
+source "$basedir/midi/editor.sh"

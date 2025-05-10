@@ -1,3 +1,2 @@
-f=$(rigctl -m 2 -r $host:$port f)
-echo $(format_frequency $f)
+format_frequency "$(rigctl -m 2 -r "$host:$port" f)"
 

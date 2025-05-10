@@ -11,7 +11,7 @@ cleanup() {
 
 default_config_file="./settings/settings.conf"
 funcdir="$(pwd)/functions"
-source $funcdir/helper_functions
+source "$funcdir/helper_functions"
 # Process command line arguments
 config_file=$default_config_file
 while [[ $# -gt 0 ]]; do
@@ -37,13 +37,13 @@ if [[ ! -f "$config_file" ]]; then
   echo "Error! Configuration file '$config_file' does not exist."
   exit 1
 else
-  source $config_file
+  source "$config_file"
 fi
 # Check environment (Operating system)
 check_environment
 # Use MIDI devices?
 if [[ $use_midi_device == "TRUE" ]]; then
-  source $basedir/midi/reader &
+  source "$basedir/midi/reader" &
 fi
 
 # Process rigctld options
@@ -62,9 +62,9 @@ declare -a file_menu_entries
 declare -a file_menu_actions
 
 # clear
-echo -e "$greeting \n
+echo -e "$greeting \\n
 Use 0 to return from a menu."
-cd $menudir
+cd "$menudir"
 
 # Function for Reading Folder Scripts and building Menu 
 build_menu_from_files() {
@@ -72,18 +72,22 @@ build_menu_from_files() {
   unset file_menu_entries
   unset file_menu_actions
 # Display the Menu Name from its name file
-  file_menu_title=$(cat $(pwd)/name)
+  # shellcheck disable=SC2034
+  file_menu_title=$(cat "$(pwd)/name")
 # Walk through the menu folder and build the menu from line 2 and 3 of each file
   local menu_name
   local file
   local menu_number=0
+  # Use find instead of ls to better handle non-alphanumeric file names.
+  # shellcheck disable=SC2012
   for file in $(ls | sort) ; do
     if [[ -f $file && ! $file == "name" ]]; then
       menu_name=$(sed -n '1p' "$file" | sed 's/# *//')
       eval "menu_name=\"$menu_name\""
+      # shellcheck disable=SC2034
       file_menu_entries["$menu_number"]="$menu_name"
       file_menu_actions["$menu_number"]="$file"
-      menu_number=$(( ${menu_number}+1 ))
+      menu_number=$(( menu_number+1 ))
     fi
   done
 }
@@ -91,7 +95,7 @@ build_menu_from_files() {
 file_menu_select() {
   local cmd=${file_menu_actions[$1]}
   shift $# # Clear all positional parameters to avoid passing them further on.
-  source $cmd
+  source "$cmd"
   build_menu_from_files
   return 0
 }
@@ -103,7 +107,7 @@ while true; do
   if [[ $(pwd) == "$menudir" ]]; then
     echo "Already at top level."
   elif [[ $(pwd) == "$basedir/menus/options" ]]; then
-    cd $menudir
+    cd "$menudir"
     build_menu_from_files
   else
     cd ..

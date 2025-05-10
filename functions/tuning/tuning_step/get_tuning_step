@@ -2,5 +2,5 @@
 if [[ -z "$tuning_step" ]]; then
   echo "Select a tuning step first."
 else
-  format_frequency $tuning_step
+  format_frequency "$tuning_step"
 fi

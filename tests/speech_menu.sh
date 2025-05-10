@@ -55,7 +55,7 @@ while true; do
 
 # Automatische Korrektur anwenden: Wir haben ein Mapping File für häufige Verhörer und deren richtige Entsprechung
   while IFS=" " read -r wrong correct; do
-    sed -i "s/\b$wrong\b/$correct/g" result_raw.txt
+    sed -i "s/\\b$wrong\\b/$correct/g" result_raw.txt
   done < mapping.txt
 
 # Endgültiges Ergebnis

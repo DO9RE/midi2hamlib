@@ -1,2 +1,2 @@
 # Functions Menu
-source $funcdir/functions/function_select
+source "$funcdir/functions/function_select"

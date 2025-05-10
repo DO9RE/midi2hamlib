@@ -30,5 +30,7 @@ server_pid=$!
 process_one &
 process_two &
 
+# Suppress warning to use single quotes.
+# shellcheck disable=SC2064
 trap "kill $server_pid; exit" INT TERM
 wait

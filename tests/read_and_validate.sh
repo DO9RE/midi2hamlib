@@ -1,3 +1,4 @@
+# shellcheck disable=SC1091
 source ../functions/helper_functions
 maxval=10
 while true; do
@@ -13,7 +14,7 @@ done
 echo "zero-based array:"
 arr=("goback" "one" "two")
 while true; do
-  echo "Menu with ${#arr[@]} entries from array (${arr[@]}) with keys ${!arr[@]}."
+  echo "Menu with ${#arr[@]} entries from array (${arr[*]}) with keys ${!arr[*]}."
   if ! read_and_validate_arr_0 "Input: " arr choice ; then
     continue
   fi
@@ -27,7 +28,7 @@ unset arr
 arr[1]="one"
 arr[2]="two"
 while true; do
-  echo "Menu with ${#arr[@]} entries from array (${arr[@]}) with keys ${!arr[@]}."
+  echo "Menu with ${#arr[@]} entries from array (${arr[*]}) with keys ${!arr[*]}."
   if ! read_and_validate_arr_1 "Input: " arr choice ; then
     continue
   fi

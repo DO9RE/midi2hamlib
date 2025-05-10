@@ -1,2 +1,2 @@
 # output current vfo
-rigctl -m 2 -r $host:$port v
+rigctl -m 2 -r "$host:$port" v

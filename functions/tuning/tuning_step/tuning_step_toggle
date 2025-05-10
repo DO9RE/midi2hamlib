@@ -4,7 +4,7 @@ if [[ ! -v tuning_steps ]]; then
 fi
 
 tuning_step_entry() {
-  format_frequency ${tuning_steps[$1]}
+  format_frequency "${tuning_steps[$1]}"
 }
 
 tuning_step_select() {
@@ -13,7 +13,7 @@ tuning_step_select() {
 }
 
 if [[ $1 ]]; then #Triggered with parameter
-  if validate_midi_value $@ tuning_steps tuning_step_midi_result; then
+  if validate_midi_value "$@" tuning_steps tuning_step_midi_result; then
     tuning_step=${tuning_steps[$tuning_step_midi_result]}
   else
     return 0 # stop here
@@ -22,4 +22,4 @@ else #Called from keyboard, show tuning steps list
   show_menu "Tuning step:" tuning_steps tuning_step_select tuing_step_entry
 fi
 # Display tuning step
-format_frequency $tuning_step
+format_frequency "$tuning_step"

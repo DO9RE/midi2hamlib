@@ -31,7 +31,7 @@ function main_menu {
       return 0
     elif ! [[ "$menu_index" =~ ^[0-9]+$ ]] || (( menu_index < 1 )); then
       echo "invalid line number."
-      read -p "press enter to continue."
+      read -rp "press enter to continue."
       continue
     else
 #     skip header line
@@ -49,11 +49,11 @@ function edit_menu {
 
   if [[ -z "$line" ]]; then
     echo "invalid line number."
-    read -p "press enter to go back."
+    read -rp "Press enter to go back."
     return
   elif [[ "$line" =~ ^# ]]; then
     echo "This line is a comment and cannot be edited."
-    read -p "press enter to go back."
+    read -rp "Press enter to go back."
     return
   fi
 
@@ -84,7 +84,7 @@ function edit_menu {
 
     if ! [[ "$field_choice" =~ ^[0-9]+$ ]] || (( field_choice < 1 )) || (( field_choice > ${#fields[@]} )); then
       echo "invalid option."
-      read -p "press enter to continue..."
+      read -rp "press enter to continue..."
       continue
     fi
 
@@ -112,7 +112,7 @@ function edit_field {
       echo "3 = control"
 #      echo "4 = pitch"
       echo "0 = go back"
-      read -p "Your choice: " choice
+      read -rp "Your choice: " choice
 
       case $choice in
         1) new_value="note_on"; break ;;
@@ -125,7 +125,9 @@ function edit_field {
     done
 # Check for special case: editing "Field 6", SCRIPT
   elif [[ $field_index -eq 5 ]]; then
-    source $funcdir/file_picker.sh $funcdir
+    source "$funcdir/file_picker.sh" "$funcdir"
+    # We cannot do replacement in variable expansion, because the pattern contains slashes.
+    # shellcheck disable=SC2001
     new_value=$(echo "$file_picker_result" | sed "s#${funcdir}/##g")
 # Check for special case: editing "Field 7", MODE
   elif [[ $field_index -eq 6 ]]; then
@@ -145,7 +147,7 @@ function edit_field {
         echo "5 = down_r, like 'down' but with wrap-around"
       fi
       echo "0 = go back"
-      read -p "Your choice: " choice
+      read -rp "Your choice: " choice
 
       if [[ $choice -eq 0 ]]; then
         return
@@ -170,7 +172,7 @@ function edit_field {
       fi
     done
   else
-    read -p "new value for ${headers[field_index]}: " new_value
+    read -rp "New value for ${headers[field_index]}: " new_value
   fi
   # store new value for currently edited field.
   fields[field_index]=$new_value
@@ -178,12 +180,16 @@ function edit_field {
   if [[ $field_index -eq 1 ]]; then
     case ${fields[field_index]} in
       "control")
+        # Quoting rhs of ~= is OK here, we do not need regexp matching.
+        # shellcheck disable=SC2076
         if [[ ! " abs mod zone abs_r mod_r " =~ " ${fields[6]} " ]]; then
           fields[6]='abs'
           echo "${headers[6]} has been set to '${fields[6]}' for consistency with TYPE field."
         fi
         ;;
       *)
+        # Quoting rhs of ~= is OK here, we do not need regexp matching.
+        # shellcheck disable=SC2076
         if [[ ! " key up down up_r down_r " =~ " ${fielda[6]} " ]]; then
           fields[6]='key'
           echo "${headers[6]} has been set to '${fields[6]}' for consistency with TYPE field."
@@ -192,13 +198,13 @@ function edit_field {
     esac
   fi
   # re-read currently edited line.
-  new_line=$(ifs=' '; echo "${fields[*]}")
+  new_line="${fields[*]}"
 
   # Escape slashes for sed
   escaped_new_line=$(printf '%s' "$new_line" | sed 's/[&/\]/\\&/g')
   sed -i "${line_number}s/.*/$escaped_new_line/" "$file" # Write file
   echo "Field updated."
-  read -p "Press enter to continue."
+  read -rp "Press enter to continue."
 }
 
 function delete_line {
@@ -215,7 +221,7 @@ function delete_line {
     elif [[ "$confirm" == "1" ]]; then
       sed -i "${line_number}d" "$file"
       echo "deleted."
-      read -p "press enter, to return to the main menu."
+      read -rp "Press enter, to return to the main menu."
       return
     else
       echo "invalid option."

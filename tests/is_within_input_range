@@ -2,7 +2,6 @@
 is_within_input_range() {
   local index=$1
   local array=("${!2}")
-  
   if (( index >= 0 && index < ${#array[@]} )); then
     return 0
   else
@@ -10,6 +9,7 @@ is_within_input_range() {
   fi
 }
 
+# shellcheck disable=SC2034
 my_array=("Element1" "Element2" "Element3" "Element4")
 if is_within_input_range 22 my_array[@]; then
   echo "passt"

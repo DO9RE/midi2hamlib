@@ -7,9 +7,9 @@ midi_mapper() {
     event="$device control $channel $controller $value"
   fi
   # Map the event to a dummy function
-  echo "$event dummy_function" >> $midi_mapping_file
+  echo "$event dummy_function" >> "$midi_mapping_file"
   # delete midi_mapper_on file
-  rm $basedir/midi/midi_mapper_on
+  rm "$basedir/midi/midi_mapper_on"
   # Exit MIDI reader to reload mapping file at restart
   exit
 }
@@ -25,12 +25,12 @@ done
 ports=$(IFS=,; echo "${midi_devices[*]}")
 
 # Read MIDI mapping from file into memory
-midi_mapping=$(cat "$midi_mapping_file" | sed -n '/^#/!p')
+midi_mapping=$(sed -n '/^#/!p' <"$midi_mapping_file")
 # Start aseqdump and process the output
-stdbuf -oL $ASEQDUMP_CMD -p "$ports" 2>/dev/null | while read -r line; do
+stdbuf -oL "$ASEQDUMP_CMD" -p "$ports" 2>/dev/null | while read -r line; do
   unset source type channel controller value on_off note velocity
   # Remove commas and extract all needed values
-  eval $(echo "$line" | awk '
+  eval "$(echo "$line" | awk '
   {
     gsub(",", "");  # remove commas
     source = $1;
@@ -48,7 +48,7 @@ stdbuf -oL $ASEQDUMP_CMD -p "$ports" 2>/dev/null | while read -r line; do
     } else {
       printf("source=\"%s\" type=\"%s\" channel=\"%s\" ", source, type, channel);
     }
-  }')
+  }')"
 
   # Map source to device
   device=""
@@ -63,34 +63,32 @@ stdbuf -oL $ASEQDUMP_CMD -p "$ports" 2>/dev/null | while read -r line; do
   unset mapping
   if [[ $type == "Note" && ( $on_off == "on" || $on_off == "off" ) ]]; then
     # Velocity is currently not used.
-    mapping=($(echo "$midi_mapping" | awk -v device=$device -v channel=$channel -v evtype=note_${on_off} -v note=$note '$1 == device && $3 == channel && $4 == note && $2 == evtype {print $6 " " $7}'))
-    # Caution, mapping is an array!
-    if [[ -n "$mapping" ]]; then
+    mapping=($(echo "$midi_mapping" | awk -v device="$device" -v channel="$channel" -v evtype="note_${on_off}" -v note="$note" '$1 == device && $3 == channel && $4 == note && $2 == evtype {print $6 " " $7}'))
+    if [[ -n "${mapping[0]}" ]]; then
       if [[ -z "${mapping[1]}" ]]; then
         mapping[1]="key"
       fi
 #     echo "note_${on_off} $note; script ${mapping[0]} mode ${mapping[1]}"
       case ${mapping[1]} in
-        "up") source $funcdir/${mapping[0]} 65 abs_r ;;
-        "down") source $funcdir/${mapping[0]} 63 abs_r ;;
-        "up_r") source $funcdir/${mapping[0]} 65 mod_r ;;
-        "down_r") source $funcdir/${mapping[0]} 63 mod_r ;;
-        *) source $funcdir/${mapping[0]} ;;
+        "up") source "$funcdir/${mapping[0]}" 65 abs_r ;;
+        "down") source "$funcdir/${mapping[0]}" 63 abs_r ;;
+        "up_r") source "$funcdir/${mapping[0]}" 65 mod_r ;;
+        "down_r") source "$funcdir/${mapping[0]}" 63 mod_r ;;
+        *) source "$funcdir/${mapping[0]}" ;;
       esac
     fi
   elif [[ $type == "Control" ]]; then
-    mapping=($(echo "$midi_mapping" | awk -v device=$device -v channel=$channel -v controller=$controller -v value=$value '$1 == device && $3 == channel && $4 == controller && $2 == "control" && ($5=="n" || $5==value) {print $6 " " $7}'))
-    # Caution, mapping is an array!
-    if [[ -n "$mapping" ]]; then
+    mapping=($(echo "$midi_mapping" | awk -v device="$device" -v channel="$channel" -v controller="$controller" -v value="$value" '$1 == device && $3 == channel && $4 == controller && $2 == "control" && ($5=="n" || $5==value) {print $6 " " $7}'))
+    if [[ -n "${mapping[0]}" ]]; then
       if [[ -z "${mapping[1]}" ]]; then
         mapping[1]="abs"
       fi
 #     echo "control $controller $value; script ${mapping[0]} mode ${mapping[1]}"
-      source $funcdir/${mapping[0]} $value "${mapping[1]}"
+      source "$funcdir/${mapping[0]}" "$value" "${mapping[1]}"
     fi
   fi
   # run midi mapper function if there is no mapping for the current event, also its no note off and the midi_mapper_on file is present
-  if [[ -f $basedir/midi/midi_mapper_on && -z "$mapping" && $on_off != "off" ]]; then
+  if [[ -f $basedir/midi/midi_mapper_on && -z "${mapping[0]}" && $on_off != "off" ]]; then
     midi_mapper
   fi
 done

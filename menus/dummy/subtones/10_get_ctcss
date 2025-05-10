@@ -1,2 +1,2 @@
 # Get CTCSS Tone
-source $funcdir/ctcss/get_ctcss
+source "$funcdir/ctcss/get_ctcss"

@@ -53,7 +53,7 @@ display_menu() {
     if ((i < ${#menu_items[@]})); then
       right="${menu_items[i]}"
     fi
-    printf "%-$(($cols / 2))s %s\n" "$left" "$right"
+    printf "%-$((cols / 2))s %s\\n" "$left" "$right"
   done
 }
 
@@ -68,7 +68,7 @@ while true; do
     echo "(Es gibt weitere Optionen. Drücke Enter, um die nächsten zu sehen, oder wähle jetzt eine Option aus.)"
   fi
 
-  read -p "> " choice
+  read -rp "> " choice
 
   if [[ $choice =~ ^[0-9]+$ && $choice -le ${#menu_items[@]} ]]; then
     echo "Du hast Menüpunkt $choice gewählt: ${menu_items[choice-1]}"

@@ -1,17 +1,17 @@
 select_vfo() {
-  rigctl -m 2 -r $host:$port V ${vfos[$1]}
+  rigctl -m 2 -r "$host:$port" V "${vfos[$1]}"
   return 1
 }
 
 # get VFO list
 if [[ ! -v vfos ]]; then
-  vfos=($(rigctl -m 2 -r $host:$port V ?))
+  vfos=($(rigctl -m 2 -r "$host:$port" V "?"))
 fi
 if [[ $1 ]]; then #Triggered with parameter
 # Switch transceiver to selected VFO
-  if validate_midi_value $@ vfos vfo_midi_result; then
-    select_vfo $vfo_midi_result
-    rigctl -m 2 -r $host:$port v
+  if validate_midi_value "$@" vfos vfo_midi_result; then
+    select_vfo "$vfo_midi_result"
+    rigctl -m 2 -r "$host:$port" v
   fi
 else #Called from keyboard, show VFOs list and ask for selection.
   show_menu "Select VFO:" vfos "VFO?: " select_vfo

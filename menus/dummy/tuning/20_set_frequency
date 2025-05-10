@@ -1,2 +1,2 @@
 # Set Frequency
-source $funcdir/tuning/set_frequency
+source "$funcdir/tuning/set_frequency"

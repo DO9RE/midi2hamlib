@@ -1,2 +1,2 @@
 # Set bandwidth
-source $funcdir/modes/bandwidth_toggle
+source "$funcdir/modes/bandwidth_toggle"

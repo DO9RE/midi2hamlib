@@ -4,13 +4,13 @@
 re_format_frequency() {
   local frequency=$1
   frequency=$(echo "$frequency * 1000000 /1" | sed 's/,/./g' | bc)
-  echo $frequency
+  echo "$frequency"
 }
 
 # Function for stripping leading zeros and maybe also decimal point.
 # This also replaces ',' by '.'.
 strip_trailing_zeros() {
-	echo $1 | sed 's/,/./g; s/\(\.[1-9]\+\)0*$/\1/g; s/\.0*$//g'
+	echo "$1" | sed 's/,/./g; s/\(\.[1-9]\+\)0*$/\1/g; s/\.0*$//g'
 }
  
 # Function for formatting frequencies output more human friendly
@@ -31,15 +31,17 @@ format_frequency() {
     power="Hz"
   fi
   # Output Frequency, remove trailing 0s or the whole decimal point if needed and add the power in Hz.
-  echo "$(strip_trailing_zeros $frequency) $power"
+  echo "$(strip_trailing_zeros "$frequency") $power"
 }
 
 multiply_and_format() { # expects a number and its multiplier. Returns the Number without the decimal point.
   local number=$1
   local multiplier=$2
-  local result=$(echo "$number * $multiplier" | bc)
-  local formatted_result=$(strip_trailing_zeros $result)
-  echo $formatted_result
+  local result
+  result=$(echo "$number * $multiplier" | bc)
+  local formatted_result
+  formatted_result=$(strip_trailing_zeros "$result")
+  echo "$formatted_result"
 }
 
 # ${#array[@]} to determine an arrays length in elements.
@@ -117,12 +119,14 @@ validate_midi_value() {
   case "$2" in
     "abs_r"|"mod_r")
       local m=$2
-      local unified_value=$(unify_rel_midi $1)
-      validate_midi_value $(( valmidiresult + unified_value )) ${m:0:3} $3 $4 "$5"
+      local unified_value
+      unified_value=$(unify_rel_midi "$1")
+      validate_midi_value $(( valmidiresult + unified_value )) "${m:0:3}" "$3" "$4" "$5"
       return # use exit status from call to validate_midi_value in line above.
       ;;
     "zone")
-      local newvalmidiresult=$(fader_to_zones $1 $valmidirange)
+      local newvalmidiresult
+      newvalmidiresult=$(fader_to_zones "$1" "$valmidirange")
       if [[ -z "$valmidiresult" || ( ! "$valmidiresult" -eq "$newvalmidiresult" ) ]]; then
         valmidiresult=$newvalmidiresult
         return 0
@@ -132,7 +136,7 @@ validate_midi_value() {
       fi
       ;;
     "mod")
-      valmidiresult=$(apply_modulo $1 $valmidirange)
+      valmidiresult=$(apply_modulo "$1" "$valmidirange")
       return 0
       ;;
     *) # default, "abs"
@@ -156,7 +160,7 @@ validate_midi_value() {
 
 get_current_mode() {
 # Return only the mode name without the passband
-  echo $(rigctl -m 2 -r $host:$port m | head -n 1)
+  rigctl -m 2 -r "$host:$port" m | head -n 1
 }
 
 # Function for use with the transceiver functions.
@@ -220,7 +224,7 @@ read_and_validate() {
 read_and_validate_arr_0() {
   local -n ravarr=$2
   local maxval=$((${#ravarr[@]}-1))
-  read_and_validate "$1" $maxval $3
+  read_and_validate "$1" "$maxval" "$3"
   return $?
 }
 
@@ -230,14 +234,15 @@ read_and_validate_arr_0() {
 read_and_validate_arr_1() {
   local -n ravarr=$2
   local maxval=${#ravarr[@]}
-  read_and_validate "$1" $maxval $3
+  read_and_validate "$1" "$maxval" "$3"
   return $?
 }
 
 is_process_running_for_user() {
   local process_name="$1"
   local user_name="$2"
-
+  # Consider using pgrep instead of grep on output of ps.
+  # shellcheck disable=SC2009
   if ps -u "$user_name" -f | grep -v grep | grep "$process_name" > /dev/null; then
     return 0
   else
@@ -253,7 +258,7 @@ fi
 if [[ ! -v show_menu_min_width || $show_menu_min_width -lt 20 ]]; then
   show_menu_min_width=20
 fi
-mcols=$((${screen_columns}/${show_menu_min_width}))
+mcols=$((screen_columns/show_menu_min_width))
 if [[ $show_menu_columns -gt $mcols ]]; then
   show_menu_columns=$mcols
 fi
@@ -262,7 +267,7 @@ if [[ ! -v show_menu_max_width ]]; then
 # show_menu_max_width=$((${screen_columns}/${show_menu_columns}))
   show_menu_max_width=40
 fi
-show_menu_width=$((${screen_columns}/${show_menu_columns}))
+show_menu_width=$((screen_columns/show_menu_columns))
 if [[ $show_menu_width -gt $show_menu_max_width ]]; then
   show_menu_width=$show_menu_max_width
 fi
@@ -345,21 +350,22 @@ show_menu() {
   local last_was_printf=0
   while true; do
     if [[ -n "$title" ]]; then
-      echo -e "\n${title}"
+      echo -e "\\n${title}"
     else
       echo ""
     fi
     for index in "${!show_menu_entries[@]}"; do
-      idx=$(($index+1))
+      idx=$((index+1))
       if [[ -z $entry_text_handler ]]; then
         entry_text="$idx: ${show_menu_entries[$index]}"
       else
-        entry_text="$idx: $(${entry_text_handler} $index)"
+        entry_text="$idx: $(${entry_text_handler} "$index")"
       fi
-      if [[ $(((${idx})%${show_menu_columns})) -eq 0 ]]; then
+      if [[ $((idx % show_menu_columns)) -eq 0 ]]; then
         echo "$entry_text"
         last_was_printf=0
       else
+        # shellcheck disable=SC2059
         printf "$show_menu_format" "$entry_text"
         last_was_printf=1
       fi
@@ -373,7 +379,7 @@ show_menu() {
 #   Exit functions menu when 0 is issued or if selection handler returns non-zero.
     if [[ $selection -eq 0 ]]; then
       break
-    elif ! ${selection_handler} $((${selection}-1)) ; then
+    elif ! ${selection_handler} $((selection-1)) ; then
       break
     fi
   done
@@ -436,8 +442,7 @@ check_environment() {
 #   Überprüfen, ob das Kompilat existiert
     if [ ! -f "$midi_monitor_binary" ]; then
       echo "MIDI monitor binary not found. Compiling midi_monitor..."
-      gcc -o "$midi_monitor_binary" "$midi_monitor_source" -framework CoreMIDI -framework CoreFoundation
-      if [ $? -ne 0 ]; then
+      if gcc -o "$midi_monitor_binary" "$midi_monitor_source" -framework CoreMIDI -framework CoreFoundation ; then
         echo "Compilation of midi_monitor failed. Please check the source file."
         exit 1
       fi

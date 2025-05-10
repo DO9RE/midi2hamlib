@@ -1,2 +1,2 @@
 # Set Mode
-source $funcdir/modes/mode_toggle
+source "$funcdir/modes/mode_toggle"

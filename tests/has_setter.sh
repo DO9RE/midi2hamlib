@@ -4,8 +4,10 @@ function get_functions_with_setter_info() {
   local setter=$2
   echo "$1"
   echo "$2"
-  local getter_list="$(rigctl -m 1 $getter ?)"
-  local setter_list="$(rigctl -m 1 $setter ?)"
+  local getter_list
+  getter_list="$(rigctl -m 1 "$getter" "?")"
+  local setter_list
+  setter_list="$(rigctl -m 1 "$setter" "?")"
   echo "'$getter_list'"
   echo "'$setter_list'"
   IFS=' ' read -r -a getter_array <<< "$getter_list"
@@ -37,7 +39,7 @@ function get_functions_with_setter_info() {
 
 echo "Functions:"
 get_functions_with_setter_info u U
-echo -e "\nLevels:"
+echo -e "\\nLevels:"
 get_functions_with_setter_info l L
-echo -e "\nParameters:"
+echo -e "\\nParameters:"
 get_functions_with_setter_info p P

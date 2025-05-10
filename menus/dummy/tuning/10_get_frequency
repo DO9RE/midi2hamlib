@@ -1,3 +1,3 @@
 # Get frequency
-source $funcdir/tuning/get_frequency
+source "$funcdir/tuning/get_frequency"
 

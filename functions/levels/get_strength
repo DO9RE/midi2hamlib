@@ -1,5 +1,5 @@
 # Function for displaying the S-Meter-Reading
-strength=$(rigctl -m 2 -r $host:$port l STRENGTH)
+strength=$(rigctl -m 2 -r "$host:$port" l STRENGTH)
 # task: Turn the number into a -s-value in DB. Here is what hamlib developer Phil, GM3ZZA said:
 # A value of STRENGTH meter reading of 0 (zero) indicates S9. The value is dB relative to S9. My application uses 6dB per S-point so -54 and below indicates a reading S0. A value above 0 indicates S9 plus that value in dB.
 # Richard: My approach:
@@ -15,6 +15,6 @@ calculate_s_level() {
   fi
 }
 
-calculate_s_level $strength
+calculate_s_level "$strength"
 
 

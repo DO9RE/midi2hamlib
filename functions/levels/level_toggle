@@ -1,19 +1,19 @@
 announce_level() {
-  echo "${levels[$1]} = $(rigctl -m $model -r $host:$port l ${levels[$1]})"
+  echo "${levels[$1]} = $(rigctl -m 2 -r "$host:$port" l "${levels[$1]}")"
   return 0
 }
 
 if [[ ! -v levels ]]; then
   # Build an array from the transceiver models supported levels, using the --dump-caps flag.
-  levels=($(rigctl -m $model --dump-caps | 
+  levels=($(rigctl -m "$model" --dump-caps | 
   grep "Set level:" | 
   sed 's/\(Set level:\)\|\([^A-Z_ ]\)//g'))
   # Build levels by querying rig
   #levels=($(rigctl -m 2 -r $host:$port L ?))
 fi
 if [[ $1 ]]; then #Triggered with parameter
-  if validate_midi_value $@ levels level_midi_result; then
-    announce_level $level_midi_result
+  if validate_midi_value "$@" levels level_midi_result; then
+    announce_level "$level_midi_result"
   fi
 else #Called from keyboard, show modes list and ask for selection.
   show_menu "Other levels:" levels 'Level?: ' announce_level

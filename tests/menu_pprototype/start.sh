@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC1091
 source ../../functions/helper_functions
 
 # it is important to always use different names for arrays and handlers for menus.
@@ -8,7 +9,7 @@ source ../../functions/helper_functions
 main_menu_handler() {
   # menu exit is already handled in show_menu.
   # Keep demo simple, just source a script that is named like the menu entry.
-  source ${main_menu_entries[$1]}
+  source "${main_menu_entries[$1]}"
   return 0
 }
 

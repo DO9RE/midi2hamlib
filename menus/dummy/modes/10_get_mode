@@ -1,2 +1,2 @@
 # Get Mode
-source $funcdir/modes/get_mode
+source "$funcdir/modes/get_mode"

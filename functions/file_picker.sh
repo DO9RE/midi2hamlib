@@ -27,7 +27,7 @@ while true; do
   done
 
 # Fetch user input
-  read -p "Your choice: " choice
+  read -rp "Your choice: " choice
 
 # Quit if 0 is given
   if [ "$choice" -eq 0 ]; then
@@ -53,6 +53,7 @@ while true; do
         current_dir="$item"
       else
 #       Output file to stdout
+        # shellcheck disable=SC2034
         file_picker_result="$item"
         return 0
       fi

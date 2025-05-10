@@ -2,13 +2,13 @@
 if [[ ! $last_function ]]; then
   echo "No function selected"
 else
-  status_last_function=$(rigctl -m 2 -r $host:$port u $last_function)
+  status_last_function=$(rigctl -m 2 -r "$host:$port" u "$last_function")
   if [[ $status_last_function == 0 ]]; then
-    rigctl -m 2 -r $host:$port U $last_function 1
+    rigctl -m 2 -r "$host:$port" U "$last_function" 1
   elif [[ $status_last_function == 1 ]]; then
-    rigctl -m 2 -r $host:$port U $last_function 0
+    rigctl -m 2 -r "$host:$port" U "$last_function" 0
   fi
-  status_last_function=$(rigctl -m 2 -r $host:$port u $last_function)
+  status_last_function=$(rigctl -m 2 -r "$host:$port" u "$last_function")
   # Show function and its status, the 0 and 1 converted to human friendly off and on.
   echo "$last_function is $(humanize_status "$status_last_function")"
 fi  

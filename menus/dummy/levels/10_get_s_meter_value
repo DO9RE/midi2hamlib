@@ -1,2 +1,2 @@
 # Get S Meter value
-source $funcdir/levels/get_strength
+source "$funcdir/levels/get_strength"

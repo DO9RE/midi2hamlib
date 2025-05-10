@@ -1,2 +1,2 @@
 # Other levels
-source $funcdir/levels/level_toggle
+source "$funcdir/levels/level_toggle"
