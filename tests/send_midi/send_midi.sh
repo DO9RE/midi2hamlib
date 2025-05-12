@@ -5,7 +5,7 @@ usage() {
   echo "Usage: $0 [OPTIONS]"
   echo ""
   echo "Options:"
-  echo "  -p, --port <port>       Specify the MIDI port."
+  echo "  -p, --port <port>       Specify the MIDI port (name or identifier, e.g., 'hw:3,0,0' or 'MIDI Device Name')."
   echo "  -l, --list              List all available MIDI ports."
   echo "  -s, --send <event>      Send a MIDI event in human-readable format, such as:"
   echo "                          'noteon 1 60 127' for Note On, channel 1, note 60, velocity 127."
@@ -61,6 +61,28 @@ convert_to_hex() {
   printf "%02X %02X %02X" "$status" "$param1" "$param2"
 }
 
+# Function to resolve the port if a name is provided
+resolve_port() {
+  local port_input="$1"
+  local resolved_port=""
+
+  # Check if the input matches the hw:X,Y,Z format
+  if [[ "$port_input" =~ ^hw:[0-9]+,[0-9]+,[0-9]+$ ]]; then
+    echo "$port_input"
+    return
+  fi
+
+  # Search for the port name in the output of `amidi -l`
+  resolved_port=$(amidi -l | grep -i "$port_input" | awk '{print $2}')
+
+  if [[ -z "$resolved_port" ]]; then
+    echo "Error: Could not find a MIDI port matching '$port_input'."
+    exit 1
+  fi
+
+  echo "$resolved_port"
+}
+
 # Parse command-line arguments
 PORT=""
 EVENT_TYPE=""
@@ -112,10 +134,14 @@ case "$COMMAND" in
       usage
       exit 1
     fi
+
+    # Resolve the port name or identifier
+    RESOLVED_PORT=$(resolve_port "$PORT")
     HEX_MESSAGE=$(convert_to_hex "$EVENT_TYPE" "$CHANNEL" "$PARAM1" "$PARAM2")
-    echo "Sending MIDI message: $HEX_MESSAGE to port: $PORT"
+
+    echo "Sending MIDI message: $HEX_MESSAGE to port: $RESOLVED_PORT"
     # Send the message using amidi --send-hex
-    amidi --port="$PORT" --send-hex="$HEX_MESSAGE"
+    amidi --port="$RESOLVED_PORT" --send-hex="$HEX_MESSAGE"
     ;;
   *)
     echo "Error: No valid command provided."
