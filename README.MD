@@ -61,7 +61,30 @@ according to your decision.
 If you want to install hamlib from the package repository, do:
 
 ```
-sudo apt install libhamlib libhamlib-utils
+sudo apt install libhamlib-utils
+```
+
+Normally, package **libhamlib-utils** should also pull in the latest
+avalable packaged version of libhamlib, so we do not explicitly mention
+libhamlib in the above command. This also has the advantage that different
+versions of libhamlib have different package names.
+
+## Uninstalling libhamlib packages
+
+If you decided to use libhamlib from your package repository and now change
+your mind, or if you just want to make sure that no prebuilt version of
+libhamlib is installed, we first list all installed libhamlib packages:
+
+```
+apt list --installed | grep '^libhamlib'
+```
+
+If this doesn't return any packages, just skip to the next section.
+Otherwise please uninstall the listed packages, taking the following command
+as an example, mentioning all packages that apt listed.
+
+```
+sudo apt purge libhamlib4 libhamlib-utils
 ```
 
 ## Building hamlib
@@ -72,10 +95,64 @@ In order to build hamlib, we need to install still some tools:
 sudo apt install autoconf automake libtool libreadline-dev
 ```
 
-From within the home folder, Clone the hamlib repository from github:
+In most cases, your transceiver should use a serial port for communication
+with a computer, most likely by using an RS232-to-USB converter. If your rig
+as a built-in USB connection, it most likely also ofers one or more serial
+ports via USB. Iven ICom transceivers which use a CI-V interace are most
+liekyl connected using an adapter that is recognized as a serial port.
+
+In all these use-cases, there is nothing to do for us to support that
+hardware, sonce the serial port drivers are already part of the Linux
+kernel. However, if you want to use transceivers that do not connect
+directly or indirectly via a serial port but require special libhamlib
+backends that use native USB communication, you will have to install
+**libusb**.
+
+Since t least currently there are multiple **libusb** versions shippe with
+Raspian OS, we let apt show them up:
+
+```
+apt list | grep '^libusb-'
+```
+
+This may yield a list like this:
+
+```
+libusb-0.1-4/stable 2:0.1.12-32 armhf
+libusb-1.0-0-dev/stable,now 2:1.0.26-1 armhf  [installiert]
+libusb-1.0-0/stable,now 2:1.0.26-1 armhf  [Installiert,automatisch]
+libusb-1.0-doc/stable,now 2:1.0.26-1 all  [Installiert,automatisch]
+libusb-dev/stable 2:0.1.12-32 armhf
+libusb-java-doc/stable 0.8+ztex20090101-9 all
+libusb-java-lib/stable 0.8+ztex20090101-9 armhf
+libusb-java/stable 0.8+ztex20090101-9 all
+libusb-libusb-perl/stable 0.09-2+b3 armhf
+libusb-ocaml-dev/stable 1.3.1-4+b13 armhf
+libusb-ocaml/stable 1.3.1-4+b13 armhf
+libusb-ruby1.8/stable 0.2.1-2 all
+libusb-ruby1.9.1/stable 0.2.1-2 all
+libusb-ruby/stable 0.2.1-2 all
+```
+
+From this as an example, we can see, that among many other packages, there is version 0.1-4 and
+version 1.0-0 available. We pick 1.0-0:
+
+```
+sudo apt install libusb-1.0-0 libusb-1.0-0-dev
+```
+
+Please note that you might get different package versions. Please adapt the
+above commands accordingly.
+
+From within the home folder, clone the hamlib repository from github:
 
 ```
 git clone https://github.com/hamlib/hamlib
+```
+
+After changing into the hamlib folder with 
+
+```
 cd hamlib
 ```
 
@@ -127,9 +204,11 @@ fine for us:
 ```
 
 **configure** will print lots of messages for each check it is doing. At
-the end, it prints a summary of enabled and disabled options. Revise this
-section in order to detect major issues. We do not expect anything severe
-going wrong.
+the end, it prints a summary of enabled and disabled options. Examine this
+output in order to detect major issues. We do not expect anything severe
+going wrong. But, for example, if you wanted to support native USB backends
+and installed **libusb** as described above, you can check the output of
+**configure** to see if libusb was detected.
 
 If **configure** is done, finally build hamlib:
 
@@ -143,17 +222,18 @@ yourself a cup of coffee. :-)
 After building, install hamlib into your system and update the library cache:
 
 ```
-sudo make install
-sudo ldconfig
+sudo make install && sudo ldconfig
 ```
 
 Now you can change back into your home directory and try to run **rigctl**
 in order to check if hamlib is ready:
 
 ```
-cd
-rigctl --version
+cd && rigctl --version
 ```
+
+Check the output of rigctl. If the reported version matches the one you
+wanted to install, you are finally done.
 
 Congrats, you built hamlib!
 
