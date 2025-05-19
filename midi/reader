@@ -18,7 +18,7 @@ midi_mapper() {
 # This replaces device names by their corresponding port numbers right in the array:
 for i in "${!midi_devices[@]}"; do
   device_port=$($ASEQDUMP_CMD -l | grep "${midi_devices[$i]}" | awk '{print $1}' | head -n 1)
-  midi_devices[$i]=$device_port
+  midi_devices[i]=$device_port
 done
 
 # Convert MIDI ports into a comma-separated list for ASEQDUMP

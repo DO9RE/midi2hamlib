@@ -44,8 +44,18 @@ if [[ ! -f "$config_file" ]]; then
 else
   source "$config_file"
 fi
+
+# switch numpad to numbers
+setleds +num
+
+# Check if a rig model was set.
+if [[ $model -lt 1 ]]; then
+  source "$basedir/additional_scripts/choose_rig"
+fi
+
 # Check environment (Operating system)
 check_environment
+
 # Use MIDI devices?
 if [[ $use_midi_device == "TRUE" ]]; then
   source "$basedir/midi/reader" &
@@ -59,9 +69,6 @@ if [[ -v device_path ]]; then rigctldoptions+=(-r "$device_path"); fi
 if [[ -v serial_speed ]]; then rigctldoptions+=(-s "$serial_speed"); fi
 rigctld "${rigctldoptions[@]}" &
 unset rigctldoptions
-
-# switch numpad to numbers
-setleds +num
 
 declare -a file_menu_entries
 declare -a file_menu_actions

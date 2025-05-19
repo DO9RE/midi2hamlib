@@ -154,7 +154,9 @@ validate_midi_value() {
       fi
       ;;
   esac
+  # shellcheck disable=SC2317
   echo "validate_midi_value: This code block sould never be executed."
+  # shellcheck disable=SC2317
   return 1
 }
 

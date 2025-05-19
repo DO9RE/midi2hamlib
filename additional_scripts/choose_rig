@@ -1,0 +1,72 @@
+# Select a rig from a vendors and models list and write result to global
+# "model" variable.
+
+
+vendorhandler() {
+  selectedvendor=${sortedvendors[$1]}
+  # Create list of models from selected vendor.
+  unset sortedmodels
+  declare -a sortedmodels
+  while IFS="" read -r line; do
+    sortedmodels+=( "$line" )
+  done <<<"$(for i in "${!rignr[@]}"; do if [[ "${rigvendor[$i]}" == "$selectedvendor" ]]; then echo "${rigmodel[$i]}"; fi; done | sort -u -d)"
+  ###echo "${#sortedmodels[@]} models: ${sortedmodels[@]}"
+  # Show menu with sorted list of vendors.
+  show_menu "Model menu" sortedmodels "Model: " modelhandler
+  if [[ $model -gt 1 ]]; then
+    # A model was selected. Leave menu.
+    return 1
+  else
+    return 0
+  fi 
+}
+
+modelhandler() {
+  selectedmodel=${sortedmodels[$1]}
+  # Find rig number and write to global model variable.
+  for i in "${!rignr[@]}"; do
+    if [[ "${rigvendor[$i]}" == "$selectedvendor" && "${rigmodel[$i]}" == "$selectedmodel" ]]; then
+      model="${rignr[$i]}"
+      return 1 # leave menu
+    fi
+  done
+  return 0 # something went wrong, stay in menu.
+}
+
+unset riglist rignr rigvendor sortedvendors selectedvendor rigmodel sortedmodels selectedmodel tmp i
+declare -a rignr
+declare -a rigvendor
+declare -a sortedvendors
+declare -a rigmodel
+declare -a sortedmodels
+model=1
+selectedvendor="Hamlib"
+selectedmodel="Dummy transceiver"
+riglist=$(rigctl --list | sed -n '1!p' | sed -n /Hamlib/!p)
+# Store rig number, manufactorer and model into arrays.
+# Complicated, ecause there is no dedicated field separator.
+while IFS="" read -r line; do
+   read -r tmp <<<"${line:0:8}"
+   rignr+=( "$tmp" )
+   read -r tmp <<<"${line:8:23}"
+   rigvendor+=( "$tmp" )
+   read -r tmp <<<"${line:31:24}"
+   if [[ -z "$tmp" ]]; then
+     tmp="Generic"
+   fi
+   rigmodel+=( "$tmp" )
+done <<<"$riglist"
+# Create a sorted list of vendors.  
+while IFS="" read -r line; do
+  sortedvendors+=( "$line" )
+done <<<"$(for i in "${rigvendor[@]}"; do echo "$i"; done | sort -u -d)"
+###echo "Rigs: ${#rignr[@]} ${#rigvendor[@]} ${#rigmodel[@]} ${#sortedvendors[@]} '${sortedvendors[0]}'"
+# Show menu with sorted list of vendors.
+show_menu "Vendor Menu" sortedvendors "Vendor: " vendorhandler
+if [[ $model -le 1 ]]; then
+  model=1
+  selectedvendor="Hamlib"
+  selectedmodel="Dummy transceiver"
+fi
+echo "Using ${selectedvendor} ${selectedmodel}."
+unset riglist rignr rigvendor sortedvendors selectedvendor rigmodel sortedmodels selectedmodel tmp i
