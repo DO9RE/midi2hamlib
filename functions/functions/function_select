@@ -2,13 +2,10 @@
 if [[ ! -v functions ]]; then
   functions=($(rigctl -m 2 -r "$host:$port" U "?"))
 fi
+function_states=( $(rigctl -m 2 -r "$host:$port" $(for f in "${functions[@]}"; do echo "u $f"; done)) )
 
 function_select_entry() {
-# Do not show the 0 index, cause its not a function, its the go back feature.
-# Show number, name and status of selected function
-  local funcstat
-  funcstat=$(rigctl -m 2 -r "$host:$port" u "${functions[$1]}")
-  echo "${functions[$1]} ($(humanize_status "$funcstat"))"
+  echo "${functions[$1]} ($(humanize_status "${function_states[$1]}"))"
 }
 
 function_select_handler() {
@@ -19,9 +16,8 @@ function_select_handler() {
     rigctl -m 2 -r "$host:$port" U "${functions[$1]}" 0
   fi
 # Show function status
-  local funcstat
-  funcstat=$(rigctl -m 2 -r "$host:$port" u "${functions[$1]}")
-  echo "${functions[$1]} is $(humanize_status "$funcstat")"
+  function_states=( $(rigctl -m 2 -r "$host:$port" $(for f in "${functions[@]}"; do echo "u $f"; done)) )
+  echo "${functions[$1]} is $(humanize_status "${function_states[$1]}")"
   return 0
 }
 
@@ -31,7 +27,7 @@ if [[ $1 ]]; then #Triggered with parameter
 # What ever kind of midi controller the user has: These variables can be used to toggle the function on or off. Due to the sourcing natureof the whole project, the variables are available from everywhere.
   if validate_midi_value "$@" functions func_midi_result; then
     last_function=${functions[$func_midi_result]}
-    status_last_function=$(rigctl -m 2 -r "$host:$port" u "${last_function}")
+    status_last_function=${function_states[$func_midi_result]}
     echo "$last_function is $(humanize_status "$status_last_function")"
   fi
 else # Called from keyboard, show functions list and ask for selection.
