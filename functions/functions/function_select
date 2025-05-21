@@ -2,6 +2,7 @@
 if [[ ! -v functions ]]; then
   functions=($(rigctl -m 2 -r "$host:$port" U "?"))
 fi
+# shellcheck disable=2046
 function_states=( $(rigctl -m 2 -r "$host:$port" $(for f in "${functions[@]}"; do echo "u $f"; done)) )
 
 function_select_entry() {
@@ -16,6 +17,7 @@ function_select_handler() {
     rigctl -m 2 -r "$host:$port" U "${functions[$1]}" 0
   fi
 # Show function status
+  # shellcheck disable=2046
   function_states=( $(rigctl -m 2 -r "$host:$port" $(for f in "${functions[@]}"; do echo "u $f"; done)) )
   echo "${functions[$1]} is $(humanize_status "${function_states[$1]}")"
   return 0

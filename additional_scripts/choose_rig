@@ -46,15 +46,15 @@ riglist=$(rigctl --list | sed -n '1!p' | sed -n /Hamlib/!p)
 # Store rig number, manufactorer and model into arrays.
 # Complicated, ecause there is no dedicated field separator.
 while IFS="" read -r line; do
-   read -r tmp <<<"${line:0:8}"
-   rignr+=( "$tmp" )
-   read -r tmp <<<"${line:8:23}"
-   rigvendor+=( "$tmp" )
-   read -r tmp <<<"${line:31:24}"
-   if [[ -z "$tmp" ]]; then
-     tmp="Generic"
-   fi
-   rigmodel+=( "$tmp" )
+  read -r tmp <<<"${line:0:8}"
+  rignr+=( "$tmp" )
+  read -r tmp <<<"${line:8:23}"
+  rigvendor+=( "$tmp" )
+  read -r tmp <<<"${line:31:24}"
+  if [[ -z "$tmp" ]]; then
+    tmp="Generic"
+  fi
+  rigmodel+=( "$tmp" )
 done <<<"$riglist"
 # Create a sorted list of vendors.  
 while IFS="" read -r line; do

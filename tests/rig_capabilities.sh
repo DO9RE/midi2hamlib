@@ -1,0 +1,119 @@
+#!/bin/bash
+# Get functions, levels and parameter lists from transceiver.
+# Parameters:
+# type: one of u, l or p.
+# var: Array name to store result in.
+# model: Rig model. If given, use rigctl with -m parameter.
+#   If not, use rigctl with -m2 and host:port variables.
+get_func_level_params() {
+  local cmd=$1
+  local getter_list setter_list
+  if [[ -n $3 ]]; then
+    getter_list=$(rigctl -m "$3" "${cmd,,}" "?")
+    setter_list=$(rigctl -m "$3" "${cmd^^}" "?")
+  else
+    getter_list=$(rigctl -m2 -r "$host:$port" "${cmd,,}" "?")
+    setter_list=$(rigctl -m2 -r "$host:$port" "${cmd^^}" "?")
+  fi
+  local -n map=$2
+  for getter in ${getter_list}; do
+    map["$getter"]="get"
+  done
+  for setter in ${setter_list}; do
+    map["$setter"]+="set"
+  done
+}
+
+# parameters:
+# title: String like "functions", "levels"...
+# array: Array from rig_func_level_params
+print_func_level_params() {
+  local title="$1"
+  # Following is correct as long as parameter $2 names an array variable.
+  # shellcheck disable=SC2178
+  local -n map=$2
+  local -a getters setters getset
+  for item in "${!map[@]}"; do
+    if [[ ${map[$item]} =~ getset ]]; then
+      getset+=( "$item" )
+    elif [[ ${map[$item]} =~ get ]]; then
+      getters+=( "$item" )
+    elif [[ ${map[$item]} =~ set ]]; then
+      setters+=( "$item" )
+    fi    
+  done
+  if [[ -n ${getset[0]} || -n ${getters[0]} || -n ${setters[0]} ]]; then
+    echo "  ${title^}:"
+    if [[ -n ${getset[0]} ]]; then
+      printf "    get/set: %3s; %s.\n" "${#getset[@]}" "${getset[*]}"
+    fi    
+    if [[ -n ${getters[0]} ]]; then
+      printf "    get    : %3s; %s.\n" "${#getters[@]}" "${getters[*]}"
+    fi    
+    if [[ -n ${setters[0]} ]]; then
+      printf "    set    : %3s; %s.\n" "${#setters[@]}" "${setters[*]}"
+    fi    
+  else
+    echo "  No ${title}."
+  fi
+}
+
+# Parameters:
+# model: Rig model number.
+# rigcap_general: Array for overall rig data.
+get_capabilities() {
+  local tmp
+  # Following is correct as long as parameter $2 names an array variable.
+  # shellcheck disable=SC2178
+  local -n general=$2
+  general["rignr"]="$1"
+  # Read capabilities line by line, to make sure we also can detect unhandled things.
+  # If we wold just grep for specific lines, we wouldn't know what we are missing to evaluate.
+  while IFS="" read -r line; do
+    if [[ "$line" =~ ^Model\ name: ]]; then
+      read -r tmp tmp tmp <<<"$line"
+      general["model"]="$tmp"
+    elif [[ "$line" =~ ^Mfg\ name: ]]; then
+      read -r tmp tmp tmp <<<"$line"
+      general["vendor"]="$tmp"
+#   else
+#     echo "Unhandled: '$line'"
+    fi
+  done <<<$(rigctl -m "$1" --dump-caps)
+}
+
+# Parameters:
+# rigcap_general: Array for overall rig data.
+print_rig_capabilities()
+{
+  # Following is correct as long as parameter $2 names an array variable.
+  # shellcheck disable=SC2178
+  local -n general=$1
+  echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
+}
+
+# Get rig info for dummy transceiver. Used as reference to compare other models against it.
+# these variable seem unused, but are passed as variable names to functions.
+# shellcheck disable=SC2034
+declare -A rigcap_dummy_functions rigcap_dummy_levels rigcap_dummy_parameters rigcap_dummy_general
+get_func_level_params u rigcap_dummy_functions 1
+get_func_level_params l rigcap_dummy_levels 1
+get_func_level_params p rigcap_dummy_parameters 1
+get_capabilities 1 rigcap_dummy_general
+# Output rig info for dummy transceiver.
+print_rig_capabilities rigcap_dummy_general
+print_func_level_params "functions" rigcap_dummy_functions
+print_func_level_params "Levels" rigcap_dummy_levels
+print_func_level_params "parameters" rigcap_dummy_parameters
+# Now collect rig info for all other models and compare with dummy.
+# Store rig number, manufactorer and model into arrays.
+# Complicated, ecause there is no dedicated field separator.
+while IFS="" read -r line; do
+  read -r rignr <<<"${line:0:8}"
+  read -r vendor <<<"${line:8:23}"
+  read -r model <<<"${line:31:24}"
+  if [[ -z "$model" ]]; then
+    model="Generic"
+  fi
+  ###echo "$vendor $model, $rignr:"
+done <<<$(rigctl --list | sed -n '1!p' | sed -n /Hamlib/!p)
