@@ -59,49 +59,101 @@ print_func_level_params() {
 }
 
 # Parameters:
+# --unhandled: Optional flag that prints all lines from --dump-caps output
+#   that have not been handled or ignored on purpose.
 # model: Rig model number.
 # rigcap_general: Array for overall rig data.
+# rigcap_bounds: Array which stores min, max and res values for levels and other values.
 get_capabilities() {
-  local tmp
+  local tmp tmp1 tmp2 tmp3 tmp4 tmp5 show_unhandled
+  if [[ "$1" == "--unhandled" ]]; then
+    show_unhandled=1
+    shift 1
+  else
+    show_unhandled=0
+  fi
   # Following is correct as long as parameter $2 names an array variable.
   # shellcheck disable=SC2178
-  local -n general=$2
-  general["rignr"]="$1"
+  local -n general=$2 bounds=$3
+  general[rignr]="$1"
   # Read capabilities line by line, to make sure we also can detect unhandled things.
   # If we wold just grep for specific lines, we wouldn't know what we are missing to evaluate.
   while IFS="" read -r line; do
-    if [[ "$line" =~ ^Model\ name: ]]; then
+# Ignore these lines, at least for now.
+    if [[ "$line" =~ ^Caps\ dump\ for\ model:
+      || "$line" =~ ^Hamlib\ version
+      || "$line" =~ ^Backend\ version:
+      || "$line" =~ ^Backend\ copyright:
+      || "$line" =~ ^Backend\ status:
+      || "$line" =~ ^Rig\ type:
+      || "$line" =~ ^PTT\ type:
+      || "$line" =~ ^DCD\ type:
+      || "$line" =~ ^Port\ type:
+      || "$line" =~ ^Serial\ speed:
+      || "$line" =~ ^Write\ delay:
+      || "$line" =~ ^Post\ write\ delay:
+      || "$line" =~ ^Has\ targetable\ VFO:
+      || "$line" =~ ^Targetable\ features:
+      || "$line" =~ ^Has\ async\ data\ support:
+    ]]; then
+      continue
+# Rig model name
+    elif [[ "$line" =~ ^Model\ name: ]]; then
       read -r tmp tmp tmp <<<"$line"
-      general["model"]="$tmp"
+      general[model]="$tmp"
+# Vendor name
     elif [[ "$line" =~ ^Mfg\ name: ]]; then
       read -r tmp tmp tmp <<<"$line"
-      general["vendor"]="$tmp"
-#   else
-#     echo "Unhandled: '$line'"
+      general[vendor]="$tmp"
+# Anounce
+    elif [[ "$line" =~ ^Announce: ]]; then
+      read -r tmp tmp <<<"$line"
+      general[announce]="$tmp"
+# RIT, XIT, IF-Shift
+    elif [[ "$line" =~ ^Max\ (RIT|XIT|IF-SHIFT): ]]; then
+      read -r tmp tmp1 tmp <<<"$line"
+      tmp1=${tmp1:0:3}
+      tmp1=${tmp1/IF-/IFSHIFT} # contains RIT, XIT or IFSHIFT
+      read -r tmp2 tmp3 <<<$(echo "$tmp" | sed -e 's#/+# #g' -e 's/k/*1000/g' -e 's/M/*1000000/g' -e 's/G/*1000000000/g' -e s#Hz#/1#g)
+      bounds[${tmp1}]=minmax
+      bounds[${tmp1}:min]=$(echo "$tmp2" | bc)
+      bounds[${tmp1}:max]=$(echo "$tmp3" | bc)
+# Unhandled lines
+    elif [[ $show_unhandled -gt 0 ]]; then
+      if [[ $show_unhandled -eq 1 ]]; then
+        echo "Unhandled capability lines for ${general[vendor]} ${general[model]}, ${general["rignr"]}:"
+        shwo_unhandled=2
+      fi
+      echo "  Unhandled: '$line'"
     fi
   done <<<$(rigctl -m "$1" --dump-caps)
 }
 
 # Parameters:
 # rigcap_general: Array for overall rig data.
+# rigcap_bounds: Array which stores min, max and res values for levels and other values.
 print_rig_capabilities()
 {
   # Following is correct as long as parameter $2 names an array variable.
   # shellcheck disable=SC2178
-  local -n general=$1
-  echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
+  local -n general=$1 bounds=$2
+  echo "${general[vendor]} ${general[model]}, ${general[rignr]}:"
+  echo "  Announce: ${general[announce]}"
+  for i in RIT XIT IFSHIFT; do
+    echo "  $i: ${bounds[$i:min]} to ${bounds[$i:max]}"
+  done
 }
 
 # Get rig info for dummy transceiver. Used as reference to compare other models against it.
 # these variable seem unused, but are passed as variable names to functions.
 # shellcheck disable=SC2034
-declare -A rigcap_dummy_functions rigcap_dummy_levels rigcap_dummy_parameters rigcap_dummy_general
+declare -A rigcap_dummy_functions rigcap_dummy_levels rigcap_dummy_parameters rigcap_dummy_general rigcap_dummy_bounds
 get_func_level_params u rigcap_dummy_functions 1
 get_func_level_params l rigcap_dummy_levels 1
 get_func_level_params p rigcap_dummy_parameters 1
-get_capabilities 1 rigcap_dummy_general
+get_capabilities 1 rigcap_dummy_general rigcap_dummy_bounds
 # Output rig info for dummy transceiver.
-print_rig_capabilities rigcap_dummy_general
+print_rig_capabilities rigcap_dummy_general rigcap_dummy_bounds
 print_func_level_params "functions" rigcap_dummy_functions
 print_func_level_params "Levels" rigcap_dummy_levels
 print_func_level_params "parameters" rigcap_dummy_parameters

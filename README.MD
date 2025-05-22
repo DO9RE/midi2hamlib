@@ -237,6 +237,33 @@ wanted to install, you are finally done.
 
 Congrats, you built hamlib!
 
+### HTML documentation for hamlib
+
+If you just want to use **midi2hamlib**, you can safely skip this section. But if you really want to deep-dive into the hamib API, maybe because you want
+to adapt **midi2hamlib** to your needs, you can build the HTML doxygen
+documentation. In order to do so, please install the required tools by
+typing:
+
+```
+sudo apt install doxygen source-highlight graphviz
+```
+
+After that, generate the HTML documentation by first changing to the
+**hamlib/doc** folder and then using **make**:
+
+```
+cd ~/hamlib/doc && make doc
+```
+
+After that, you will find and **index.html** file in the **html** subfolder of
+**hamlib/doc**.
+
+The HTML documentation doesn't come with an **install** target for **make**,
+so you have to keep it in the hamlib folder and cannot install it to your
+system automatically like you did with **hamlib**. So use the browser of
+your choice, e.g. **elinks**, to view the HTML documentation where it has been built or copy
+it to somewhere else yourself. 
+
 ## Download midi2hamlib
 
 Now we need to download this wonderful package. We do this with the following command:
