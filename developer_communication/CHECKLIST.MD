@@ -1,5 +1,13 @@
 # Checklist, Todo and ideas
 
+- [ ] Set Levels
+
+## **Note by DK7STJ – 2025-05-23:**  
+- Implement setting levels by menu.
+  - Without validation, just let the transceiver digest the value and read back what it did woth int.
+  - Validate against capabilities.
+- Implement setting levels by MIDI.
+
 - [ ] Improve bandwidth selection.
 
 ## **Note by DK7STJ – 2025-05-10:**  
