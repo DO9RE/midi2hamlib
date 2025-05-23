@@ -118,6 +118,13 @@ get_capabilities() {
       bounds[${tmp1}]=minmax
       bounds[${tmp1}:min]=$(echo "$tmp2" | bc)
       bounds[${tmp1}:max]=$(echo "$tmp3" | bc)
+# Preamp, Attenuator
+    elif [[ "$line" =~ ^(Preamp|Attenuator): ]]; then
+      read -r tmp1 tmp <<<"${line//dB/}"
+      if [[ "$tmp" == "None" ]]; then continue; fi
+      tmp1="${tmp1/:/]"
+      tmp1="${tmp1^^}"
+      bounds[$tmp1:values]="$tmp"
 # Unhandled lines
     elif [[ $show_unhandled -gt 0 ]]; then
       if [[ $show_unhandled -eq 1 ]]; then
@@ -168,4 +175,6 @@ while IFS="" read -r line; do
     model="Generic"
   fi
   ###echo "$vendor $model, $rignr:"
+  ###rigctl -m "$rignr" --dump-caps | grep '^\(Preamp\)\|\(Attenuator\)'
+  ###echo
 done <<<$(rigctl --list | sed -n '1!p' | sed -n /Hamlib/!p)
