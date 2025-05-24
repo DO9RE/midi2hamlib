@@ -12,6 +12,8 @@ get_func_level_params() {
     getter_list=$(rigctl -m "$3" "${cmd,,}" "?")
     setter_list=$(rigctl -m "$3" "${cmd^^}" "?")
   else
+    # Host and port are not define here, but can be used when run from within idi2hamlib.
+    # shellcheck disable=SC2154
     getter_list=$(rigctl -m2 -r "$host:$port" "${cmd,,}" "?")
     setter_list=$(rigctl -m2 -r "$host:$port" "${cmd^^}" "?")
   fi
@@ -65,7 +67,7 @@ print_func_level_params() {
 # rigcap_general: Array for overall rig data.
 # rigcap_bounds: Array which stores min, max and res values for levels and other values.
 get_capabilities() {
-  local tmp tmp1 tmp2 tmp3 tmp4 tmp5 show_unhandled
+  local tmp tmp1 tmp2 tmp3 show_unhandled
   if [[ "$1" == "--unhandled" ]]; then
     show_unhandled=1
     shift 1
@@ -75,7 +77,8 @@ get_capabilities() {
   # Following is correct as long as parameter $2 names an array variable.
   # shellcheck disable=SC2178
   local -n general=$2 bounds=$3
-  general[rignr]="$1"
+  local -a tmparr tmparr1 tmparr2
+  general["rignr"]="$1"
   # Read capabilities line by line, to make sure we also can detect unhandled things.
   # If we wold just grep for specific lines, we wouldn't know what we are missing to evaluate.
   while IFS="" read -r line; do
@@ -100,40 +103,58 @@ get_capabilities() {
 # Rig model name
     elif [[ "$line" =~ ^Model\ name: ]]; then
       read -r tmp tmp tmp <<<"$line"
-      general[model]="$tmp"
+      general["model"]="$tmp"
 # Vendor name
     elif [[ "$line" =~ ^Mfg\ name: ]]; then
       read -r tmp tmp tmp <<<"$line"
-      general[vendor]="$tmp"
+      general["vendor"]="$tmp"
 # Anounce
     elif [[ "$line" =~ ^Announce: ]]; then
       read -r tmp tmp <<<"$line"
-      general[announce]="$tmp"
+      general["announce"]="$tmp"
 # RIT, XIT, IF-Shift
     elif [[ "$line" =~ ^Max\ (RIT|XIT|IF-SHIFT): ]]; then
       read -r tmp tmp1 tmp <<<"$line"
       tmp1=${tmp1:0:3}
       tmp1=${tmp1/IF-/IFSHIFT} # contains RIT, XIT or IFSHIFT
-      read -r tmp2 tmp3 <<<$(echo "$tmp" | sed -e 's#/+# #g' -e 's/k/*1000/g' -e 's/M/*1000000/g' -e 's/G/*1000000000/g' -e s#Hz#/1#g)
+      read -r tmp2 tmp3 <<<"$(echo "$tmp" | sed -e 's#/+# #g' -e 's/k/*1000/g' -e 's/M/*1000000/g' -e 's/G/*1000000000/g' -e s#Hz#/1#g)"
       bounds[${tmp1}]=minmax
+      bounds[${tmp1}:unit]=Hz
       bounds[${tmp1}:min]=$(echo "$tmp2" | bc)
       bounds[${tmp1}:max]=$(echo "$tmp3" | bc)
 # Preamp, Attenuator
     elif [[ "$line" =~ ^(Preamp|Attenuator): ]]; then
       read -r tmp1 tmp <<<"${line//dB/}"
       if [[ "$tmp" == "None" ]]; then continue; fi
-      tmp1="${tmp1/:/]"
+      tmp1="${tmp1/:/}"
       tmp1="${tmp1^^}"
-      bounds[$tmp1:values]="$tmp"
+      bounds[${tmp1}]=values
+      bounds[${tmp1}:unit]=dB
+      bounds[${tmp1}:values]="$tmp"
+# AGC levels
+    elif [[ "$line" =~ ^AGC\ levels: ]]; then
+      read -r tmp tmp tmp <<<"${line//=/ }"
+      tmparr=( $tmp )
+      tmp=${#tmparr[@]}
+      tmparr1=()
+      tmparr2=()
+      for ((i=0; i<$tmp; i++)); do
+         tmparr1+=( "${tmparr[i]}" )
+         ((i++))
+         tmparr2+=( "${tmparr[i]}" )
+      done
+      bounds["AGC"]=mappedvalues
+      bounds["AGC:values"]="${tmparr1[*]}"
+      bounds["AGC:names"]="${tmparr2[*]}"
 # Unhandled lines
     elif [[ $show_unhandled -gt 0 ]]; then
       if [[ $show_unhandled -eq 1 ]]; then
-        echo "Unhandled capability lines for ${general[vendor]} ${general[model]}, ${general["rignr"]}:"
-        shwo_unhandled=2
+        echo "Unhandled capability lines for ${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
+        show_unhandled=2
       fi
       echo "  Unhandled: '$line'"
     fi
-  done <<<$(rigctl -m "$1" --dump-caps)
+  done <<<"$(rigctl -m "$1" --dump-caps)"
 }
 
 # Parameters:
@@ -144,11 +165,12 @@ print_rig_capabilities()
   # Following is correct as long as parameter $2 names an array variable.
   # shellcheck disable=SC2178
   local -n general=$1 bounds=$2
-  echo "${general[vendor]} ${general[model]}, ${general[rignr]}:"
-  echo "  Announce: ${general[announce]}"
+  echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
+  echo "  Announce: ${general["announce"]}"
   for i in RIT XIT IFSHIFT; do
     echo "  $i: ${bounds[$i:min]} to ${bounds[$i:max]}"
   done
+  echo "  AGC: ${bounds["AGC:names"]} ${bounds["AGC:values"]}"
 }
 
 # Get rig info for dummy transceiver. Used as reference to compare other models against it.
@@ -175,6 +197,10 @@ while IFS="" read -r line; do
     model="Generic"
   fi
   ###echo "$vendor $model, $rignr:"
+  # preamp, attenuator
   ###rigctl -m "$rignr" --dump-caps | grep '^\(Preamp\)\|\(Attenuator\)'
+  # AGC levels
+  ###rigctl -m "$rignr" --dump-caps | grep '^AGC levels'
+  ###rigctl -m "$rignr" --dump-caps | awk '{i=index($0,"AGC("); if (i>0) { $0=substr($0,i); i=index($0,")"); print substr($0,1,i) }}'
   ###echo
-done <<<$(rigctl --list | sed -n '1!p' | sed -n /Hamlib/!p)
+done <<<"$(rigctl --list | sed -n '1!p' | sed -n /Hamlib/!p)"
