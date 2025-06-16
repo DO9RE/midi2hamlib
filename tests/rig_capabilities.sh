@@ -67,7 +67,7 @@ print_func_level_params() {
 # rigcap_general: Array for overall rig data.
 # rigcap_bounds: Array which stores min, max and res values for levels and other values.
 get_capabilities() {
-  local tmp tmp1 tmp2 tmp3 show_unhandled
+  local tmp tmp1 tmp2 tmp3 show_unhandled indentation
   if [[ "$1" == "--unhandled" ]]; then
     show_unhandled=1
     shift 1
@@ -82,8 +82,55 @@ get_capabilities() {
   # Read capabilities line by line, to make sure we also can detect unhandled things.
   # If we wold just grep for specific lines, we wouldn't know what we are missing to evaluate.
   while IFS="" read -r line; do
+# Detect indented blocks like extra functions, levels, parameters, memories etc.
+# Note that in some hamlib versions, these lines may also contain additional info, not just headings.
+    if [[ "$line" =~ ^Extra\ functions: ]]; then
+      indentation="functions" 
+      # ToDo: process rest of line after colon.
+      continue
+    elif [[ "$line" =~ ^Extra\ levels: ]]; then
+      indentation="levels" 
+      # ToDo: process rest of line after colon.
+      continue
+    elif [[ "$line" =~ ^Extra\ parameters: ]]; then
+      indentation="parameters" 
+      # ToDo: process rest of line after colon.
+      continue
+    elif [[ "$line" =~ ^Memories: ]]; then
+      indentation="memories" 
+      # ToDo: process rest of line after colon.
+      continue
+    elif [[ "$line" =~ ^TX\ ranges ]]; then
+      indentation="txranges" 
+      # ToDo: process rest of line after colon.
+      continue
+    elif [[ "$line" =~ ^RX\ ranges ]]; then
+      indentation="rxranges" 
+      # ToDo: process rest of line after colon.
+      continue
+    elif [[ "$line" =~ ^Tuning\ steps ]]; then
+      indentation="tuningsteps" 
+      # ToDo: process rest of line after colon.
+      continue
+    elif [[ "$line" =~ ^Filters: ]]; then
+      indentation="filters" 
+      # ToDo: process rest of line after colon.
+      continue
+    elif [[ "$line" =~ ^bandwidths: ]]; then
+      indentation="bandwidths" 
+      # ToDo: process rest of line after colon.
+      continue
+    elif [[ ! ( "$line" =~ ^[[:space:]] ) ]]; then
+      indentation=""
+    fi
+# Ignore indented content for now.
+    if [[ -n "$indentation" && "$line" =~ ^[[:space:]] ]]; then
+      continue
+    fi
 # Ignore these lines, at least for now.
-    if [[ "$line" =~ ^Caps\ dump\ for\ model:
+    if [[ -z "$line"
+      || "$line" =~ ^Overall\ backend\ warnings:
+      || "$line" =~ ^Caps\ dump\ for\ model:
       || "$line" =~ ^Hamlib\ version
       || "$line" =~ ^Backend\ version:
       || "$line" =~ ^Backend\ copyright:
@@ -96,6 +143,7 @@ get_capabilities() {
       || "$line" =~ ^Write\ delay:
       || "$line" =~ ^Post\ write\ delay:
       || "$line" =~ ^Has\ targetable\ VFO:
+      || "$line" =~ ^Has\ transceive:
       || "$line" =~ ^Targetable\ features:
       || "$line" =~ ^Has\ async\ data\ support:
     ]]; then
