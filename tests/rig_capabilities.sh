@@ -170,7 +170,7 @@ print_rig_capabilities()
   for i in RIT XIT IFSHIFT; do
     echo "  $i: ${bounds[$i:min]} to ${bounds[$i:max]}"
   done
-  echo "  AGC: ${bounds["AGC:names"]} ${bounds["AGC:values"]}"
+  echo "  AGC: '${bounds["AGC:names"]}' --> '${bounds["AGC:values"]}'"
 }
 
 # Get rig info for dummy transceiver. Used as reference to compare other models against it.
@@ -188,7 +188,7 @@ print_func_level_params "Levels" rigcap_dummy_levels
 print_func_level_params "parameters" rigcap_dummy_parameters
 # Now collect rig info for all other models and compare with dummy.
 # Store rig number, manufactorer and model into arrays.
-# Complicated, ecause there is no dedicated field separator.
+# Complicated, because there is no dedicated field separator.
 while IFS="" read -r line; do
   read -r rignr <<<"${line:0:8}"
   read -r vendor <<<"${line:8:23}"
