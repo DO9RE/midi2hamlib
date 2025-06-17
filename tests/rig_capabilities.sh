@@ -146,6 +146,8 @@ get_capabilities() {
       || "$line" =~ ^Has\ transceive:
       || "$line" =~ ^Targetable\ features:
       || "$line" =~ ^Has\ async\ data\ support:
+      || "$line" =~ ^Spectrum
+      || "$line" =~ ^Has[[:space:]]
     ]]; then
       continue
 # Rig model name
