@@ -66,6 +66,7 @@ print_func_level_params() {
 # model: Rig model number.
 # rigcap_general: Array for overall rig data.
 # rigcap_bounds: Array which stores min, max and res values for levels and other values.
+# rigcap_features: Array with feature availability information.
 get_capabilities() {
   local tmp tmp1 tmp2 tmp3 show_unhandled indentation
   if [[ "$1" == "--unhandled" ]]; then
@@ -76,7 +77,7 @@ get_capabilities() {
   fi
   # Following is correct as long as parameter $2 names an array variable.
   # shellcheck disable=SC2178
-  local -n general=$2 bounds=$3
+  local -n general=$2 bounds=$3 features=$4
   local -a tmparr tmparr1 tmparr2
   general["rignr"]="$1"
   # Read capabilities line by line, to make sure we also can detect unhandled things.
@@ -120,7 +121,7 @@ get_capabilities() {
       indentation="bandwidths" 
       # ToDo: process rest of line after colon.
       continue
-    elif [[ ! ( "$line" =~ ^[[:space:]] ) ]]; then
+    elif [[ ! "$line" =~ ^[[:space:]] ]]; then
       indentation=""
     fi
 # Ignore indented content for now.
@@ -196,6 +197,24 @@ get_capabilities() {
       bounds["AGC"]=mappedvalues
       bounds["AGC:values"]="${tmparr1[*]}"
       bounds["AGC:names"]="${tmparr2[*]}"
+# Feature availability
+    elif [[ "$line" =~ Can\ (Reset|Scan): ]]; then
+      read -r tmp tmp1 tmp2 <<<"${line,,}"
+      tmp1="${tmp1/:/}"
+      if [[ "$tmp2" == "y" ]]; then
+        features[$tmp1]="yes"
+      fi
+    elif [[ "$line" =~ ^Can\ (get|set|send|recv|stop|wait|decode|ctl)\ [A-Z,a-z]+ ]]; then
+      read -r tmp tmp1 tmp <<<"${line,,}"
+      tmp="${tmp/ /}"
+      tmp="${tmp/:/}"
+      read -r tmp2 tmp3 <<<"$tmp"
+      if [[ "$tmp2" == "mem/vfo" ]]; then
+        tmp2="memvfo"
+      fi
+      if [[ "$tmp3" == "y" ]]; then
+        features[$tmp2]+="$tmp1"
+      fi
 # Unhandled lines
     elif [[ $show_unhandled -gt 0 ]]; then
       if [[ $show_unhandled -eq 1 ]]; then
@@ -205,34 +224,52 @@ get_capabilities() {
       echo "  Unhandled: '$line'"
     fi
   done <<<"$(rigctl -m "$1" --dump-caps)"
+  for i in "${!features[@]}"; do
+    if [[ "${features[$i]}" =~ setget ]]; then
+      features[$i]=getset
+    elif [[ "${features[$i]}" =~ recvsend ]]; then
+      features[$i]=sendrecv
+    fi
+  done
 }
 
 # Parameters:
 # rigcap_general: Array for overall rig data.
 # rigcap_bounds: Array which stores min, max and res values for levels and other values.
+# rigcap_features: Array with feature availability information.
 print_rig_capabilities()
 {
   # Following is correct as long as parameter $2 names an array variable.
   # shellcheck disable=SC2178
-  local -n general=$1 bounds=$2
+  local -n general=$1 bounds=$2 features=$3
   echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
   echo "  Announce: ${general["announce"]}"
   for i in RIT XIT IFSHIFT; do
     echo "  $i: ${bounds[$i:min]} to ${bounds[$i:max]}"
   done
   echo "  AGC: '${bounds["AGC:names"]}' --> '${bounds["AGC:values"]}'"
+  local -A ftypes
+  for i in "${!features[@]}"; do
+    ftypes["${features[$i]}"]+=" $i"
+  done
+  if [[ "${#features[@]}" -gt "0" ]]; then
+    echo "  Features:"
+    for i in "${!ftypes[@]}"; do
+      echo "    $i:${ftypes["$i"]}"
+    done
+  fi
 }
 
 # Get rig info for dummy transceiver. Used as reference to compare other models against it.
 # these variable seem unused, but are passed as variable names to functions.
 # shellcheck disable=SC2034
-declare -A rigcap_dummy_functions rigcap_dummy_levels rigcap_dummy_parameters rigcap_dummy_general rigcap_dummy_bounds
+declare -A rigcap_dummy_functions rigcap_dummy_levels rigcap_dummy_parameters rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features
 get_func_level_params u rigcap_dummy_functions 1
 get_func_level_params l rigcap_dummy_levels 1
 get_func_level_params p rigcap_dummy_parameters 1
-get_capabilities 1 rigcap_dummy_general rigcap_dummy_bounds
+get_capabilities 1 rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features
 # Output rig info for dummy transceiver.
-print_rig_capabilities rigcap_dummy_general rigcap_dummy_bounds
+print_rig_capabilities rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features
 print_func_level_params "functions" rigcap_dummy_functions
 print_func_level_params "Levels" rigcap_dummy_levels
 print_func_level_params "parameters" rigcap_dummy_parameters
