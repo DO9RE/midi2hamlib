@@ -67,6 +67,9 @@ print_func_level_params() {
 # rigcap_general: Array for overall rig data.
 # rigcap_bounds: Array which stores min, max and res values for levels and other values.
 # rigcap_features: Array with feature availability information.
+# rigcap_ctcss_range: Array that holds valid CTCSS values.
+# rigcap_dcs_range: Array that holds valid DCS values.
+# rigcap_modes: Array with valid modes.
 get_capabilities() {
   local tmp tmp1 tmp2 tmp3 show_unhandled indentation
   if [[ "$1" == "--unhandled" ]]; then
@@ -77,7 +80,7 @@ get_capabilities() {
   fi
   # Following is correct as long as parameter $2 names an array variable.
   # shellcheck disable=SC2178
-  local -n general=$2 bounds=$3 features=$4
+  local -n general=$2 bounds=$3 features=$4 ctcss=$5 dcs=$6 modeslist=$7
   local -a tmparr tmparr1 tmparr2
   general["rignr"]="$1"
   # Read capabilities line by line, to make sure we also can detect unhandled things.
@@ -177,7 +180,7 @@ get_capabilities() {
     elif [[ "$line" =~ ^(Preamp|Attenuator): ]]; then
       read -r tmp1 tmp <<<"${line//dB/}"
       if [[ "$tmp" == "None" ]]; then continue; fi
-      tmp1="${tmp1/:/}"
+      tmp1="${tmp1//:/}"
       tmp1="${tmp1^^}"
       bounds[${tmp1}]=values
       bounds[${tmp1}:unit]=dB
@@ -200,14 +203,14 @@ get_capabilities() {
 # Feature availability
     elif [[ "$line" =~ Can\ (Reset|Scan): ]]; then
       read -r tmp tmp1 tmp2 <<<"${line,,}"
-      tmp1="${tmp1/:/}"
+      tmp1="${tmp1//:/}"
       if [[ "$tmp2" == "y" ]]; then
         features[$tmp1]="yes"
       fi
     elif [[ "$line" =~ ^Can\ (get|set|send|recv|stop|wait|decode|ctl)\ [A-Z,a-z]+ ]]; then
       read -r tmp tmp1 tmp <<<"${line,,}"
-      tmp="${tmp/ /}"
-      tmp="${tmp/:/}"
+      tmp="${tmp// /}"
+      tmp="${tmp//:/}"
       read -r tmp2 tmp3 <<<"$tmp"
       if [[ "$tmp2" == "mem/vfo" ]]; then
         tmp2="memvfo"
@@ -215,6 +218,20 @@ get_capabilities() {
       if [[ "$tmp3" == "y" ]]; then
         features[$tmp2]+="$tmp1"
       fi
+# Modes
+  elif [[ "$line" =~ Mode\ list: ]]; then
+    read -r tmp tmp tmp <<<"$line" # tmp now contains the modes.
+    modeslist=( $tmp )
+  elif [[ "$line" =~ ^CTCSS: ]]; then
+    tmp=$(echo "$line" | sed 's/\(CTCSS: *\)\|\( Hz.*$\)\|\.//g')
+    if [[ -n "$tmp" && ! "$tmp" =~ None ]]; then
+      ctcss=( $tmp )
+    fi
+  elif [[ "$line" =~ ^DCS: ]]; then
+    tmp=$(echo "$line" | sed 's/\(DCS: *\)\|\(,.*$\)\|\.//g')
+    if [[ -n "$tmp" && ! "$tmp" =~ None ]]; then
+      dcs=( $tmp )
+    fi
 # Unhandled lines
     elif [[ $show_unhandled -gt 0 ]]; then
       if [[ $show_unhandled -eq 1 ]]; then
@@ -237,11 +254,14 @@ get_capabilities() {
 # rigcap_general: Array for overall rig data.
 # rigcap_bounds: Array which stores min, max and res values for levels and other values.
 # rigcap_features: Array with feature availability information.
+# rigcap_ctcss_range: Array that holds valid CTCSS values.
+# rigcap_dcs_range: Array that holds valid DCS values.
+# rigcap_modes: Array with valid modes.
 print_rig_capabilities()
 {
   # Following is correct as long as parameter $2 names an array variable.
   # shellcheck disable=SC2178
-  local -n general=$1 bounds=$2 features=$3
+  local -n general=$1 bounds=$2 features=$3 ctcss=$4 dcs=$5 modeslist=$6
   echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
   echo "  Announce: ${general["announce"]}"
   for i in RIT XIT IFSHIFT; do
@@ -258,18 +278,28 @@ print_rig_capabilities()
       echo "    $i:${ftypes["$i"]}"
     done
   fi
+  if [[ -n "${modeslist[0]}" ]]; then
+    echo "  Modes: ${modeslist[*]}"
+  fi
+  if [[ -n "${ctcss[0]}" ]]; then
+    echo "  CTCSS: ${ctcss[*]}"
+  fi
+  if [[ -n "${dcs[0]}" ]]; then
+    echo "  DCS: ${dcs[*]}"
+  fi
 }
 
 # Get rig info for dummy transceiver. Used as reference to compare other models against it.
 # these variable seem unused, but are passed as variable names to functions.
 # shellcheck disable=SC2034
+declare -a rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes
 declare -A rigcap_dummy_functions rigcap_dummy_levels rigcap_dummy_parameters rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features
 get_func_level_params u rigcap_dummy_functions 1
 get_func_level_params l rigcap_dummy_levels 1
 get_func_level_params p rigcap_dummy_parameters 1
-get_capabilities 1 rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features
+get_capabilities 1 rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes
 # Output rig info for dummy transceiver.
-print_rig_capabilities rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features
+print_rig_capabilities rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes
 print_func_level_params "functions" rigcap_dummy_functions
 print_func_level_params "Levels" rigcap_dummy_levels
 print_func_level_params "parameters" rigcap_dummy_parameters
