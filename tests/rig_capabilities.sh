@@ -1,5 +1,5 @@
 #!/bin/bash
-# Get functions, levels and parameter lists from transceiver.
+# Get functions, levels and parameter lists from transceiver, using U, L or P with '?'.
 # Parameters:
 # type: one of u, l or p.
 # var: Array name to store result in.
@@ -19,7 +19,7 @@ get_func_level_params() {
   fi
   local -n map=$2
   for getter in ${getter_list}; do
-    map["$getter"]="get"
+    map["$getter"]+="get"
   done
   for setter in ${setter_list}; do
     map["$setter"]+="set"
@@ -30,12 +30,22 @@ get_func_level_params() {
 # title: String like "functions", "levels"...
 # array: Array from rig_func_level_params
 print_func_level_params() {
+  local check
+  check=""
+  if [[ "$1" == "--check" ]]; then
+    check=1
+    shift 1
+  fi
   local title="$1"
   # Following is correct as long as parameter $2 names an array variable.
   # shellcheck disable=SC2178
   local -n map=$2
   local -a getters setters getset
+  local inconsistent
   for item in "${!map[@]}"; do
+    if [[ ! ${map[$item]} =~ ^(getget|setset|getsetgetset)$ ]]; then
+      inconsistent+=" $item"
+    fi
     if [[ ${map[$item]} =~ getset ]]; then
       getset+=( "$item" )
     elif [[ ${map[$item]} =~ get ]]; then
@@ -58,6 +68,43 @@ print_func_level_params() {
   else
     echo "  No ${title}."
   fi
+  if [[ "$check" == "1" && -n "$inconsistent" ]]; then
+    echo "  Inconsistency for:$inconsistent."
+  fi  
+}
+
+# Get or check VFO list from transceiver, using the V command with '?'.
+# Parameters:
+# --check: If specified, this function doesn't update the VFO list but only checks
+#   consistency against result from V command.
+# var: Array name to store result in.
+# model: Rig model. If given, use rigctl with -m parameter.
+#   If not, use rigctl with -m2 and host:port variables.
+get_vfo_list() {
+  local checkonly tmp
+  checkonly=""
+  if [[ "$1" == "--check" ]]; then
+    checkonly=1
+    shift 1
+  fi
+  local -n result=$1
+  if [[ -n $2 ]]; then
+    tmp=$(rigctl -m "$2" V "?")
+  else
+    # Host and port are not define here, but can be used when run from within idi2hamlib.
+    # shellcheck disable=SC2154
+    tmp=$(rigctl -m2 -r "$host:$port" V "?")
+  fi
+  read -r tmp <<<"$tmp" # strip spaces at beginning and end
+  if [[ "$checkonly" == "1" ]]; then
+    if [[ "$tmp" != "${result[*]}" ]]; then
+      echo "  VFO inconsistency: V command reports $tmp."
+#   else
+#     echo "VFO consistency check OK."
+    fi
+  else
+    result=( $tmp )
+  fi
 }
 
 # Parameters:
@@ -70,6 +117,9 @@ print_func_level_params() {
 # rigcap_ctcss_range: Array that holds valid CTCSS values.
 # rigcap_dcs_range: Array that holds valid DCS values.
 # rigcap_modes: Array with valid modes.
+# rigcap_vfos: Array containing all available VFOs.
+# rigcap_functions, rigcap_levels, rigcap_parameters:
+#   Arrays that store get, set or getset functions, levels and parameters.
 get_capabilities() {
   local tmp tmp1 tmp2 tmp3 show_unhandled indentation
   if [[ "$1" == "--unhandled" ]]; then
@@ -80,7 +130,7 @@ get_capabilities() {
   fi
   # Following is correct as long as parameter $2 names an array variable.
   # shellcheck disable=SC2178
-  local -n general=$2 bounds=$3 features=$4 ctcss=$5 dcs=$6 modeslist=$7
+  local -n general=$2 bounds=$3 features=$4 ctcss=$5 dcs=$6 modeslist=$7 vfos=$8 functions=$9 levels=$10 params=$11
   local -a tmparr tmparr1 tmparr2
   general["rignr"]="$1"
   # Read capabilities line by line, to make sure we also can detect unhandled things.
@@ -201,7 +251,7 @@ get_capabilities() {
       bounds["AGC:values"]="${tmparr1[*]}"
       bounds["AGC:names"]="${tmparr2[*]}"
 # Feature availability
-    elif [[ "$line" =~ Can\ (Reset|Scan): ]]; then
+    elif [[ "$line" =~ ^Can\ (Reset|Scan): ]]; then
       read -r tmp tmp1 tmp2 <<<"${line,,}"
       tmp1="${tmp1//:/}"
       if [[ "$tmp2" == "y" ]]; then
@@ -219,19 +269,32 @@ get_capabilities() {
         features[$tmp2]+="$tmp1"
       fi
 # Modes
-  elif [[ "$line" =~ Mode\ list: ]]; then
+  elif [[ "$line" =~ ^Mode\ list: ]]; then
     read -r tmp tmp tmp <<<"$line" # tmp now contains the modes.
     modeslist=( $tmp )
+# CTCSS
   elif [[ "$line" =~ ^CTCSS: ]]; then
     tmp=$(echo "$line" | sed 's/\(CTCSS: *\)\|\( Hz.*$\)\|\.//g')
     if [[ -n "$tmp" && ! "$tmp" =~ None ]]; then
       ctcss=( $tmp )
     fi
+# DCS
   elif [[ "$line" =~ ^DCS: ]]; then
     tmp=$(echo "$line" | sed 's/\(DCS: *\)\|\(,.*$\)\|\.//g')
     if [[ -n "$tmp" && ! "$tmp" =~ None ]]; then
       dcs=( $tmp )
     fi
+# VFO list
+  elif [[ "$line" =~ ^VFO\ list: ]]; then
+    read -r tmp tmp tmp <<<"$line"
+    vfos=( $tmp )
+# Functions
+  elif [[ "$line" =~ ^(Get|Set)\ functions: ]]; then
+    read -r tmp1 tmp tmp2 <<<"$line"
+    tmp1="${tmp1,,}"
+    for i in $tmp2 ; do
+      functions["$i"]+="$tmp1"
+    done
 # Unhandled lines
     elif [[ $show_unhandled -gt 0 ]]; then
       if [[ $show_unhandled -eq 1 ]]; then
@@ -257,11 +320,12 @@ get_capabilities() {
 # rigcap_ctcss_range: Array that holds valid CTCSS values.
 # rigcap_dcs_range: Array that holds valid DCS values.
 # rigcap_modes: Array with valid modes.
-print_rig_capabilities()
+# rigcap_vfos: Array containing all available VFOs.
+print_capabilities()
 {
   # Following is correct as long as parameter $2 names an array variable.
   # shellcheck disable=SC2178
-  local -n general=$1 bounds=$2 features=$3 ctcss=$4 dcs=$5 modeslist=$6
+  local -n general=$1 bounds=$2 features=$3 ctcss=$4 dcs=$5 modeslist=$6 vfos=$7
   echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
   echo "  Announce: ${general["announce"]}"
   for i in RIT XIT IFSHIFT; do
@@ -287,22 +351,30 @@ print_rig_capabilities()
   if [[ -n "${dcs[0]}" ]]; then
     echo "  DCS: ${dcs[*]}"
   fi
+  if [[ -n "${vfos[0]}" ]]; then
+    echo "  VFOs: ${vfos[*]}"
+  fi
 }
 
 # Get rig info for dummy transceiver. Used as reference to compare other models against it.
 # these variable seem unused, but are passed as variable names to functions.
 # shellcheck disable=SC2034
-declare -a rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes
+declare -a rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes rigcap_dummy_vfos
 declare -A rigcap_dummy_functions rigcap_dummy_levels rigcap_dummy_parameters rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features
+# Get functions, levels and parameters from transceiver command help.
+# This is for consistency checking against output of --dump-caps
 get_func_level_params u rigcap_dummy_functions 1
 get_func_level_params l rigcap_dummy_levels 1
 get_func_level_params p rigcap_dummy_parameters 1
-get_capabilities 1 rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes
+# Evaluate rig capabilities from --dump-caps
+get_capabilities 1 rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes rigcap_dummy_vfos rigcap_dummy_functions rigcap_dummy_levels rigcap_dummy_parameters
 # Output rig info for dummy transceiver.
-print_rig_capabilities rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes
-print_func_level_params "functions" rigcap_dummy_functions
+print_capabilities rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes rigcap_dummy_vfos
+print_func_level_params --check "functions" rigcap_dummy_functions
 print_func_level_params "Levels" rigcap_dummy_levels
 print_func_level_params "parameters" rigcap_dummy_parameters
+get_vfo_list --check rigcap_dummy_vfos 1
+
 # Now collect rig info for all other models and compare with dummy.
 # Store rig number, manufactorer and model into arrays.
 # Complicated, because there is no dedicated field separator.
