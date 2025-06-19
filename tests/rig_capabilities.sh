@@ -172,7 +172,7 @@ get_capabilities() {
       indentation="filters" 
       # ToDo: process rest of line after colon.
       continue
-    elif [[ "$line" =~ ^bandwidths: ]]; then
+    elif [[ "$line" =~ ^Bandwidths: ]]; then
       indentation="bandwidths" 
       # ToDo: process rest of line after colon.
       continue
@@ -197,7 +197,7 @@ get_capabilities() {
       || "$line" =~ ^Port\ type:
       || "$line" =~ ^Serial\ speed:
       || "$line" =~ ^Write\ delay:
-      || "$line" =~ ^Post\ write\ delay:
+      || "$line" =~ ^Post\ Write\ delay:
       || "$line" =~ ^Has\ targetable\ VFO:
       || "$line" =~ ^Has\ transceive:
       || "$line" =~ ^Targetable\ features:
@@ -290,6 +290,14 @@ get_capabilities() {
   elif [[ "$line" =~ ^VFO\ list: ]]; then
     read -r tmp tmp tmp <<<"$line"
     vfos=( $tmp )
+# Banks
+  elif [[ "$line" =~ Number\ of\ banks: ]]; then
+    read -r tmp tmp tmp tmp <<<"$line"
+    general["banks"]="$tmp"
+# Memory name size
+  elif [[ "$line" =~ Memory\ name\ desc\ size: ]]; then
+    read -r tmp tmp tmp tmp tmp <<<"$line"
+    general["memnamedescsize"]="$tmp"
 # Functions
   elif [[ "$line" =~ ^(Get|Set)\ functions: ]]; then
     read -r tmp1 tmp tmp2 <<<"$line"
@@ -340,6 +348,8 @@ print_capabilities()
   local -n general=$1 bounds=$2 features=$3 ctcss=$4 dcs=$5 modeslist=$6 vfos=$7 vfo_ops=$8 scan_ops=$9
   echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
   echo "  Announce: ${general["announce"]}"
+  echo "  Banks: ${general["banks"]}"
+  echo "  Mem Name Desc Size: ${general["memnamedescsize"]}"
   for i in RIT XIT IFSHIFT; do
     echo "  $i: ${bounds[$i:min]} to ${bounds[$i:max]}"
   done
@@ -385,7 +395,7 @@ get_func_level_params u rigcap_dummy_functions 1
 get_func_level_params l rigcap_dummy_levels 1
 get_func_level_params p rigcap_dummy_parameters 1
 # Evaluate rig capabilities from --dump-caps
-get_capabilities 1 rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes rigcap_dummy_vfos rigcap_dummy_vfo_ops rigcap_dummy_scan_ops rigcap_dummy_functions rigcap_dummy_levels rigcap_dummy_parameters
+get_capabilities --unhandled 1 rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes rigcap_dummy_vfos rigcap_dummy_vfo_ops rigcap_dummy_scan_ops rigcap_dummy_functions rigcap_dummy_levels rigcap_dummy_parameters
 # Output rig info for dummy transceiver.
 print_capabilities rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes rigcap_dummy_vfos rigcap_dummy_vfo_ops rigcap_dummy_scan_ops
 print_func_level_params --check "functions" rigcap_dummy_functions
