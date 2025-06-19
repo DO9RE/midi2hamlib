@@ -118,6 +118,8 @@ get_vfo_list() {
 # rigcap_dcs_range: Array that holds valid DCS values.
 # rigcap_modes: Array with valid modes.
 # rigcap_vfos: Array containing all available VFOs.
+# rigcap_dummy_fvo_ops, rigcap_dummy_scan_ops:
+#   Arrays that hold VFO and scan operations.
 # rigcap_functions, rigcap_levels, rigcap_parameters:
 #   Arrays that store get, set or getset functions, levels and parameters.
 get_capabilities() {
@@ -130,7 +132,7 @@ get_capabilities() {
   fi
   # Following is correct as long as parameter $2 names an array variable.
   # shellcheck disable=SC2178
-  local -n general=$2 bounds=$3 features=$4 ctcss=$5 dcs=$6 modeslist=$7 vfos=$8 functions=$9 levels=$10 params=$11
+  local -n general=$2 bounds=$3 features=$4 ctcss=$5 dcs=$6 modeslist=$7 vfos=$8 vfo_ops=$9 scan_ops=${10} functions=${11} levels=${12} params=${13}
   local -a tmparr tmparr1 tmparr2
   general["rignr"]="$1"
   # Read capabilities line by line, to make sure we also can detect unhandled things.
@@ -295,6 +297,14 @@ get_capabilities() {
     for i in $tmp2 ; do
       functions["$i"]+="$tmp1"
     done
+# VFO Ops
+  elif [[ "$line" =~ ^VFO\ Ops: ]]; then
+    read -r tmp tmp tmp <<<"$line"
+    vfo_ops=( $tmp )
+# Scan Ops
+  elif [[ "$line" =~ ^Scan\ Ops: ]]; then
+    read -r tmp tmp tmp <<<"$line"
+    scan_ops=( $tmp )
 # Unhandled lines
     elif [[ $show_unhandled -gt 0 ]]; then
       if [[ $show_unhandled -eq 1 ]]; then
@@ -321,11 +331,13 @@ get_capabilities() {
 # rigcap_dcs_range: Array that holds valid DCS values.
 # rigcap_modes: Array with valid modes.
 # rigcap_vfos: Array containing all available VFOs.
+# rigcap_dummy_fvo_ops, rigcap_dummy_scan_ops:
+#   Arrays that hold VFO and scan operations.
 print_capabilities()
 {
   # Following is correct as long as parameter $2 names an array variable.
   # shellcheck disable=SC2178
-  local -n general=$1 bounds=$2 features=$3 ctcss=$4 dcs=$5 modeslist=$6 vfos=$7
+  local -n general=$1 bounds=$2 features=$3 ctcss=$4 dcs=$5 modeslist=$6 vfos=$7 vfo_ops=$8 scan_ops=$9
   echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
   echo "  Announce: ${general["announce"]}"
   for i in RIT XIT IFSHIFT; do
@@ -354,12 +366,18 @@ print_capabilities()
   if [[ -n "${vfos[0]}" ]]; then
     echo "  VFOs: ${vfos[*]}"
   fi
+  if [[ -n "${vfo_ops[0]}" ]]; then
+    echo "  VFO Ops: ${vfo_ops[*]}"
+  fi
+  if [[ -n "${scan_ops[0]}" ]]; then
+    echo "  Scan Ops: ${scan_ops[*]}"
+  fi
 }
 
 # Get rig info for dummy transceiver. Used as reference to compare other models against it.
 # these variable seem unused, but are passed as variable names to functions.
 # shellcheck disable=SC2034
-declare -a rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes rigcap_dummy_vfos
+declare -a rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes rigcap_dummy_vfos rigcap_dummy_vfo_ops rigcap_dummy_scan_ops
 declare -A rigcap_dummy_functions rigcap_dummy_levels rigcap_dummy_parameters rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features
 # Get functions, levels and parameters from transceiver command help.
 # This is for consistency checking against output of --dump-caps
@@ -367,9 +385,9 @@ get_func_level_params u rigcap_dummy_functions 1
 get_func_level_params l rigcap_dummy_levels 1
 get_func_level_params p rigcap_dummy_parameters 1
 # Evaluate rig capabilities from --dump-caps
-get_capabilities 1 rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes rigcap_dummy_vfos rigcap_dummy_functions rigcap_dummy_levels rigcap_dummy_parameters
+get_capabilities 1 rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes rigcap_dummy_vfos rigcap_dummy_vfo_ops rigcap_dummy_scan_ops rigcap_dummy_functions rigcap_dummy_levels rigcap_dummy_parameters
 # Output rig info for dummy transceiver.
-print_capabilities rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes rigcap_dummy_vfos
+print_capabilities rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes rigcap_dummy_vfos rigcap_dummy_vfo_ops rigcap_dummy_scan_ops
 print_func_level_params --check "functions" rigcap_dummy_functions
 print_func_level_params "Levels" rigcap_dummy_levels
 print_func_level_params "parameters" rigcap_dummy_parameters
