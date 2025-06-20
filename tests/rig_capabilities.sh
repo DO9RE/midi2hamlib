@@ -123,7 +123,8 @@ get_vfo_list() {
 # rigcap_functions, rigcap_levels, rigcap_parameters:
 #   Arrays that store get, set or getset functions, levels and parameters.
 get_capabilities() {
-  local tmp tmp1 tmp2 tmp3 show_unhandled indentation
+  local tmp tmp1 tmp2 tmp3 tmp4 tmp5 tmp6
+  local show_unhandled indentation
   if [[ "$1" == "--unhandled" ]]; then
     show_unhandled=1
     shift 1
@@ -134,6 +135,7 @@ get_capabilities() {
   # shellcheck disable=SC2178
   local -n general=$2 bounds=$3 features=$4 ctcss=$5 dcs=$6 modeslist=$7 vfos=$8 vfo_ops=$9 scan_ops=${10} functions=${11} levels=${12} params=${13}
   local -a tmparr tmparr1 tmparr2
+  local -A rangeconsistency
   general["rignr"]="$1"
   # Read capabilities line by line, to make sure we also can detect unhandled things.
   # If we wold just grep for specific lines, we wouldn't know what we are missing to evaluate.
@@ -271,48 +273,101 @@ get_capabilities() {
         features[$tmp2]+="$tmp1"
       fi
 # Modes
-  elif [[ "$line" =~ ^Mode\ list: ]]; then
-    read -r tmp tmp tmp <<<"$line" # tmp now contains the modes.
-    modeslist=( $tmp )
+    elif [[ "$line" =~ ^Mode\ list: ]]; then
+      read -r tmp tmp tmp <<<"$line" # tmp now contains the modes.
+      modeslist=( $tmp )
 # CTCSS
-  elif [[ "$line" =~ ^CTCSS: ]]; then
-    tmp=$(echo "$line" | sed 's/\(CTCSS: *\)\|\( Hz.*$\)\|\.//g')
-    if [[ -n "$tmp" && ! "$tmp" =~ None ]]; then
-      ctcss=( $tmp )
-    fi
+    elif [[ "$line" =~ ^CTCSS: ]]; then
+      tmp=$(echo "$line" | sed 's/\(CTCSS: *\)\|\( Hz.*$\)\|\.//g')
+      if [[ -n "$tmp" && ! "$tmp" =~ None ]]; then
+        ctcss=( $tmp )
+      fi
 # DCS
-  elif [[ "$line" =~ ^DCS: ]]; then
-    tmp=$(echo "$line" | sed 's/\(DCS: *\)\|\(,.*$\)\|\.//g')
-    if [[ -n "$tmp" && ! "$tmp" =~ None ]]; then
-      dcs=( $tmp )
-    fi
+    elif [[ "$line" =~ ^DCS: ]]; then
+      tmp=$(echo "$line" | sed 's/\(DCS: *\)\|\(,.*$\)\|\.//g')
+      if [[ -n "$tmp" && ! "$tmp" =~ None ]]; then
+        dcs=( $tmp )
+      fi
 # VFO list
-  elif [[ "$line" =~ ^VFO\ list: ]]; then
-    read -r tmp tmp tmp <<<"$line"
-    vfos=( $tmp )
+    elif [[ "$line" =~ ^VFO\ list: ]]; then
+      read -r tmp tmp tmp <<<"$line"
+      vfos=( $tmp )
 # Banks
-  elif [[ "$line" =~ Number\ of\ banks: ]]; then
-    read -r tmp tmp tmp tmp <<<"$line"
-    general["banks"]="$tmp"
+    elif [[ "$line" =~ Number\ of\ banks: ]]; then
+      read -r tmp tmp tmp tmp <<<"$line"
+      general["banks"]="$tmp"
 # Memory name size
-  elif [[ "$line" =~ Memory\ name\ desc\ size: ]]; then
-    read -r tmp tmp tmp tmp tmp <<<"$line"
-    general["memnamedescsize"]="$tmp"
+    elif [[ "$line" =~ Memory\ name\ desc\ size: ]]; then
+      read -r tmp tmp tmp tmp tmp <<<"$line"
+      general["memnamedescsize"]="$tmp"
 # Functions
-  elif [[ "$line" =~ ^(Get|Set)\ functions: ]]; then
-    read -r tmp1 tmp tmp2 <<<"$line"
-    tmp1="${tmp1,,}"
-    for i in $tmp2 ; do
-      functions["$i"]+="$tmp1"
-    done
+    elif [[ "$line" =~ ^(Get|Set)\ functions: ]]; then
+      read -r tmp1 tmp tmp2 <<<"$line"
+      tmp1="${tmp1,,}"
+      for i in $tmp2 ; do
+        functions["$i"]+="$tmp1"
+      done
 # VFO Ops
-  elif [[ "$line" =~ ^VFO\ Ops: ]]; then
-    read -r tmp tmp tmp <<<"$line"
-    vfo_ops=( $tmp )
+    elif [[ "$line" =~ ^VFO\ Ops: ]]; then
+      read -r tmp tmp tmp <<<"$line"
+      vfo_ops=( $tmp )
 # Scan Ops
-  elif [[ "$line" =~ ^Scan\ Ops: ]]; then
-    read -r tmp tmp tmp <<<"$line"
-    scan_ops=( $tmp )
+    elif [[ "$line" =~ ^Scan\ Ops: ]]; then
+      read -r tmp tmp tmp <<<"$line"
+      scan_ops=( $tmp )
+# Levels and Parameters
+    elif [[ "$line" =~ ^(Get|Set)\ (level|parameters): ]]; then
+      # Read get/set into tmp1, level/parameters into tmp2 and rest into tmp.
+      read -r tmp1 tmp2 tmp <<<"$line"  
+      tmp1="${tmp1,,}" # lowercase
+      tmp2="${tmp2//s:/}"
+      tmp2="${tmp2//:/}"
+      tmparr=( $(echo "$tmp" | sed 's#\((\|\.\.\|/\|)\)# \1 #g') )
+      for (( i=0; i<${#tmparr[@]}; i+=8 )); do
+        if [[ "${tmparr[i+1]}" != "("
+          || "${tmparr[i+3]}" != ".."
+          || "${tmparr[i+5]}" != "/"
+          || "${tmparr[i+7]}" != ")"
+        ]]; then
+          echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
+          echo "Unexpected $tmp1 $tmp2 capability at entry $(( i/8 )) in '$tmp'."
+          exit 1
+        fi
+        tmp3="${tmparr[i]}" # name
+        tmp4="${tmparr[i+2]}" # min
+        tmp5="${tmparr[i+4]}" # max
+        tmp6="${tmparr[i+6]}" # resolution
+        # Check if another level or parameter with the same name is already registered with a different value range.
+        # We expect that value ranges for set and get are the same and that parameters and levels do not have the same name.
+        if [[ -n "${rangeconsistency[$tmp3]}" && "${rangeconsistency[$tmp3]}" != "$tmp4:$tmp5:$tmp6" ]]; then
+          echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
+          echo "Range inconsistency for $tmp1 $tmp2 $tmp3. Is '$tmp4:$tmp5:$tmp6' but was already stored with '${rangeconsistency[$tmp3]}'."
+          exit 1
+        fi
+        rangeconsistency[$tmp3]="$tmp4:$tmp5:$tmp6"
+        if [[ "$tmp4:$tmp5" != "0:0" ]]; then
+          bounds[$tmp3]+="minmax"
+          bounds[$tmp3:min]="$tmp4"
+          bounds[$tmp3:max]="$tmp5"
+        fi
+        if [[ "$tmp6" != "0" ]]; then
+          bounds[$tmp3]+="res"
+          bounds[$tmp3:res]="$tmp6"
+        fi
+        case $tmp2 in
+          level)
+            levels[$tmp3]+="$tmp1"
+            ;;
+          parameter)
+            params[$tmp3]+="$tmp1"
+            ;;
+          *)
+            echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
+            echo "Unexpected keyword '$tmp2' for $tmp1 $tmp2 $tmp3."
+            exit 1
+            ;;
+        esac
+      done
 # Unhandled lines
     elif [[ $show_unhandled -gt 0 ]]; then
       if [[ $show_unhandled -eq 1 ]]; then
@@ -399,8 +454,8 @@ get_capabilities --unhandled 1 rigcap_dummy_general rigcap_dummy_bounds rigcap_d
 # Output rig info for dummy transceiver.
 print_capabilities rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes rigcap_dummy_vfos rigcap_dummy_vfo_ops rigcap_dummy_scan_ops
 print_func_level_params --check "functions" rigcap_dummy_functions
-print_func_level_params "Levels" rigcap_dummy_levels
-print_func_level_params "parameters" rigcap_dummy_parameters
+print_func_level_params --check "levels" rigcap_dummy_levels
+print_func_level_params --check "parameters" rigcap_dummy_parameters
 get_vfo_list --check rigcap_dummy_vfos 1
 
 # Now collect rig info for all other models and compare with dummy.
