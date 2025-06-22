@@ -122,6 +122,7 @@ get_vfo_list() {
 #   Arrays that hold VFO and scan operations.
 # rigcap_functions, rigcap_levels, rigcap_parameters:
 #   Arrays that store get, set or getset functions, levels and parameters.
+# rigcap_warnings: Array holding backend warnings.
 get_capabilities() {
   local tmp tmp1 tmp2 tmp3 tmp4 tmp5 tmp6
   local show_unhandled indentation
@@ -133,7 +134,7 @@ get_capabilities() {
   fi
   # Following is correct as long as parameter $2 names an array variable.
   # shellcheck disable=SC2178
-  local -n general=$2 bounds=$3 features=$4 ctcss=$5 dcs=$6 modeslist=$7 vfos=$8 vfo_ops=$9 scan_ops=${10} functions=${11} levels=${12} params=${13}
+  local -n general=$2 bounds=$3 features=$4 ctcss=$5 dcs=$6 modeslist=$7 vfos=$8 vfo_ops=$9 scan_ops=${10} functions=${11} levels=${12} params=${13} warnings=${14}
   local -a tmparr tmparr1 tmparr2
   local -A rangeconsistency
   general["rignr"]="$1"
@@ -216,6 +217,9 @@ get_capabilities() {
     elif [[ "$line" =~ ^Mfg\ name: ]]; then
       read -r tmp tmp tmp <<<"$line"
       general["vendor"]="$tmp"
+# Warnings
+  elif [[ "$line" =~ Warning-- ]]; then
+    warnings+=( "${line:10}" )
 # Anounce
     elif [[ "$line" =~ ^Announce: ]]; then
       read -r tmp tmp <<<"$line"
@@ -304,6 +308,7 @@ get_capabilities() {
     elif [[ "$line" =~ ^(Get|Set)\ functions: ]]; then
       read -r tmp1 tmp tmp2 <<<"$line"
       tmp1="${tmp1,,}"
+      general["functions_$tmp1"]="$tmp2"
       for i in $tmp2 ; do
         functions["$i"]+="$tmp1"
       done
@@ -345,12 +350,15 @@ get_capabilities() {
           exit 1
         fi
         rangeconsistency[$tmp3]="$tmp4:$tmp5:$tmp6"
-        if [[ "$tmp4:$tmp5" != "0:0" ]]; then
-          bounds[$tmp3]+="minmax"
+        if [[ ! "${tmp4//./}" =~ ^0+$ ]]; then
+          bounds[$tmp3]+="min"
           bounds[$tmp3:min]="$tmp4"
+        fi
+        if [[ ! "${tmp5//./}" =~ ^0+$ ]]; then
+          bounds[$tmp3]+="max"
           bounds[$tmp3:max]="$tmp5"
         fi
-        if [[ "$tmp6" != "0" ]]; then
+        if [[ ! "${tmp6//./}" =~ ^0+$ ]]; then
           bounds[$tmp3]+="res"
           bounds[$tmp3:res]="$tmp6"
         fi
@@ -367,6 +375,7 @@ get_capabilities() {
             exit 1
             ;;
         esac
+        general["${tmp2}s_${tmp1}"]="$tmp3 "
       done
 # Unhandled lines
     elif [[ $show_unhandled -gt 0 ]]; then
@@ -384,6 +393,24 @@ get_capabilities() {
       features[$i]=sendrecv
     fi
   done
+  general["functions"]=general["functions_get"]
+  for i in ${general["functions_set"]}; do
+    if [[ "${functions[$i]}" == "set" ]]; then
+      general["functions"]+=" $i"
+    fi
+  done
+  general["levels"]=general["levels_get"]
+  for i in ${general["levels_set"]}; do
+    if [[ "${levels[$i]}" == "set" ]]; then
+      general["levels"]+=" $i"
+    fi
+  done
+  general["parameters"]=general["parameters_get"]
+  for i in ${general["parameters_set"]}; do
+    if [[ "${params[$i]}" == "set" ]]; then
+      general["parameters"]+=" $i"
+    fi
+  done
 }
 
 # Parameters:
@@ -396,11 +423,12 @@ get_capabilities() {
 # rigcap_vfos: Array containing all available VFOs.
 # rigcap_dummy_fvo_ops, rigcap_dummy_scan_ops:
 #   Arrays that hold VFO and scan operations.
+# rigcap_warnings: Array holding backend warnings.
 print_capabilities()
 {
   # Following is correct as long as parameter $2 names an array variable.
   # shellcheck disable=SC2178
-  local -n general=$1 bounds=$2 features=$3 ctcss=$4 dcs=$5 modeslist=$6 vfos=$7 vfo_ops=$8 scan_ops=$9
+  local -n general=$1 bounds=$2 features=$3 ctcss=$4 dcs=$5 modeslist=$6 vfos=$7 vfo_ops=$8 scan_ops=$9 warnings=${10}
   echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
   echo "  Announce: ${general["announce"]}"
   echo "  Banks: ${general["banks"]}"
@@ -437,12 +465,19 @@ print_capabilities()
   if [[ -n "${scan_ops[0]}" ]]; then
     echo "  Scan Ops: ${scan_ops[*]}"
   fi
+  if [[ ${#warnings[@]} -ne "0" ]]; then
+    echo "  Warnings:"
+    for i in "${warnings[@]}"; do
+      echo "    - $i"
+    done
+  fi 
 }
 
-# Get rig info for dummy transceiver. Used as reference to compare other models against it.
-# these variable seem unused, but are passed as variable names to functions.
+# Get rig info for dummy transceiver.
+# Used as reference to compare other models against it.
+# These variable seem unused, but are passed as variable names to functions.
 # shellcheck disable=SC2034
-declare -a rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes rigcap_dummy_vfos rigcap_dummy_vfo_ops rigcap_dummy_scan_ops
+declare -a rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes rigcap_dummy_vfos rigcap_dummy_vfo_ops rigcap_dummy_scan_ops rigcap_dummy_warnings
 declare -A rigcap_dummy_functions rigcap_dummy_levels rigcap_dummy_parameters rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features
 # Get functions, levels and parameters from transceiver command help.
 # This is for consistency checking against output of --dump-caps
@@ -450,15 +485,21 @@ get_func_level_params u rigcap_dummy_functions 1
 get_func_level_params l rigcap_dummy_levels 1
 get_func_level_params p rigcap_dummy_parameters 1
 # Evaluate rig capabilities from --dump-caps
-get_capabilities --unhandled 1 rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes rigcap_dummy_vfos rigcap_dummy_vfo_ops rigcap_dummy_scan_ops rigcap_dummy_functions rigcap_dummy_levels rigcap_dummy_parameters
+get_capabilities --unhandled 1 rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes rigcap_dummy_vfos rigcap_dummy_vfo_ops rigcap_dummy_scan_ops rigcap_dummy_functions rigcap_dummy_levels rigcap_dummy_parameters rigcap_dummy_warnings
 # Output rig info for dummy transceiver.
-print_capabilities rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes rigcap_dummy_vfos rigcap_dummy_vfo_ops rigcap_dummy_scan_ops
+print_capabilities rigcap_dummy_general rigcap_dummy_bounds rigcap_dummy_features rigcap_dummy_ctcss rigcap_dummy_dcs rigcap_dummy_modes rigcap_dummy_vfos rigcap_dummy_vfo_ops rigcap_dummy_scan_ops rigcap_dummy_warnings
 print_func_level_params --check "functions" rigcap_dummy_functions
 print_func_level_params --check "levels" rigcap_dummy_levels
 print_func_level_params --check "parameters" rigcap_dummy_parameters
 get_vfo_list --check rigcap_dummy_vfos 1
 
-# Now collect rig info for all other models and compare with dummy.
+# Now collect rig info for all other models or if given , just the given model, and compare with dummy.
+rigmodel=$1
+shift
+if [[ "$rigmodel" == "1" ]]; then
+  # Was already examined above.
+  exit 0
+fi
 # Store rig number, manufactorer and model into arrays.
 # Complicated, because there is no dedicated field separator.
 while IFS="" read -r line; do
@@ -475,4 +516,25 @@ while IFS="" read -r line; do
   ###rigctl -m "$rignr" --dump-caps | grep '^AGC levels'
   ###rigctl -m "$rignr" --dump-caps | awk '{i=index($0,"AGC("); if (i>0) { $0=substr($0,i); i=index($0,")"); print substr($0,1,i) }}'
   ###echo
+  # shellcheck disable=SC2034
+  declare -a rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_warnings
+  declare -A rigcap_functions rigcap_levels rigcap_parameters rigcap_general rigcap_bounds rigcap_features
+  if [[ -z "$rigmodel" ]]; then
+    echo -n "."
+  fi
+  if [[ -z "$rigmodel" || "$rigmodel" -eq "$rignr" ]]; then
+    # ToDo: Include check for consistency with v, u, l and p commands. 
+    get_capabilities --unhandled $rignr rigcap_general rigcap_bounds rigcap_features rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_functions rigcap_levels rigcap_parameters rigcap_warnings
+    if [[ -n "$rigmodel" ]]; then
+      print_capabilities rigcap_general rigcap_bounds rigcap_features rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_warnings
+      print_func_level_params "functions" rigcap_functions
+      print_func_level_params "levels" rigcap_levels
+      print_func_level_params "parameters" rigcap_parameters
+    fi
+  fi
+  unset rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_warnings
+  unset rigcap_functions rigcap_levels rigcap_parameters rigcap_general rigcap_bounds rigcap_features
 done <<<"$(rigctl --list | sed -n '1!p' | sed -n /Hamlib/!p)"
+if [[ -z "$rigmodel" ]]; then
+  echo "done."
+fi
