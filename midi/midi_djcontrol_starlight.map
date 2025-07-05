@@ -1,0 +1,53 @@
+#DEVICE TYPE     CHAN NUM VAL SCRIPT MODE
+#
+# DJControl Starlight
+
+# Control names consist of:
+# - channel number, e.g. 0, 1, 2, ..., 6, 7.
+# - type, e.g. B, K, F or P for Button, Knob, Fader or Pad.
+# - value, e.g. note for buttons and pads or controller number for knobs.
+# - Wheels are basically big touch-sensitive knobs, they send note_on/off
+#   events as well as control-change events.
+# - They have a touch-sensitive surface and a non-touch-sensitive rim.
+# - Turning them with the finger on the flat surface is a different
+#   controller than turning the rim.
+# - They appear in three lines, the "button" of the wheel is above the "knobs".
+# - They have type WB and WK for wheel button and wheel knob.
+#
+# Layout:
+# 
+#  |    1WB8        1B12  0K3      0B1      0K4   2B12        2WB8   |
+# 1F8   1WK10       0B3         1K0     2K0       1+2B3       2WK10 2F8
+#  |    1WK9        1B15  1B16  1K1     2K1 2B15  2B16        1WK9   |
+#                   6P0   6P1               7P0   7P1
+# 1B5   1B6   1B7   6P2   6P3   ---0F0---   7P2   7P3   2B5   2B6   2B7
+#
+# Buttons: 15
+# - 1 at the very top, in the middle above the two inner knobs.
+# - 3 Buttons horizontally on the lower left and lower right.
+# - 4 buttons above each group of pads. Two side by side, the other two above.
+# - The button in the right button group that is second from the top seems
+#   to generate note_on and note_off events on two channels. It is therefore
+#   named 1+2B3, becahse it sends note 3 on channels 1 and 2.
+# Faders: 3
+# - 2 vertical faders at the very left and right with a detent at position 64.
+# - 1 horizontal fader at the botto, separating the two groups of pads.
+# Knobs: 6, all with endstops.
+# - 4 at the top row, the two inner ones a litte lower than the outer ones.
+#   These are continuously adjustable. 
+# - 2 below the inner knobs of the top row. they hav a detent in the middle
+#   position.
+# Pads: 8
+# - 4 on each side of the horizontal slider, grouped in a square.
+# Wheels: 2
+# - The wheels are located directly next to the vertical faders.
+# - Touching / untouching the wheels generates a note_on / note_off event,
+# - Turning the wheels while touching them only at the rim from the side
+#   generates control-change events with value 1 or 127 when turning right or
+#   left. this doesn't trigger the touchsensitive Wheel surfaces.
+# - touching the wheels on the flat surface and turning them yields simlar 
+#   control-change events as the rim, but with a different controller ID.
+# Faders, knobs and wheels have a MSB and a LSB channel.
+# - The MSB chanel is used in the name.
+# - The LSB channel number is offfset by +32 to the MSB channel number.
+ 
