@@ -184,8 +184,17 @@ get_capabilities() {
     elif [[ ! "$line" =~ ^[[:space:]] ]]; then
       indentation=""
     fi
-# Ignore indented content for now.
-    if [[ -n "$indentation" && "$line" =~ ^[[:space:]] ]]; then
+# Extra functions
+    if [[ "$indentation" == "functions" && "$line" =~ ^[[:space:]] ]]; then
+      if [[ ! "$line" =~ : ]]; then
+        read -r tmp <<<"$line"
+        general["functions_get"]+="$tmp"
+        general["functions_set"]+="$tmp"
+        functions[$tmp]="getset"
+      fi
+      continue
+# Ignore other indented content for now.
+    elif [[ -n "$indentation" && "$line" =~ ^[[:space:]] ]]; then
       continue
     fi
 # Ignore these lines, at least for now.
