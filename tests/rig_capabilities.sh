@@ -247,13 +247,14 @@ get_capabilities() {
       bounds[${tmp1}:max]=$(echo "$tmp3" | bc)
 # Preamp, Attenuator
     elif [[ "$line" =~ ^(Preamp|Attenuator): ]]; then
-      read -r tmp1 tmp <<<"${line//dB/}"
+      read -r tmp1 tmp2 <<<"$line"
       if [[ "$tmp" == "None" ]]; then continue; fi
       tmp1="${tmp1//:/}"
       tmp1="${tmp1^^}"
-      bounds[${tmp1}]=values
-      bounds[${tmp1}:unit]=dB
-      bounds[${tmp1}:values]="$tmp"
+      tmp3="${tmp2//dB/}"
+      bounds[${tmp1}]=mappedvalues
+      bounds[${tmp1}:names]="$tmp2"
+      bounds[${tmp1}:values]="$tmp3"
 # AGC levels
     elif [[ "$line" =~ ^AGC\ levels: ]]; then
       read -r tmp tmp tmp <<<"${line//=/ }"
@@ -396,7 +397,7 @@ get_capabilities() {
             exit 1
           fi
           rangeconsistency[$tmp3]="$tmp4"
-          bounds[$tmp3]+="strings"
+          bounds[$tmp3]+="string"
           bounds[$tmp3:strings]="$tmp4"
           case $tmp2 in
             level)
@@ -479,6 +480,8 @@ print_capabilities()
     echo "  $i: ${bounds[$i:min]} to ${bounds[$i:max]}"
   done
   echo "  AGC: '${bounds["AGC:names"]}' --> '${bounds["AGC:values"]}'"
+  echo "  PREAMP: '${bounds["PREAMP:names"]}' --> '${bounds["PREAMP:values"]}'"
+  echo "  ATTENUATOR: '${bounds["ATTENUATOR:names"]}' --> '${bounds["ATTENUATOR:values"]}'"
   local -A ftypes
   for i in "${!features[@]}"; do
     ftypes["${features[$i]}"]+=" $i"
