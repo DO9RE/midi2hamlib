@@ -1,4 +1,6 @@
 #!/bin/bash
+rigctl --version
+
 # Get functions, levels and parameter lists from transceiver, using U, L or P with '?'.
 # Parameters:
 # type: one of u, l or p.
@@ -124,7 +126,7 @@ get_vfo_list() {
 #   Arrays that store get, set or getset functions, levels and parameters.
 # rigcap_warnings: Array holding backend warnings.
 get_capabilities() {
-  local tmp tmp1 tmp2 tmp3 tmp4 tmp5 tmp6
+  local i tmp tmp1 tmp2 tmp3 tmp4 tmp5 tmp6
   local show_unhandled indentation
   if [[ "$1" == "--unhandled" ]]; then
     show_unhandled=1
@@ -182,8 +184,17 @@ get_capabilities() {
     elif [[ ! "$line" =~ ^[[:space:]] ]]; then
       indentation=""
     fi
-# Ignore indented content for now.
-    if [[ -n "$indentation" && "$line" =~ ^[[:space:]] ]]; then
+# Extra functions
+    if [[ "$indentation" == "functions" && "$line" =~ ^[[:space:]] ]]; then
+      if [[ ! "$line" =~ : ]]; then
+        read -r tmp <<<"$line"
+        general["functions_get"]+="$tmp"
+        general["functions_set"]+="$tmp"
+        functions[$tmp]="getset"
+      fi
+      continue
+# Ignore other indented content for now.
+    elif [[ -n "$indentation" && "$line" =~ ^[[:space:]] ]]; then
       continue
     fi
 # Ignore these lines, at least for now.
@@ -200,7 +211,7 @@ get_capabilities() {
       || "$line" =~ ^Port\ type:
       || "$line" =~ ^Serial\ speed:
       || "$line" =~ ^Write\ delay:
-      || "$line" =~ ^Post\ Write\ delay:
+      || "$line" =~ ^Post\ (W|w)rite\ delay:
       || "$line" =~ ^Has\ targetable\ VFO:
       || "$line" =~ ^Has\ transceive:
       || "$line" =~ ^Targetable\ features:
@@ -236,13 +247,14 @@ get_capabilities() {
       bounds[${tmp1}:max]=$(echo "$tmp3" | bc)
 # Preamp, Attenuator
     elif [[ "$line" =~ ^(Preamp|Attenuator): ]]; then
-      read -r tmp1 tmp <<<"${line//dB/}"
+      read -r tmp1 tmp2 <<<"$line"
       if [[ "$tmp" == "None" ]]; then continue; fi
       tmp1="${tmp1//:/}"
       tmp1="${tmp1^^}"
-      bounds[${tmp1}]=values
-      bounds[${tmp1}:unit]=dB
-      bounds[${tmp1}:values]="$tmp"
+      tmp3="${tmp2//dB/}"
+      bounds[${tmp1}]=mappedvalues
+      bounds[${tmp1}:names]="$tmp2"
+      bounds[${tmp1}:values]="$tmp3"
 # AGC levels
     elif [[ "$line" =~ ^AGC\ levels: ]]; then
       read -r tmp tmp tmp <<<"${line//=/ }"
@@ -328,54 +340,85 @@ get_capabilities() {
       tmp2="${tmp2//s:/}"
       tmp2="${tmp2//:/}"
       tmparr=( $(echo "$tmp" | sed 's#\((\|\.\.\|/\|)\)# \1 #g') )
-      for (( i=0; i<${#tmparr[@]}; i+=8 )); do
-        if [[ "${tmparr[i+1]}" != "("
-          || "${tmparr[i+3]}" != ".."
-          || "${tmparr[i+5]}" != "/"
-          || "${tmparr[i+7]}" != ")"
+      (( i=0 ))
+      while (( i<${#tmparr[@]} )); do
+        if [[ "${tmparr[i+1]}" == "("
+          && "${tmparr[i+3]}" == ".."
+          && "${tmparr[i+5]}" == "/"
+          && "${tmparr[i+7]}" == ")"
         ]]; then
-          echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
-          echo "Unexpected $tmp1 $tmp2 capability at entry $(( i/8 )) in '$tmp'."
-          exit 1
-        fi
-        tmp3="${tmparr[i]}" # name
-        tmp4="${tmparr[i+2]}" # min
-        tmp5="${tmparr[i+4]}" # max
-        tmp6="${tmparr[i+6]}" # resolution
-        # Check if another level or parameter with the same name is already registered with a different value range.
-        # We expect that value ranges for set and get are the same and that parameters and levels do not have the same name.
-        if [[ -n "${rangeconsistency[$tmp3]}" && "${rangeconsistency[$tmp3]}" != "$tmp4:$tmp5:$tmp6" ]]; then
-          echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
-          echo "Range inconsistency for $tmp1 $tmp2 $tmp3. Is '$tmp4:$tmp5:$tmp6' but was already stored with '${rangeconsistency[$tmp3]}'."
-          exit 1
-        fi
-        rangeconsistency[$tmp3]="$tmp4:$tmp5:$tmp6"
-        if [[ ! "${tmp4//./}" =~ ^0+$ ]]; then
-          bounds[$tmp3]+="min"
-          bounds[$tmp3:min]="$tmp4"
-        fi
-        if [[ ! "${tmp5//./}" =~ ^0+$ ]]; then
-          bounds[$tmp3]+="max"
-          bounds[$tmp3:max]="$tmp5"
-        fi
-        if [[ ! "${tmp6//./}" =~ ^0+$ ]]; then
-          bounds[$tmp3]+="res"
-          bounds[$tmp3:res]="$tmp6"
-        fi
-        case $tmp2 in
-          level)
-            levels[$tmp3]+="$tmp1"
-            ;;
-          parameter)
-            params[$tmp3]+="$tmp1"
-            ;;
-          *)
+          tmp3="${tmparr[i]}" # name
+          tmp4="${tmparr[i+2]}" # min
+          tmp5="${tmparr[i+4]}" # max
+          tmp6="${tmparr[i+6]}" # resolution
+          # Check if another level or parameter with the same name is already registered with a different value range.
+          # We expect that value ranges for set and get are the same and that parameters and levels do not have the same name.
+          if [[ -n "${rangeconsistency[$tmp3]}" && "${rangeconsistency[$tmp3]}" != "$tmp4:$tmp5:$tmp6" ]]; then
             echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
-            echo "Unexpected keyword '$tmp2' for $tmp1 $tmp2 $tmp3."
+            echo "Range inconsistency for $tmp1 $tmp2 $tmp3. Is '$tmp4:$tmp5:$tmp6' but was already stored with '${rangeconsistency[$tmp3]}'."
             exit 1
-            ;;
-        esac
-        general["${tmp2}s_${tmp1}"]="$tmp3 "
+          fi
+          rangeconsistency[$tmp3]="$tmp4:$tmp5:$tmp6"
+          if [[ ! "${tmp4//./}" =~ ^0+$ ]]; then
+            bounds[$tmp3]+="min"
+            bounds[$tmp3:min]="$tmp4"
+          fi
+          if [[ ! "${tmp5//./}" =~ ^0+$ ]]; then
+            bounds[$tmp3]+="max"
+            bounds[$tmp3:max]="$tmp5"
+          fi
+          if [[ ! "${tmp6//./}" =~ ^0+$ ]]; then
+            bounds[$tmp3]+="res"
+            bounds[$tmp3:res]="$tmp6"
+          fi
+          case $tmp2 in
+            level)
+              levels[$tmp3]+="$tmp1"
+              ;;
+            parameter)
+              params[$tmp3]+="$tmp1"
+              ;;
+            *)
+              echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
+              echo "Unexpected keyword '$tmp2' for $tmp1 $tmp2 $tmp3."
+              exit 1
+              ;;
+          esac
+          general["${tmp2}s_${tmp1}"]+="$tmp3 "
+          (( i+=8 ))
+        elif [[ "${tmparr[i+1]}" == "("
+          && "${tmparr[i+3]}" == ")"
+        ]]; then
+          tmp3="${tmparr[i]}" # name
+          tmp4="${tmparr[i+2]}" # content
+          if [[ -n "${rangeconsistency[$tmp3]}" && "${rangeconsistency[$tmp3]}" != "$tmp4" ]]; then
+            echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
+            echo "Range inconsistency for $tmp1 $tmp2 $tmp3. Is '$tmp4' but was already stored with '${rangeconsistency[$tmp3]}'."
+            exit 1
+          fi
+          rangeconsistency[$tmp3]="$tmp4"
+          bounds[$tmp3]+="string"
+          bounds[$tmp3:strings]="$tmp4"
+          case $tmp2 in
+            level)
+              levels[$tmp3]+="$tmp1"
+              ;;
+            parameter)
+              params[$tmp3]+="$tmp1"
+              ;;
+            *)
+              echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
+              echo "Unexpected keyword '$tmp2' for $tmp1 $tmp2 $tmp3."
+              exit 1
+              ;;
+          esac
+          general["${tmp2}s_${tmp1}"]+="$tmp3 "
+          (( i+=4 ))
+        else
+          echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
+          echo "Unexpected $tmp1 $tmp2 capability at entry $(( i/8 + 1 )) in '$tmp'."
+          exit 1
+        fi
       done
 # Unhandled lines
     elif [[ $show_unhandled -gt 0 ]]; then
@@ -437,6 +480,8 @@ print_capabilities()
     echo "  $i: ${bounds[$i:min]} to ${bounds[$i:max]}"
   done
   echo "  AGC: '${bounds["AGC:names"]}' --> '${bounds["AGC:values"]}'"
+  echo "  PREAMP: '${bounds["PREAMP:names"]}' --> '${bounds["PREAMP:values"]}'"
+  echo "  ATTENUATOR: '${bounds["ATTENUATOR:names"]}' --> '${bounds["ATTENUATOR:values"]}'"
   local -A ftypes
   for i in "${!features[@]}"; do
     ftypes["${features[$i]}"]+=" $i"

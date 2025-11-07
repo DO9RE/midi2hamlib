@@ -1,4 +1,30 @@
 #DEVICE TYPE     CHAN NUM VAL SCRIPT MODE
+#
+# The XTouch Mini consists of 8 columns of controls, each with a rotary knob
+# at the top which also can be pressed like a button. Below the knob there
+# are two buttons stacked vertically.  The knobs have detents, but no
+# endstops.
+# To the right of the 8 columns of knobs and buttons, there is a vertical
+# fader.
+# At the right end of the panel, there are two buttons, just like the
+# buttons under each knob.
+# The upper select layer 1, the lower layer 2, which gives 16
+# pressable and rotatable knobs and 32 buttons in total.
+#
+# All events are sent on channel 10.
+
+# Annotation: K1B0/K11B10 means that there is a knob that acts as controller
+# 1 and button 0 in layer 1 and as controller 11 and button 10 in layer 2.
+#
+# Pressing buttons and knobs yield note_on events with velocity 127,
+# releasing them corresponds to note_off with velocity 0.
+
+# Layout:
+# K1B0    K2B1    K3B2    K4B3    K5B4    K6B5    K7B6    K8B7      |
+# /K11B24 /K12B25 /K13B26 /K14B27 /K15B28 /K16B29 /K17B30 /K18B31   |
+# B8/B32  B9/B33  B10/B34 B11/B35 B12/B36 B13/B37 B14/B38 B15/B39 F9/F10 L1
+# B16/B40 B17/B41 B18/B42 B19/B43 B10/B44 B21/B45 B22/B46 B23/B47   |    L2
+#
 # Mode and bandwidth selection with firt and second knob.
 0       note_on  10   0   127 modes/get_mode
 0       control  10   1   n   modes/mode_toggle

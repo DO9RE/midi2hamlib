@@ -44,6 +44,9 @@ stdbuf -oL "$ASEQDUMP_CMD" -p "$ports" 2>/dev/null | while read -r line; do
       on_off = $3;
       note = $6;
       velocity = $8;
+      if (velocity == "") {
+        velocity = "0";
+      }
       printf("source=\"%s\" type=\"%s\" channel=\"%s\" on_off=\"%s\" note=\"%s\" velocity=\"%s\" ", source, type, channel, on_off, note, velocity);
     } else {
       printf("source=\"%s\" type=\"%s\" channel=\"%s\" ", source, type, channel);
