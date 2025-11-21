@@ -461,3 +461,15 @@ check_environment() {
     export ASEQDUMP_CMD="aseqdump"
   fi
 }
+
+# Function that inserts a linebreak if we are currently not at the beginning
+# of a new line. This makes sense e.g. when we are in a menu and want to
+# write output from a MIDI command. This would normally just show up after
+# the menu prompt in the same line and also would confuse speech output.
+movetonextline() {
+  local COLUMN LINE
+  IFS='[;' read -p $'\e[6n' -d R -rs _ COLUMN LINE _
+  if [[ $LINE -gt 1 ]] ; then
+    echo ""
+  fi
+}
