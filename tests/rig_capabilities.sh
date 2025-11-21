@@ -191,20 +191,34 @@ get_capabilities() {
         functions[$tmp]+="getset"
       fi
       continue
-# Extra levels
-    elif [[ "$indentation" == "levels" && "$line" =~ ^[[:space:]] ]]; then
+# Extra levels and parameters
+    elif [[ "$indentation" =~ levels|parameters && "$line" =~ ^[[:space:]] ]]; then
       if [[ ! "$line" =~ : ]]; then
         read -r tmp1 <<<"$line" # name
-      elif [[ "$line" =~ CHECKBUTTON|BUTTON ]]; then
+      elif [[ "$line" =~ Type:\ STRING ]]; then
+        # We just can get string parameters, not set them.
+        # Restriction due to input devices. No keyboard, just numpd or MIDI.
+        general["${indentation}_get"]+=" $tmp1"
+        if [[ $indentation =~ levels ]] ; then
+          levels[$tmp1]+="get"
+        else
+          params[$tmp1]+="get"
+        fi
+        bounds[$tmp1]="string"
+      elif [[ "$line" =~ Type:\ (CHECKBUTTON|BUTTON) ]]; then
         if [[ -n "${rangeconsistency[$tmp1]}" && "${rangeconsistency[$tmp1]}" != "0:1:1" ]]; then
           echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
-          echo "Range inconsistency for extra level CHECKBUTTON $tmp1. Was already stored with '${rangeconsistency[$tmp1]}'." 
+          echo "Range inconsistency for extra ${indentation::-1} CHECKBUTTON $tmp1. Was already stored with '${rangeconsistency[$tmp1]}'." 
           exit 1
         fi
         rangeconsistency[$tmp1]="0:1:1"
-        general["levels_get"]+=" $tmp1"
-        general["levels_set"]+=" $tmp1"
-        levels[$tmp1]+="getset"
+        general["${indentation}_get"]+=" $tmp1"
+        general["${indentation}_set"]+=" $tmp1"
+        if [[ $indentation =~ levels ]] ; then
+          levels[$tmp1]+="getset"
+        else
+          params[$tmp1]+="getset"
+        fi
         bounds[$tmp1]="mappedvalues"
         bounds[$tmp1:names]="off on"
         bounds[$tmp1:values]="0 1"
@@ -220,7 +234,7 @@ get_capabilities() {
           # We expect that value ranges for set and get are the same and that parameters and levels do not have the same name.
           if [[ -n "${rangeconsistency[$tmp1]}" && "${rangeconsistency[$tmp1]}" != "$tmp2:$tmp3:$tmp4" ]]; then
             echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
-            echo "Range inconsistency for extra level $tmp1. Is '$tmp2:$tmp3:$tmp4' but was already stored with '${rangeconsistency[$tmp1]}'."
+            echo "Range inconsistency for extra ${indentation::-1} $tmp1. Is '$tmp2:$tmp3:$tmp4' but was already stored with '${rangeconsistency[$tmp1]}'."
             exit 1
           fi
           rangeconsistency[$tmp1]="$tmp2:$tmp3:$tmp4"
@@ -237,21 +251,29 @@ get_capabilities() {
             bounds[$tmp1]+="res"
             bounds[$tmp1:res]="$tmp4"
           fi
-          levels[$tmp1]+="getset"
-          general["levels_get"]+=" $tmp1"
-          general["levels_set"]+=" $tmp1"
+          if [[ $indentation =~ levels ]] ; then
+            levels[$tmp1]+="getset"
+          else
+            params[$tmp1]+="getset"
+          fi
+          general["${indentation}_get"]+=" $tmp1"
+          general["${indentation}_set"]+=" $tmp1"
         else
           echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
-          echo "Unexpected 'Range' for extra level $tmp1 in '$line'."
+          echo "Unexpected 'Range' for extra ${indentation::-1} $tmp1 in '$line'."
           exit 1
         fi
       elif [[ "$line" =~ Values: ]]; then
         tmparr=( )
         tmp=$(echo "$line" | sed -e 's/\([^:"]\) /\1_/g' -e 's/^.*Values: //g' -e 's/\([0-9]\+\)=/tmparr[\1]=/g' -e 's/ /; /g')
         eval "$tmp"
-        general["levels_get"]+=" $tmp1"
-        general["levels_set"]+=" $tmp1"
-        levels[$tmp1]+="getset"
+        general["${indentation}_get"]+=" $tmp1"
+        general["${indentation}_set"]+=" $tmp1"
+        if [[ $indentation =~ levels ]] ; then
+          levels[$tmp1]+="getset"
+        else
+          params[$tmp1]+="getset"
+        fi
         bounds[$tmp1]="mappedvalues"
         bounds[$tmp1:names]="${tmparr[*]}"
         bounds[$tmp1:values]="${!tmparr[*]}"
@@ -287,6 +309,9 @@ get_capabilities() {
 # Rig model name
     elif [[ "$line" =~ ^Model\ name: ]]; then
       read -r tmp tmp tmp <<<"$line"
+      if [[ -z $tmp ]] ; then
+        tmp="Generic"
+      fi
       general["model"]="$tmp"
 # Vendor name
     elif [[ "$line" =~ ^Mfg\ name: ]]; then
@@ -620,7 +645,8 @@ print_func_level_params --check "levels" rigcap_dummy_levels
 print_func_level_params --check "parameters" rigcap_dummy_parameters
 get_vfo_list --check rigcap_dummy_vfos 1
 
-# Now collect rig info for all other models or if given, just the given model, and compare with dummy.
+# Now collect rig info for all other models or if given, 
+# just the given model, and compare with dummy.
 rigmodel=$1
 shift
 if [[ "$rigmodel" == "1" ]]; then
@@ -647,12 +673,15 @@ while IFS="" read -r line; do
   declare -a rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_warnings
   declare -A rigcap_functions rigcap_levels rigcap_parameters rigcap_general rigcap_bounds rigcap_features
   if [[ -z "$rigmodel" ]]; then
+    # We didn't give a rigmodel at startup. So loop over all models nd report progress.
     echo -n "."
   fi
   if [[ -z "$rigmodel" || "$rigmodel" -eq "$rignr" ]]; then
-    # ToDo: Include check for consistency with v, u, l and p commands. 
+    # Either we didn't specify a ig model at startup or we specified exactly one.
+    # In any case, we evaluate rig capabilities to detect undhandled lines.
     get_capabilities --unhandled $rignr rigcap_general rigcap_bounds rigcap_features rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_functions rigcap_levels rigcap_parameters rigcap_warnings
     if [[ -n "$rigmodel" ]]; then
+      # ToDo: Include check for consistency with v, u, l and p commands. 
       print_capabilities rigcap_general rigcap_bounds rigcap_features rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_warnings
       print_func_level_params "functions" rigcap_functions
       print_func_level_params "levels" rigcap_levels
