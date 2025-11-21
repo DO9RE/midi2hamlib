@@ -147,11 +147,9 @@ get_capabilities() {
 # Note that in some hamlib versions, these lines may also contain additional info, not just headings.
     if [[ "$line" =~ ^Extra\ functions: ]]; then
       indentation="functions" 
-      # ToDo: process rest of line after colon.
       continue
     elif [[ "$line" =~ ^Extra\ levels: ]]; then
       indentation="levels" 
-      # ToDo: process rest of line after colon.
       continue
     elif [[ "$line" =~ ^Extra\ parameters: ]]; then
       indentation="parameters" 
@@ -188,9 +186,75 @@ get_capabilities() {
     if [[ "$indentation" == "functions" && "$line" =~ ^[[:space:]] ]]; then
       if [[ ! "$line" =~ : ]]; then
         read -r tmp <<<"$line"
-        general["functions_get"]+="$tmp"
-        general["functions_set"]+="$tmp"
-        functions[$tmp]="getset"
+        general["functions_get"]+=" $tmp"
+        general["functions_set"]+=" $tmp"
+        functions[$tmp]+="getset"
+      fi
+      continue
+# Extra levels
+    elif [[ "$indentation" == "levels" && "$line" =~ ^[[:space:]] ]]; then
+      if [[ ! "$line" =~ : ]]; then
+        read -r tmp1 <<<"$line" # name
+      elif [[ "$line" =~ CHECKBUTTON|BUTTON ]]; then
+        if [[ -n "${rangeconsistency[$tmp1]}" && "${rangeconsistency[$tmp1]}" != "0:1:1" ]]; then
+          echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
+          echo "Range inconsistency for extra level CHECKBUTTON $tmp1. Was already stored with '${rangeconsistency[$tmp1]}'." 
+          exit 1
+        fi
+        rangeconsistency[$tmp1]="0:1:1"
+        general["levels_get"]+=" $tmp1"
+        general["levels_set"]+=" $tmp1"
+        levels[$tmp1]+="getset"
+        bounds[$tmp1]="mappedvalues"
+        bounds[$tmp1:names]="off on"
+        bounds[$tmp1:values]="0 1"
+      elif [[ "$line" =~ Range: ]]; then
+        tmparr=( $(echo "$line" | sed 's#\(\.\.\|/\)# \1 #g') )
+        if [[ "${tmparr[2]}" == ".."
+          && "${tmparr[4]}" == "/"
+        ]]; then
+          tmp2="${tmparr[1]}" # min
+          tmp3="${tmparr[3]}" # max
+          tmp4="${tmparr[5]}" # resolution
+          # Check if another level or parameter with the same name is already registered with a different value range.
+          # We expect that value ranges for set and get are the same and that parameters and levels do not have the same name.
+          if [[ -n "${rangeconsistency[$tmp1]}" && "${rangeconsistency[$tmp1]}" != "$tmp2:$tmp3:$tmp4" ]]; then
+            echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
+            echo "Range inconsistency for extra level $tmp1. Is '$tmp2:$tmp3:$tmp4' but was already stored with '${rangeconsistency[$tmp1]}'."
+            exit 1
+          fi
+          rangeconsistency[$tmp1]="$tmp2:$tmp3:$tmp4"
+          # Check if min/max is set or if both contain 0.
+          if [[ ( ! "${tmp2//./}" =~ ^0+$ ) 
+            && ( ! "${tmp3//./}" =~ ^0+$ )
+          ]]; then
+            bounds[$tmp1]+="minmax"
+            bounds[$tmp1:min]="$tmp2"
+            bounds[$tmp1:max]="$tmp3"
+          fi
+          # Check if resolution is not 0.
+          if [[ ! "${tmp4//./}" =~ ^0+$ ]]; then
+            bounds[$tmp1]+="res"
+            bounds[$tmp1:res]="$tmp4"
+          fi
+          levels[$tmp1]+="getset"
+          general["levels_get"]+=" $tmp1"
+          general["levels_set"]+=" $tmp1"
+        else
+          echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
+          echo "Unexpected 'Range' for extra level $tmp1 in '$line'."
+          exit 1
+        fi
+      elif [[ "$line" =~ Values: ]]; then
+        tmparr=( )
+        tmp=$(echo "$line" | sed -e 's/\([^:"]\) /\1_/g' -e 's/^.*Values: //g' -e 's/\([0-9]\+\)=/tmparr[\1]=/g' -e 's/ /; /g')
+        eval "$tmp"
+        general["levels_get"]+=" $tmp1"
+        general["levels_set"]+=" $tmp1"
+        levels[$tmp1]+="getset"
+        bounds[$tmp1]="mappedvalues"
+        bounds[$tmp1:names]="${tmparr[*]}"
+        bounds[$tmp1:values]="${!tmparr[*]}"
       fi
       continue
 # Ignore other indented content for now.
@@ -359,14 +423,14 @@ get_capabilities() {
             exit 1
           fi
           rangeconsistency[$tmp3]="$tmp4:$tmp5:$tmp6"
-          if [[ ! "${tmp4//./}" =~ ^0+$ ]]; then
-            bounds[$tmp3]+="min"
+          if [[ ( ! "${tmp4//./}" =~ ^0+$ )
+          	&& ( ! "${tmp5//./}" =~ ^0+$ )
+          ]]; then
+            bounds[$tmp3]+="minmax"
             bounds[$tmp3:min]="$tmp4"
-          fi
-          if [[ ! "${tmp5//./}" =~ ^0+$ ]]; then
-            bounds[$tmp3]+="max"
             bounds[$tmp3:max]="$tmp5"
           fi
+          # Check if resolution is not 0.
           if [[ ! "${tmp6//./}" =~ ^0+$ ]]; then
             bounds[$tmp3]+="res"
             bounds[$tmp3:res]="$tmp6"
@@ -437,21 +501,39 @@ get_capabilities() {
     fi
   done
   general["functions"]=general["functions_get"]
+  for i in ${general["functions_get"]}; do
+    if [[ "${functions[$i]}" == "get" ]]; then
+      general["functions_getonly"]+="$i "
+    fi
+  done
   for i in ${general["functions_set"]}; do
     if [[ "${functions[$i]}" == "set" ]]; then
       general["functions"]+=" $i"
+      general["functions_setonly"]+="$i "
     fi
   done
   general["levels"]=general["levels_get"]
+  for i in ${general["levels_get"]}; do
+    if [[ "${levels[$i]}" == "get" ]]; then
+      general["levels_getonly"]+="$i "
+    fi
+  done
   for i in ${general["levels_set"]}; do
     if [[ "${levels[$i]}" == "set" ]]; then
       general["levels"]+=" $i"
+      general["levels_setonly"]+="$i "
     fi
   done
   general["parameters"]=general["parameters_get"]
+  for i in ${general["parameters_get"]}; do
+    if [[ "${params[$i]}" == "get" ]]; then
+      general["parameters_getonly"]+="$i "
+    fi
+  done
   for i in ${general["parameters_set"]}; do
     if [[ "${params[$i]}" == "set" ]]; then
       general["parameters"]+=" $i"
+      general["parameters_setonly"]+="$i "
     fi
   done
 }
@@ -538,7 +620,7 @@ print_func_level_params --check "levels" rigcap_dummy_levels
 print_func_level_params --check "parameters" rigcap_dummy_parameters
 get_vfo_list --check rigcap_dummy_vfos 1
 
-# Now collect rig info for all other models or if given , just the given model, and compare with dummy.
+# Now collect rig info for all other models or if given, just the given model, and compare with dummy.
 rigmodel=$1
 shift
 if [[ "$rigmodel" == "1" ]]; then
