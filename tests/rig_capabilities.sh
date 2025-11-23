@@ -564,6 +564,7 @@ get_capabilities() {
 }
 
 # Parameters:
+# --diff: Print noteworthy differences compared to dummy rig.
 # rigcap_general: Array for overall rig data.
 # rigcap_bounds: Array which stores min, max and res values for levels and other values.
 # rigcap_features: Array with feature availability information.
@@ -576,9 +577,26 @@ get_capabilities() {
 # rigcap_warnings: Array holding backend warnings.
 print_capabilities()
 {
+  local diff=""
+  if [[ $1 == "--diff" ]]; then
+  	diff=1
+  	shift 1
+  fi
   # Following is correct as long as parameter $2 names an array variable.
   # shellcheck disable=SC2178
   local -n general=$1 bounds=$2 features=$3 ctcss=$4 dcs=$5 modeslist=$6 vfos=$7 vfo_ops=$8 scan_ops=$9 warnings=${10}
+  if [[ $diff -ge 0 ]]; then
+    if [[ ${general["announce"]} != ${rigcap_dummy_general["announce"]} ]]; then
+  	  echo "${general["rignr"]} ${general["vendor"]} ${general["model"]}: Announce: ${general["announce"]}"
+    fi
+    if [[ -n ${general["functions_setonly"]} && -z ${rigcap_dummy_general["functions_setonly"]} ]]; then
+  	  echo "${general["rignr"]} ${general["vendor"]} ${general["model"]}: setonly functions ${general["functions_setonly"]}"
+    fi
+    if [[ -n ${general["functions_getonly"]} && -z ${rigcap_dummy_general["functions_setonly"]} ]]; then
+  	  echo "${general["rignr"]} ${general["vendor"]} ${general["model"]}: getonly functions ${general["functions_getonly"]}"
+    fi
+  	return 0
+  fi
   echo "${general["vendor"]} ${general["model"]}, ${general["rignr"]}:"
   echo "  Announce: ${general["announce"]}"
   echo "  Banks: ${general["banks"]}"
@@ -681,11 +699,17 @@ while IFS="" read -r line; do
     # In any case, we evaluate rig capabilities to detect undhandled lines.
     get_capabilities --unhandled $rignr rigcap_general rigcap_bounds rigcap_features rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_functions rigcap_levels rigcap_parameters rigcap_warnings
     if [[ -n "$rigmodel" ]]; then
-      # ToDo: Include check for consistency with v, u, l and p commands. 
+      # print detailed report for given rig model. 
+      # Check for consistency for levels, functions and parameters is not
+      # possible. Can only be done if transceiver is in fact available
+      # and of course for dummy. 
       print_capabilities rigcap_general rigcap_bounds rigcap_features rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_warnings
       print_func_level_params "functions" rigcap_functions
       print_func_level_params "levels" rigcap_levels
       print_func_level_params "parameters" rigcap_parameters
+    else
+      # only print noteworthy differences compared to dummy rig.
+      print_capabilities --diff rigcap_general rigcap_bounds rigcap_features rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_warnings
     fi
   fi
   unset rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_warnings
