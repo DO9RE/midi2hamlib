@@ -221,7 +221,7 @@ internal_get_capabilities() {
       tmp1=${tmp1:0:3}
       tmp1=${tmp1/IF-/IFSHIFT} # contains RIT, XIT or IFSHIFT
       read -r tmp2 tmp3 <<<"$(echo "$tmp" | sed -e 's#/+# #g' -e 's/k/*1000/g' -e 's/M/*1000000/g' -e 's/G/*1000000000/g' -e s#Hz#/1#g)"
-      bounds[${tmp1}]=minmax
+      bounds[${tmp1}]=minmaxunit
       bounds[${tmp1}:unit]=Hz
       bounds[${tmp1}:min]=$(echo "$tmp2" | bc)
       bounds[${tmp1}:max]=$(echo "$tmp3" | bc)
@@ -462,4 +462,40 @@ get_rig_capabilities() {
   declare -ag rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_warnings
   declare -Ag rigcap_functions rigcap_levels rigcap_parameters rigcap_general rigcap_bounds rigcap_features
   get_capabilities $model rigcap_general rigcap_bounds rigcap_features rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_functions rigcap_levels rigcap_parameters rigcap_warnings
+}
+
+# Check if rig can set/get/send/recv/ctrl a feature/function/level/parameter.
+# Parameters:
+# verb: Action that shall be checked, e.g. get, set.
+# type: oe of fuction, feature, level, parameter.
+# name: Name of the function/level/parameter/feature.
+# Returns 0 if action is possible, 1 otherwise.
+rig_can() {
+  declare -n check="rigcap_${type}s"
+  if [[ ${check[$name]} =~ $verb ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+# Like rig_can, but print message if action is not possible.
+anounce_rig_can() {
+  if rig_can "$@" ; then
+    return 0
+  else
+    echo "${1^} $3 is not supported."
+    return 1
+  fi
+}
+
+# Check if rig value (level or parameter) has a certain property like
+# min, max, res, mappedvalues, values or string.
+# Parameters: name prop
+rig_value_has() {
+  if [[ ${rigcap_bounds[$1]} =~ $2 ]]; then
+    return 0
+  else
+    return 1
+  fi
 }
