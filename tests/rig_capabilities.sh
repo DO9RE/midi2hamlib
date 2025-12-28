@@ -1,6 +1,7 @@
 #!/bin/bash
 rigctl --version
 
+source "$(dirname "$0")/../functions/helper_functions"
 source "$(dirname "$0")/../functions/rigcaps"
 
 # Get functions, levels and parameter lists from transceiver, using U, L or P with '?'.
@@ -133,7 +134,7 @@ print_capabilities()
   # Following is correct as long as parameter $2 names an array variable.
   # shellcheck disable=SC2178
   local -n general=$1 bounds=$2 features=$3 ctcss=$4 dcs=$5 modeslist=$6 vfos=$7 vfo_ops=$8 scan_ops=$9 warnings=${10}
-  if [[ $diff -ge 0 ]]; then
+  if [[ $diff -gt 0 ]]; then
     if [[ ${general["announce"]} != ${rigcap_dummy_general["announce"]} ]]; then
   	  echo "${general["rignr"]} ${general["vendor"]} ${general["model"]}: Announce: ${general["announce"]}"
     fi
@@ -188,7 +189,19 @@ print_capabilities()
     for i in "${warnings[@]}"; do
       echo "    - $i"
     done
-  fi 
+  fi
+  local -A vtypes vtnames
+  for i in "${!bounds[@]}" ; do
+    if [[ ! $i =~ : ]] ; then
+      (( vtypes[${bounds["$i"]}]++ ))
+      vtnames[${bounds["$i"]}]+=" $i"
+    fi
+  done
+  echo "  Value Types:"
+  for i in "${!vtypes[@]}" ; do
+    echo "    ${i} ${vtypes["$i"]}:${vtnames[$i]}"
+  done
+  echo
 }
 
 # Get rig info for dummy transceiver.
@@ -228,7 +241,7 @@ while IFS="" read -r line; do
   if [[ -z "$model" ]]; then
     model="Generic"
   fi
-  ###echo "$vendor $model, $rignr:"
+  echo "$vendor $model, $rignr:"
   # preamp, attenuator
   ###rigctl -m "$rignr" --dump-caps | grep '^\(Preamp\)\|\(Attenuator\)'
   # AGC levels

@@ -17,7 +17,7 @@
 #   Arrays that store get, set or getset functions, levels and parameters.
 # rigcap_warnings: Array holding backend warnings.
 internal_get_capabilities() {
-  local i tmp tmp1 tmp2 tmp3 tmp4 tmp5 tmp6
+  local i tmp tmp1 tmp2 tmp3 tmp4 tmp5 tmp6 xxx
   local show_unhandled indentation
   if [[ "$1" == "--unhandled" ]]; then
     show_unhandled=1
@@ -88,7 +88,7 @@ internal_get_capabilities() {
         read -r tmp1 <<<"$line" # name
       elif [[ "$line" =~ Type:\ STRING ]]; then
         # We just can get string parameters, not set them.
-        # Restriction due to input devices. No keyboard, just numpd or MIDI.
+        # Restriction due to input devices. No keyboard, just numpad or MIDI.
         general["${indentation}_get"]+=" $tmp1"
         if [[ $indentation =~ levels ]] ; then
           levels[$tmp1]+="get"
@@ -130,17 +130,32 @@ internal_get_capabilities() {
           fi
           rangeconsistency[$tmp1]="$tmp2:$tmp3:$tmp4"
           # Check if min/max is set or if both contain 0.
-          if [[ ( ! "${tmp2//./}" =~ ^0+$ ) 
-            && ( ! "${tmp3//./}" =~ ^0+$ )
+          if [[ ( ( ! "${tmp2//./}" =~ ^0+$ ) || ( ! "${tmp3//./}" =~ ^0+$ ) )
+            && ( ! ${bounds[$tmp1]} =~ minmax )
           ]]; then
             bounds[$tmp1]+="minmax"
-            bounds[$tmp1:min]="$tmp2"
-            bounds[$tmp1:max]="$tmp3"
+            bounds[$tmp1:min]=$(strip_trailing_zeros "$tmp2")
+            bounds[$tmp1:max]=$(strip_trailing_zeros "$tmp3")
           fi
           # Check if resolution is not 0.
-          if [[ ! "${tmp4//./}" =~ ^0+$ ]]; then
+          if [[ ( ! "${tmp4//./}" =~ ^0+$ )
+            && ( ! ${bounds[$tmp1]} =~ res )
+          ]]; then
             bounds[$tmp1]+="res"
-            bounds[$tmp1:res]="$tmp4"
+            bounds[$tmp1:res]=$(strip_trailing_zeros "$tmp4")
+          fi
+          # float or int
+          xxx="${bounds[$tmp1:min]}${bounds[$tmp1:max]}${bounds[$tmp1:res]}"
+          if [[ -z $xxx ]] ; then
+            xxx="${tmp2}${tmp3}${tmp4}"
+          fi
+          if [[ ${bounds[$tmp1]} =~ string|values|int|float ]] ; then
+            # float or int is already set or do not apply
+            true
+          elif [[ ( ! ${bounds[$tmp1]} =~ int ) && ( -n $xxx ) && ( ! $xxx =~ \. ) ]] ; then
+            bounds[$tmp1]+="int"
+          elif [[ ! ${bounds[$tmp1]} =~ float ]] ; then
+            bounds[$tmp1]+="float"
           fi
           if [[ $indentation =~ levels ]] ; then
             levels[$tmp1]+="getset"
@@ -221,7 +236,7 @@ internal_get_capabilities() {
       tmp1=${tmp1:0:3}
       tmp1=${tmp1/IF-/IFSHIFT} # contains RIT, XIT or IFSHIFT
       read -r tmp2 tmp3 <<<"$(echo "$tmp" | sed -e 's#/+# #g' -e 's/k/*1000/g' -e 's/M/*1000000/g' -e 's/G/*1000000000/g' -e s#Hz#/1#g)"
-      bounds[${tmp1}]=minmaxunit
+      bounds[${tmp1}]=minmaxintunit
       bounds[${tmp1}:unit]=Hz
       bounds[${tmp1}:min]=$(echo "$tmp2" | bc)
       bounds[${tmp1}:max]=$(echo "$tmp3" | bc)
@@ -339,17 +354,31 @@ internal_get_capabilities() {
             exit 1
           fi
           rangeconsistency[$tmp3]="$tmp4:$tmp5:$tmp6"
-          if [[ ( ! "${tmp4//./}" =~ ^0+$ )
-          	&& ( ! "${tmp5//./}" =~ ^0+$ )
+          if [[ ( ( ! "${tmp4//./}" =~ ^0+$ ) || ( ! "${tmp5//./}" =~ ^0+$ ) )
+            && ( ! ${bounds[$tmp3]} =~ minmax )
           ]]; then
             bounds[$tmp3]+="minmax"
-            bounds[$tmp3:min]="$tmp4"
-            bounds[$tmp3:max]="$tmp5"
+            bounds[$tmp3:min]=$(strip_trailing_zeros "$tmp4")
+            bounds[$tmp3:max]=$(strip_trailing_zeros "$tmp5")
           fi
           # Check if resolution is not 0.
-          if [[ ! "${tmp6//./}" =~ ^0+$ ]]; then
+          if [[ ( ! "${tmp6//./}" =~ ^0+$ )
+            && ( ! ${bounds[$tmp3]} =~ res )
+          ]]; then
             bounds[$tmp3]+="res"
-            bounds[$tmp3:res]="$tmp6"
+            bounds[$tmp3:res]=$(strip_trailing_zeros "$tmp6")
+          fi
+          xxx="${bounds[$tmp3:min]}${bounds[$tmp3:max]}${bounds[$tmp3:res]}"
+          if [[ -z $xxx ]] ; then
+            xxx="${tmp4}${tmp5}${tmp6}"
+          fi
+          if [[ ${bounds[$tmp3]} =~ string|values|float|int ]] ; then
+            # float or int is already set or do not apply
+            true
+          elif [[ ( ! ${bounds[$tmp3]} =~ int ) && ( -n $xxx ) && ( ! $xxx =~ \. ) ]] ; then
+            bounds[$tmp3]+="int"
+          elif [[ ! ${bounds[$tmp3]} =~ float ]] ; then
+            bounds[$tmp3]+="float"
           fi
           case $tmp2 in
             level)
@@ -377,7 +406,9 @@ internal_get_capabilities() {
             exit 1
           fi
           rangeconsistency[$tmp3]="$tmp4"
-          bounds[$tmp3]+="string"
+          if [[ ! ${bounds[$tmp3]} =~ string ]] ; then
+            bounds[$tmp3]+="string"
+          fi
           bounds[$tmp3:strings]="$tmp4"
           case $tmp2 in
             level)
@@ -461,7 +492,7 @@ get_rig_capabilities() {
   # shellcheck disable=SC2034
   declare -ag rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_warnings
   declare -Ag rigcap_functions rigcap_levels rigcap_parameters rigcap_general rigcap_bounds rigcap_features
-  get_capabilities $model rigcap_general rigcap_bounds rigcap_features rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_functions rigcap_levels rigcap_parameters rigcap_warnings
+  internal_get_capabilities $model rigcap_general rigcap_bounds rigcap_features rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_functions rigcap_levels rigcap_parameters rigcap_warnings
 }
 
 # Check if rig can set/get/send/recv/ctrl a feature/function/level/parameter.
