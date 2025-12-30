@@ -1,5 +1,11 @@
+if ! anounce_rig_can get feature level ; then
+  return 0
+fi
+
 announce_level() {
-  echo "${levels[$1]} = $(rigctl -m 2 -r "$host:$port" l "${levels[$1]}")"
+  if anounce_rig_can get level "${levels[$1]}" ; then
+    echo "${levels[$1]} = $(rigctl -m 2 -r "$host:$port" l "${levels[$1]}")"
+  fi
   return 0
 }
 

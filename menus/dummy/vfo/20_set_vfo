@@ -1,0 +1,2 @@
+# Set VFO
+source "$funcdir/vfo/vfo_toggle"

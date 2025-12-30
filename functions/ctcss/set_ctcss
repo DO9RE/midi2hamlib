@@ -1,3 +1,7 @@
+if ! anounce_rig_can set feature ctcss ; then
+  return 0
+fi
+
 # Generate CTCSS Range from the given models --caps-dump output
 # Remove the decimal points, because the System needs every value as an integer.
 if [[ ! -v ctcss_range ]] ; then
@@ -24,6 +28,8 @@ else # Triggered from keyboard
     echo -n "Invalid CTCSS tone. CTCSS is still "
   fi
 fi
-# Format the output as decimal with one position behind the decimal point
-ctcss=$(rigctl -m 2 -r "$host:$port" c)
-humanize_ctcss "$ctcss"
+if rig_can get feature ctcss ; then
+  # Format the output as decimal with one position behind the decimal point
+  ctcss=$(rigctl -m 2 -r "$host:$port" c)
+  humanize_ctcss "$ctcss"
+fi

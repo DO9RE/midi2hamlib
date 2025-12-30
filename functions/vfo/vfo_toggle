@@ -1,3 +1,7 @@
+if ! anounce_rig_can set feature vfo ; then
+  return 0
+fi
+
 select_vfo() {
   rigctl -m 2 -r "$host:$port" V "${vfos[$1]}"
   return 1
@@ -15,4 +19,7 @@ if [[ $1 ]]; then #Triggered with parameter
   fi
 else #Called from keyboard, show VFOs list and ask for selection.
   show_menu "Select VFO:" vfos "VFO?: " select_vfo
+fi
+if rig_can get feature vfo ; then
+  source "$funcdir/vfo/get_vfo" 
 fi

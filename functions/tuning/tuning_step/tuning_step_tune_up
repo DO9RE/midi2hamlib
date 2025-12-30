@@ -1,4 +1,5 @@
-cur_freq=$(rigctl -m 2 -r "$host:$port" f)
-new_freq=$((cur_freq + tuning_step))
-rigctl -m 2 -r "$host:$port" F $new_freq
-
+if anounce_rig_can getset feature frequency ; then
+  cur_freq=$(rigctl -m 2 -r "$host:$port" f)
+  new_freq=$((cur_freq + tuning_step))
+  rigctl -m 2 -r "$host:$port" F $new_freq
+fi

@@ -1,3 +1,4 @@
 # Show mode and bandwidth in one line, remove \n from string
-echo "$(rigctl -m 2 -r "$host:$port" m | sed ':a;N;$!ba;s/\n/ /g') Hz"
-
+if anounce_rig_can get feature mode ; then
+  echo "$(rigctl -m 2 -r "$host:$port" m | sed ':a;N;$!ba;s/\n/ /g') Hz"
+fi

@@ -1,12 +1,14 @@
 # Checklist, Todo and ideas
 
-- [ ] Set Levels
+- [ ] Set Levels and Parameters
 
 ## **Note by DK7STJ – 2025-05-23:**  
 - Implement setting levels by menu.
   - Without validation, just let the transceiver digest the value and read back what it did woth int.
   - Validate against capabilities.
 - Implement setting levels by MIDI.
+
+- [ ] Get / Set Parameters, same like levels.
 
 - [ ] Improve bandwidth selection.
 
@@ -21,8 +23,9 @@
 
 ## **Note by DK7STJ – 2025-04-18:**  
 
+  Doesn't work for getonly and setonly functions.
   Selecting and toggling a function alternately by MIDI and by menu doesn't work as expected.
-  Toggling a function by menu doesn't update the variable n which the last function state is stored. So toggling it afterwards by MIDI yields wrong results.
+  Toggling a function by menu doesn't update the variable in which the last function state is stored. So toggling it afterwards by MIDI yields wrong results.
   Either do not use last function state and always get status from TRX
   first, or update function state when using menu.
 

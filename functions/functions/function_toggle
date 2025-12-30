@@ -1,6 +1,10 @@
 # Toggle the selected function according to $last_function and $status_last_function, coming from the function_select script
 if [[ ! $last_function ]]; then
   echo "No function selected"
+elif ! anounce_rig_can getset feature func ; then
+  return 0
+elif ! anounce_rig_can getset function "$last_function" ; then
+  return 0
 else
   status_last_function=$(rigctl -m 2 -r "$host:$port" u "$last_function")
   if [[ $status_last_function == 0 ]]; then

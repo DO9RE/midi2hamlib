@@ -1,3 +1,7 @@
+if ! anounce_rig_can getset feature func ; then
+  return 0
+fi
+
 # Build the functions list by querying the backend for supported functions. 
 if [[ ! -v functions ]]; then
   functions=($(rigctl -m 2 -r "$host:$port" U "?"))

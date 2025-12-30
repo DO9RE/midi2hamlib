@@ -1,3 +1,7 @@
+if ! anounce_rig_can getset feature mode ; then
+  return 0
+fi
+
 unset bandwidths
 declare -a bandwidths
 # get possible bandwidths for current mode

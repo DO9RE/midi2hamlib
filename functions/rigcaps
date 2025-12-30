@@ -502,8 +502,9 @@ get_rig_capabilities() {
 # name: Name of the function/level/parameter/feature.
 # Returns 0 if action is possible, 1 otherwise.
 rig_can() {
-  declare -n check="rigcap_${type}s"
-  if [[ ${check[$name]} =~ $verb ]]; then
+  declare -n check="rigcap_${2}s"
+  ###echo "XXX: rig_can $1 $2 $3: ${check[$3]}"
+  if [[ ${check[$3]} =~ $1 ]]; then
     return 0
   else
     return 1

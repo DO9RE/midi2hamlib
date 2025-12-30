@@ -1,3 +1,7 @@
+if ! anounce_rig_can set feature mode ; then
+  return 0
+fi
+
 switch_to_mode() {
 # Switch transceiver to selected mode, passing 0 as second parameter, device default bandwidth
   rigctl -m 2 -r "$host:$port" M "${modes[$1]}" 0
@@ -16,4 +20,6 @@ if [[ $1 ]]; then #Triggered with parameter
 else #Called from keyboard, show modes list and ask for selection.
   show_menu "Set mode:" modes 'Mode?: ' switch_to_mode
 fi
-source "$funcdir/modes/get_mode"
+if rig_can get feature mode ; then
+  source "$funcdir/modes/get_mode"
+fi

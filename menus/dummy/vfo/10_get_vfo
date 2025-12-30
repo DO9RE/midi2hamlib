@@ -1,0 +1,2 @@
+# Get VFO
+source "$funcdir/vfo/get_vfo"
