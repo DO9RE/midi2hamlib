@@ -1,4 +1,4 @@
 # output current vfo
-if anounce_rig_can get feature vfo ; then
+if announce_rig_can get feature vfo ; then
   rigctl -m 2 -r "$host:$port" v
 fi

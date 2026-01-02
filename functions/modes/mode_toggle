@@ -1,4 +1,4 @@
-if ! anounce_rig_can set feature mode ; then
+if ! announce_rig_can set feature mode ; then
   return 0
 fi
 

@@ -1,4 +1,4 @@
-if ! anounce_rig_can set feature ctcss ; then
+if ! announce_rig_can set feature ctcss ; then
   return 0
 fi
 

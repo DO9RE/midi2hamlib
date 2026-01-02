@@ -75,7 +75,7 @@ internal_get_capabilities() {
     fi
 # Extra functions
     if [[ "$indentation" == "functions" && "$line" =~ ^[[:space:]] ]]; then
-      if [[ ! "$line" =~ : ]]; then
+      if [[ ( $exclude_extra -ne 1 ) && ( ! "$line" =~ : ) ]]; then
         read -r tmp <<<"$line"
         general["functions_get"]+=" $tmp"
         general["functions_set"]+=" $tmp"
@@ -84,7 +84,10 @@ internal_get_capabilities() {
       continue
 # Extra levels and parameters
     elif [[ "$indentation" =~ levels|parameters && "$line" =~ ^[[:space:]] ]]; then
-      if [[ ! "$line" =~ : ]]; then
+      if [[ $exclude_extra -eq 1 ]] ; then
+        # Do nothing
+        true
+      elif [[ ! "$line" =~ : ]]; then
         read -r tmp1 <<<"$line" # name
       elif [[ "$line" =~ Type:\ STRING ]]; then
         # We just can get string parameters, not set them.
@@ -226,7 +229,7 @@ internal_get_capabilities() {
 # Warnings
   elif [[ "$line" =~ Warning-- ]]; then
     warnings+=( "${line:10}" )
-# Anounce
+# Announce
     elif [[ "$line" =~ ^Announce: ]]; then
       read -r tmp tmp <<<"$line"
       general["announce"]="$tmp"
@@ -451,6 +454,8 @@ internal_get_capabilities() {
   for i in ${general["functions_get"]}; do
     if [[ "${functions[$i]}" == "get" ]]; then
       general["functions_getonly"]+="$i "
+    else
+      general["functions_getset"]+="$i "
     fi
   done
   for i in ${general["functions_set"]}; do
@@ -463,6 +468,8 @@ internal_get_capabilities() {
   for i in ${general["levels_get"]}; do
     if [[ "${levels[$i]}" == "get" ]]; then
       general["levels_getonly"]+="$i "
+    else
+      general["levels_getset"]+="$i "
     fi
   done
   for i in ${general["levels_set"]}; do
@@ -475,6 +482,8 @@ internal_get_capabilities() {
   for i in ${general["parameters_get"]}; do
     if [[ "${params[$i]}" == "get" ]]; then
       general["parameters_getonly"]+="$i "
+    else
+      general["parameters_getset"]+="$i "
     fi
   done
   for i in ${general["parameters_set"]}; do
@@ -485,10 +494,20 @@ internal_get_capabilities() {
   done
 }
 
+# If set to 1, do not evaluate extra functions, levels and parameters.
+# This is done because it seems that current hamlib implementation doesn't
+# support accesing extra things via network protocol on dummy transceiver backend.
+# This leads to errors when doing demos with dummy transceiver.
+exclude_extra=0
+
 # Decclare global variables for storing rig capabilites 
 # and evaluate rig capabilities.
 # Global variable "model" with RIG model number must be set before. 
 get_rig_capabilities() {
+  if [[ $model -eq 1 ]] ; then
+    # See comment for exclude_extra above.
+    exclude_extra=1
+  fi
   # shellcheck disable=SC2034
   declare -ag rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_warnings
   declare -Ag rigcap_functions rigcap_levels rigcap_parameters rigcap_general rigcap_bounds rigcap_features
@@ -512,7 +531,7 @@ rig_can() {
 }
 
 # Like rig_can, but print message if action is not possible.
-anounce_rig_can() {
+announce_rig_can() {
   if rig_can "$@" ; then
     return 0
   else
@@ -530,4 +549,31 @@ rig_value_has() {
   else
     return 1
   fi
+}
+
+# Retrieve level or parameter from RIG
+# Parameters:
+# type: Either level or parameter.
+# name: level/parameter name.
+announce_rig_get_lp() {
+  if ! announce_rig_can get $1 $2 ; then
+    return 1
+  elif [[ $1 == "parameter" ]] ; then  
+    retval=$(rigctl -m 2 -r "$host:$port" p "$2")
+  else
+    retval=$(rigctl -m 2 -r "$host:$port" l "$2")
+  fi
+  # ToDo: handle minmaxresint resint mappedvalues string minmaxint minmaxresfloat minmaxintunit int float
+  echo "$2 = $retval"
+}
+
+# Send level or parameter to RIG
+# Parameters:
+# type: Either level or parameter.
+# name: level/parameter name.
+# midival: MIDI controller value.
+# midicmd: MIDI command, second parameter from MIDI map.
+announce_rig_set_lp() {
+  # ToDo: handle minmaxresint resint mappedvalues string minmaxint minmaxresfloat minmaxintunit int float
+  echo "Not implemented yet."
 }

@@ -1,0 +1,47 @@
+if ! announce_rig_can get feature param ; then
+  return 0
+fi
+
+# Announce parameter with or without value and store it for get_parameter.
+announce_param() {
+  last_parameter="${parameters[$1]}"
+  if ! announce_rig_get_lp parameter "${parameters[$1]}" ; then
+    echo "${parameters[$1]}"
+  fi
+  return 0
+}
+
+do_param_action() {
+  if [[ ${param_menu[$1]} =~ Set ]] ; then
+    announce_rig_set_lp parameter "$last_parameter"
+  else
+    source "${funcdir}/params/get_parameter"
+  fi
+  return 0
+}
+
+# Announce parameter and build param menu.
+select_param() {
+  announce_param $1
+  param_menu=( )
+  if rig_can get parameter "${parameters[$1]}" ; then
+    param_menu+=( "Get" )
+  fi
+  if rig_can set parameter "${parameters[$1]}" ; then
+    param_menu+=( "Set" )
+  fi
+  show_menu "${parameters[$1]}" param_menu 'And now? ' do_param_action
+}
+
+if [[ ! -v parameters ]]; then
+  parameters=( ${rigcap_general[parameters_getonly]} ${rigcap_general[parameters_getset]} ${rigcap_general[parameters_setonly]} )
+fi
+
+if [[ $1 ]]; then #Triggered with parameter
+  if validate_midi_value "$@" parameters param_midi_result; then
+    announce_param "$param_midi_result"
+  fi
+else #Called from keyboard, show modes list and ask for selection.
+  show_menu "Parameters:" parameters 'Parameter?: ' select_param
+fi
+

@@ -1,0 +1,6 @@
+# Get last selected parameter.
+if [[ ! $last_parameter ]] ; then
+  echo "No parameter selected"
+else
+  announce_rig_get_lp parameter "$last_parameter"
+fi

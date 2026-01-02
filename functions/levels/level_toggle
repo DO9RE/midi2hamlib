@@ -1,27 +1,54 @@
-if ! anounce_rig_can get feature level ; then
+if ! announce_rig_can get feature level ; then
   return 0
 fi
 
+# Announce level with or without value and store it for get_level.
 announce_level() {
-  if anounce_rig_can get level "${levels[$1]}" ; then
-    echo "${levels[$1]} = $(rigctl -m 2 -r "$host:$port" l "${levels[$1]}")"
+  last_level="${levels[$1]}"
+  if ! announce_rig_get_lp level "${levels[$1]}" ; then
+    echo "${levels[$1]}"
   fi
   return 0
 }
 
+do_level_action() {
+  if [[ ${level_menu[$1]} =~ Set ]] ; then
+    announce_rig_set_lp level "$last_level"
+  else
+    source "${funcdir}/levels/get_level"
+  fi
+  return 0
+}
+
+# Announce level and build level menu.
+select_level() {
+  announce_level $1
+  level_menu=( )
+  if rig_can get level "${levels[$1]}" ; then
+    level_menu+=( "Get" )
+  fi
+  if rig_can set level "${levels[$1]}" ; then
+    level_menu+=( "Set" )
+  fi
+  show_menu "${levels[$1]}" level_menu 'And now? ' do_level_action
+}
+
 if [[ ! -v levels ]]; then
-  # Build an array from the transceiver models supported levels, using the --dump-caps flag.
-  levels=($(rigctl -m "$model" --dump-caps | 
-  grep "Set level:" | 
-  sed 's/\(Set level:\)\|\([^A-Z_ ]\)//g'))
-  # Build levels by querying rig
-  #levels=($(rigctl -m 2 -r $host:$port L ?))
+  local xxx
+  # Remove STRENGTH and RAWSTR from levels.
+  # STRENGTH is handled separately, RAWSTR is only for calibration.
+  xxx=" ${rigcap_general[levels_getonly]} "
+  xxx=" ${xxx/ RAWSTR / } "
+  xxx=" ${xxx/ STRENGTH / } "
+  levels=( ${xxx} ${rigcap_general[levels_getset]} ${rigcap_general[levels_setonly]} )
+  unset xxx
 fi
+
 if [[ $1 ]]; then #Triggered with parameter
   if validate_midi_value "$@" levels level_midi_result; then
     announce_level "$level_midi_result"
   fi
 else #Called from keyboard, show modes list and ask for selection.
-  show_menu "Other levels:" levels 'Level?: ' announce_level
+  show_menu "Other levels:" levels 'Level?: ' select_level
 fi
 

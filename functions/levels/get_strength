@@ -1,8 +1,8 @@
 # Function for displaying the S-Meter-Reading
-if ! anounce_rig_can get feature func ; then
+if ! announce_rig_can get feature func ; then
   return 0
 fi
-if ! anounce_rig_can get level STRENGTH ; then
+if ! announce_rig_can get level STRENGTH ; then
   return 0
 fi
 
