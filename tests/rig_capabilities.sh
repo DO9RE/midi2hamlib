@@ -241,7 +241,7 @@ while IFS="" read -r line; do
   if [[ -z "$model" ]]; then
     model="Generic"
   fi
-  echo "$vendor $model, $rignr:"
+  ###echo "$vendor $model, $rignr:"
   # preamp, attenuator
   ###rigctl -m "$rignr" --dump-caps | grep '^\(Preamp\)\|\(Attenuator\)'
   # AGC levels

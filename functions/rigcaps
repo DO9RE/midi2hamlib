@@ -116,6 +116,10 @@ internal_get_capabilities() {
         bounds[$tmp1]="mappedvalues"
         bounds[$tmp1:names]="off on"
         bounds[$tmp1:values]="0 1"
+        bounds[$tmp1:n2v:off]="0"
+        bounds[$tmp1:n2v:on]="1"
+        bounds[$tmp1:v2n:0]="off"
+        bounds[$tmp1:v2n:1]="on"
       elif [[ "$line" =~ Range: ]]; then
         tmparr=( $(echo "$line" | sed 's#\(\.\.\|/\)# \1 #g') )
         if [[ "${tmparr[2]}" == ".."
@@ -186,6 +190,10 @@ internal_get_capabilities() {
         bounds[$tmp1]="mappedvalues"
         bounds[$tmp1:names]="${tmparr[*]}"
         bounds[$tmp1:values]="${!tmparr[*]}"
+        for i in ${!tmparr[@]} ; do
+          bounds[$tmp1:v2n:$i]="${tmparr[$i]}"
+          bounds[$tmp1:n2v:${tmparr[$i]}]="$i"
+        done
       fi
       continue
 # Ignore other indented content for now.
@@ -253,6 +261,10 @@ internal_get_capabilities() {
       bounds[${tmp1}]=mappedvalues
       bounds[${tmp1}:names]="$tmp2"
       bounds[${tmp1}:values]="$tmp3"
+      for i in $tmp2 ; do
+        bounds[${tmp1}:n2v:$i]="${i//dB/}"
+        bounds[${tmp1}:v2n:${i//dB/}]="$i"
+      done
 # AGC levels
     elif [[ "$line" =~ ^AGC\ levels: ]]; then
       read -r tmp tmp tmp <<<"${line//=/ }"
@@ -268,6 +280,10 @@ internal_get_capabilities() {
       bounds["AGC"]=mappedvalues
       bounds["AGC:values"]="${tmparr1[*]}"
       bounds["AGC:names"]="${tmparr2[*]}"
+      for i in ${!tmparr1[@]} ; do
+        bounds["AGC:v2n:${tmparr1[$i]}"]="${tmparr2[$i]}"
+        bounds["AGC:n2v:${tmparr2[$i]}"]="${tmparr1[$i]}"
+      done
 # Feature availability
     elif [[ "$line" =~ ^Can\ (Reset|Scan): ]]; then
       read -r tmp tmp1 tmp2 <<<"${line,,}"
