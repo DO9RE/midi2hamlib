@@ -279,6 +279,9 @@ fi
 show_menu_format="%-${show_menu_width}s"
 #echo "SC: $screen_columns; MC: $show_menu_columns; MinW: $show_menu_min_width; MaxW: $show_menu_max_width; MW: $show_menu_width"
 
+# Menu entries for an on/off menu
+on_off_menu=( "On" "Off" )
+
 # Display a menu with title and elements from an array.
 # the elements from the zero-based array are numbered beginning with 1.
 # Index shifting is performed transparently, so the selection is again zero-based and can 

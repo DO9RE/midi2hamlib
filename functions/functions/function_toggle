@@ -1,16 +1,30 @@
 # Toggle the selected function according to $last_function and $status_last_function, coming from the function_select script
 
-if [[ ! -v setonly_function_state ]] ; then
-  declare -A setonly_function_state
-fi
+declare -A setonly_function_state
+
+set_setonly_function_state() {
+  if [[ $1 -eq 0 ]]; then
+    rigctl -m 2 -r "$host:$port" U "$last_function" 1
+    status_last_function=1
+  else
+    rigctl -m 2 -r "$host:$port" U "$last_function" 0
+    status_last_function=0
+  fi
+  setonly_function_state[$last_function]="$status_last_function"
+  echo "$last_function is $(humanize_status "$status_last_function")"
+}
 
 if [[ ! $last_function ]]; then
   echo "No function selected"
+  return 0
 elif ! announce_rig_can getset feature func ; then
   return 0
 elif ! announce_rig_can set function "$last_function" ; then
   return 0
-else
+elif [[ ( -z $1 ) && ( "${rigcap_functions[$last_function]}" == "set" ) ]] ; then
+  # We are not invoked from MIDI and have a setonly function.
+  show_menu "${last_function}:" on_off_menu "State?: " set_setonly_function_state
+else # MIDI or not a setonly function
   if rig_can get function "$last_function" ; then
     status_last_function=$(rigctl -m 2 -r "$host:$port" u "$last_function")
   else
@@ -23,12 +37,11 @@ else
     rigctl -m 2 -r "$host:$port" U "$last_function" 0
     status_last_function=0
   fi
+  # Show function and its status, the 0 and 1 converted to human friendly off and on.
   if rig_can get function "$last_function" ; then
     status_last_function=$(rigctl -m 2 -r "$host:$port" u "$last_function")
   else
     setonly_function_state[$last_function]="$status_last_function"
   fi
-  # Show function and its status, the 0 and 1 converted to human friendly off and on.
   echo "$last_function is $(humanize_status "$status_last_function")"
-fi  
-
+fi
