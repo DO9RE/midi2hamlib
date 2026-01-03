@@ -90,7 +90,7 @@ internal_get_capabilities() {
       elif [[ ! "$line" =~ : ]]; then
         read -r tmp1 <<<"$line" # name
       elif [[ "$line" =~ Type:\ STRING ]]; then
-        # We just can get string parameters, not set them.
+        # We just can get string extra parameters, not set them.
         # Restriction due to input devices. No keyboard, just numpad or MIDI.
         general["${indentation}_get"]+=" $tmp1"
         if [[ $indentation =~ levels ]] ; then

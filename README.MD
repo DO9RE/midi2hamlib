@@ -203,6 +203,15 @@ fine for us:
 ./configure 
 ```
 
+If you want to make sure you have lubUSB support and readline features in rigctl, in
+case you want to use rigctl interactively, just do:
+
+```
+./configure --with-libusb --with-readline --with-xml-support
+```
+
+This is however not required for running midi2hamlib.
+
 **configure** will print lots of messages for each check it is doing. At
 the end, it prints a summary of enabled and disabled options. Examine this
 output in order to detect major issues. We do not expect anything severe
