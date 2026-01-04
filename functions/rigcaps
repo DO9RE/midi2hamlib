@@ -75,7 +75,7 @@ internal_get_capabilities() {
     fi
 # Extra functions
     if [[ "$indentation" == "functions" && "$line" =~ ^[[:space:]] ]]; then
-      if [[ ( $exclude_extra -ne 1 ) && ( ! "$line" =~ : ) ]]; then
+      if [[ ( $rigcap_exclude_extra -ne 1 ) && ( ! "$line" =~ : ) ]]; then
         read -r tmp <<<"$line"
         general["functions_get"]+=" $tmp"
         general["functions_set"]+=" $tmp"
@@ -84,7 +84,7 @@ internal_get_capabilities() {
       continue
 # Extra levels and parameters
     elif [[ "$indentation" =~ levels|parameters && "$line" =~ ^[[:space:]] ]]; then
-      if [[ $exclude_extra -eq 1 ]] ; then
+      if [[ $rigcap_exclude_extra -eq 1 ]] ; then
         # Do nothing
         true
       elif [[ ! "$line" =~ : ]]; then
@@ -514,15 +514,17 @@ internal_get_capabilities() {
 # This is done because it seems that current hamlib implementation doesn't
 # support accesing extra things via network protocol on dummy transceiver backend.
 # This leads to errors when doing demos with dummy transceiver.
-exclude_extra=0
+if [[ ! -v rigcap_exclude_extra ]] ; then
+  rigcap_exclude_extra=0
+fi
 
 # Decclare global variables for storing rig capabilites 
 # and evaluate rig capabilities.
 # Global variable "model" with RIG model number must be set before. 
 get_rig_capabilities() {
   if [[ $model -eq 1 ]] ; then
-    # See comment for exclude_extra above.
-    exclude_extra=1
+    # See comment for rigcap_exclude_extra above.
+    rigcap_exclude_extra=1
   fi
   # shellcheck disable=SC2034
   declare -ag rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_warnings

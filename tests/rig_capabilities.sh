@@ -204,6 +204,12 @@ print_capabilities()
   echo
 }
 
+# Evaluate no_extra commandline parameter
+if [[ $1 =~ no_extra|no-extra|exclude_extra|exclude-extra|noextra|excludeextra ]] ; then
+  rigcap_exclude_extra=1
+  shift 1
+fi
+
 # Get rig info for dummy transceiver.
 # Used as reference to compare other models against it.
 # These variable seem unused, but are passed as variable names to functions.
