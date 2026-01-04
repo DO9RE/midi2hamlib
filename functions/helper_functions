@@ -10,7 +10,10 @@ re_format_frequency() {
 # Function for stripping leading zeros and maybe also decimal point.
 # This also replaces ',' by '.'.
 strip_trailing_zeros() {
-	echo "$1" | sed 's/,/./g; s/\(\.[1-9]\+\)0*$/\1/g; s/\.0*$//g'
+	echo "$1" | sed 's/,/./g; s/\(\.[0-9]\+[1-9]\)0*$/\1/g; s/\.0*$//g'
+}
+strip_trailing_zeros_float() {
+	echo "$1" | sed 's/,/./g; s/\(\.[0-9]\+[1-9]\)0*$/\1/g; s/^[^.]\+[0-9]*$/&.0/g'
 }
  
 # Function for formatting frequencies output more human friendly

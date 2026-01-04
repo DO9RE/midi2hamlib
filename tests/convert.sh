@@ -46,3 +46,7 @@ for i in 126 127 0 1 2 62 63 64 65 66; do
   echo -n "$(unify_rel_midi $i) "
 done
 echo
+echo "Testing strip_trailing_zeros and strip_trailing_zeros_float:"
+for i in 1.0 +1,123000 -1.0100 100 ; do
+  echo "$i --> $(strip_trailing_zeros $i), $(strip_trailing_zeros_float $i)"
+done
