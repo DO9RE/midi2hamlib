@@ -4,26 +4,25 @@ fi
 
 # Build the functions list by querying the backend for supported functions. 
 if [[ ! -v functions ]]; then
-  functions=($(rigctl -m 2 -r "$host:$port" U "?"))
+  functions=( ${rigcap_general[functions_getonly]} ${rigcap_general[functions_getset]} ${rigcap_general[functions_setonly]} )
+  functions_get="${rigcap_general[functions_getonly]} ${rigcap_general[functions_getset]}"
 fi
 # shellcheck disable=2046
-function_states=( $(rigctl -m 2 -r "$host:$port" $(for f in "${functions[@]}"; do echo "u $f"; done)) )
+function_states=( $(rigctl -m 2 -r "$host:$port" $(for f in "${functions_get"; do echo "u $f"; done)) )
 
 function_select_entry() {
-  echo "${functions[$1]} ($(humanize_status "${function_states[$1]}"))"
+  if [[ -n "${function_states[$1]}" ]] ; then
+    echo "${functions[$1]} ($(humanize_status "${function_states[$1]}"))"
+  else
+    echo "${functions[$1]}"
+  fi
 }
 
 function_select_handler() {
-# toggle function on or off, according to its current status:
-  if [[ $(rigctl -m 2 -r "$host:$port" u "${functions[$1]}") == 0 ]]; then
-    rigctl -m 2 -r "$host:$port" U "${functions[$1]}" 1
-  else
-    rigctl -m 2 -r "$host:$port" U "${functions[$1]}" 0
-  fi
-# Show function status
+  last_function=${functions[$1]}
+  source "$funcdir/functions_function_toggle"
   # shellcheck disable=2046
-  function_states=( $(rigctl -m 2 -r "$host:$port" $(for f in "${functions[@]}"; do echo "u $f"; done)) )
-  echo "${functions[$1]} is $(humanize_status "${function_states[$1]}")"
+  function_states=( $(rigctl -m 2 -r "$host:$port" $(for f in "${functions_get}"; do echo "u $f"; done)) )
   return 0
 }
 
@@ -33,8 +32,7 @@ if [[ $1 ]]; then #Triggered with parameter
 # What ever kind of midi controller the user has: These variables can be used to toggle the function on or off. Due to the sourcing natureof the whole project, the variables are available from everywhere.
   if validate_midi_value "$@" functions func_midi_result; then
     last_function=${functions[$func_midi_result]}
-    status_last_function=${function_states[$func_midi_result]}
-    echo "$last_function is $(humanize_status "$status_last_function")"
+    function_select_entry $func_midi_result
   fi
 else # Called from keyboard, show functions list and ask for selection.
   show_menu "Functions:" functions 'Function?: ' function_select_handler function_select_entry

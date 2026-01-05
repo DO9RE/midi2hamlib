@@ -19,7 +19,7 @@
   - Shall we ignore bandwith settings with value 0?
   - We shall adapt our bandwidth_toggle script to work even if no bandwidth can be selected.  
 
-- [ ] Rework function selection / toggling.
+- [ ] Synchronize function selection / toggling between MIDI and numpad.
 
 ## **Note by DK7STJ – 2025-04-18:**  
 
@@ -42,6 +42,9 @@
   current setting before. So at least if the function has been updated through
   the menu meanwhile and then is toggled again by MIDI input, it sets the
   currect value.  
+
+- [X] Added support for getonly and setonly functions.
+  Implemented by DK7STJ on 2026-01-05.
 
 - [ ] We need to compile the latest Hamlib from its Repo, cause the Version which comes with aptAPT on Bookworm is 2 years old.
 
