@@ -18,7 +18,7 @@
 #
 # Pressing buttons and knobs yield note_on events with velocity 127,
 # releasing them corresponds to note_off with velocity 0.
-
+#
 # Layout:
 # K1B0    K2B1    K3B2    K4B3    K5B4    K6B5    K7B6    K8B7      |
 # /K11B24 /K12B25 /K13B26 /K14B27 /K15B28 /K16B29 /K17B30 /K18B31   |
@@ -35,12 +35,12 @@
 # VFO selection with 4th knob
 0       note_on  10   3   n   vfo/get_vfo
 0       control  10   4   n   vfo/vfo_toggle
-# Function selection and toggling with 5th knob
-0       note_on  10   4   127 functions/function_toggle
-0       control  10   5   n   functions/function_select
 # Get signal strength, level selection with 6th knob
-0       note_on  10   5   n   levels/get_strength
-0       control  10   6   n   levels/level_toggle
+0       note_on  10   4   n   levels/get_strength
+0       control  10   5   n   levels/level_toggle
+# Function selection and toggling with 5th knob
+0       note_on  10   5   127 functions/function_toggle
+0       control  10   6   n   functions/function_select
 # Tuning up/down and tuning step selection with 8th knob and keys below knob 7 and 8
 0       note_on  10   7   n   tuning/tuning_step/get_tuning_step
 0       control  10   8   n   tuning/tuning_step/tuning_step_toggle
