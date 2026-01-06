@@ -522,10 +522,6 @@ fi
 # and evaluate rig capabilities.
 # Global variable "model" with RIG model number must be set before. 
 get_rig_capabilities() {
-  if [[ $model -eq 1 ]] ; then
-    # See comment for rigcap_exclude_extra above.
-    rigcap_exclude_extra=1
-  fi
   # shellcheck disable=SC2034
   declare -ag rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_warnings
   declare -Ag rigcap_functions rigcap_levels rigcap_parameters rigcap_general rigcap_bounds rigcap_features

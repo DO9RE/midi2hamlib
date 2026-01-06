@@ -55,6 +55,7 @@ if [[ $model -lt 1 ]]; then
 fi
 
 # Get rig capabilities
+rigcap_exclude_extra=1 # Extra functions, levels and parameters seem not to work with rigctld.
 get_rig_capabilities
 
 # Check environment (Operating system)
