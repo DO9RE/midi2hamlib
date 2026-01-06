@@ -466,6 +466,15 @@ internal_get_capabilities() {
       features[$i]=sendrecv
     fi
   done
+  # Fake we have at least one getonly and setonly function.
+  if false ; then
+    # Pretend RIT is getonly (readonly)
+    functions["RIT"]=${functions["RIT"]//set/}
+    general["functions_set"]=${general["functions_set"]//RIT/}
+    # Pretend XIT is setonly.
+    functions["XIT"]=${functions["XIT"]//get/}
+    general["functions_get"]=${general["functions_get"]//XIT/}
+  fi # End fake
   general["functions"]=general["functions_get"]
   for i in ${general["functions_get"]}; do
     if [[ "${functions[$i]}" == "get" ]]; then

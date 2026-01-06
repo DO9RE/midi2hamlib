@@ -1,5 +1,4 @@
 # Toggle the selected function according to $last_function and $status_last_function, coming from the function_select script
-
 declare -A setonly_function_state
 
 set_setonly_function_state() {

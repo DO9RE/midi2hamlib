@@ -7,7 +7,6 @@ if [[ ! -v functions ]]; then
   functions=( ${rigcap_general[functions_getonly]} ${rigcap_general[functions_getset]} ${rigcap_general[functions_setonly]} )
   functions_get="${rigcap_general[functions_getonly]} ${rigcap_general[functions_getset]}"
 fi
-# shellcheck disable=2046
 function_states=( $(rigctl -m 2 -r "$host:$port" $(for f in ${functions_get}; do echo "u $f"; done)) )
 
 function_select_entry() {
@@ -20,9 +19,9 @@ function_select_entry() {
 
 function_select_handler() {
   last_function=${functions[$1]}
-  source "$funcdir/functions_function_toggle"
-  # shellcheck disable=2046
-  function_states=( $(rigctl -m 2 -r "$host:$port" $(for f in ${functions_get}; do echo "u $f"; done)) )
+  shift $# # Clear all parameters. Otherwise they are given to the sourced script.
+  source "$funcdir/functions/function_toggle"
+  # Function states are updated when in function_select_entry.
   return 0
 }
 
@@ -31,8 +30,7 @@ if [[ $1 ]]; then #Triggered with parameter
 # So we put name and status of the function in charge into two variables
 # What ever kind of midi controller the user has: These variables can be used to toggle the function on or off. Due to the sourcing natureof the whole project, the variables are available from everywhere.
   if validate_midi_value "$@" functions func_midi_result; then
-    last_function=${functions[$func_midi_result]}
-    function_select_entry $func_midi_result
+    function_select_handler $func_midi_result
   fi
 else # Called from keyboard, show functions list and ask for selection.
   show_menu "Functions:" functions 'Function?: ' function_select_handler function_select_entry
