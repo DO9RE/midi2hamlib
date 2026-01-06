@@ -20,6 +20,9 @@ source "$funcdir/rigcaps"
 source "$funcdir/helper_functions"
 # Process command line arguments
 config_file=$default_config_file
+if [[ -n $midi2hamlib_config_file ]] ; then
+  config_file=$midi2hamlib_config_file
+fi
 while [[ $# -gt 0 ]]; do
   case $1 in
     -c|--config-file)
