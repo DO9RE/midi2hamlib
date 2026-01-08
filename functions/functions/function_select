@@ -2,12 +2,15 @@ if ! announce_rig_can getset feature func ; then
   return 0
 fi
 
-# Build the functions list by querying the backend for supported functions. 
+# Build the functions list.
 if [[ ! -v functions ]]; then
   functions=( ${rigcap_general[functions_getonly]} ${rigcap_general[functions_getset]} ${rigcap_general[functions_setonly]} )
   functions_get="${rigcap_general[functions_getonly]} ${rigcap_general[functions_getset]}"
 fi
-function_states=( $(rigctl -m 2 -r "$host:$port" $(for f in ${functions_get}; do echo "u $f"; done)) )
+
+before_functions_menu() {
+  function_states=( $(rigctl -m 2 -r "$host:$port" $(for f in ${functions_get}; do echo "u $f"; done)) )
+}
 
 function_select_entry() {
   if [[ -n "${function_states[$1]}" ]] ; then
@@ -21,7 +24,6 @@ function_select_handler() {
   last_function=${functions[$1]}
   shift $# # Clear all parameters. Otherwise they are given to the sourced script.
   source "$funcdir/functions/function_toggle"
-  # Function states are updated when in function_select_entry.
   return 0
 }
 
@@ -33,5 +35,5 @@ if [[ $1 ]]; then #Triggered with parameter
     function_select_handler $func_midi_result
   fi
 else # Called from keyboard, show functions list and ask for selection.
-  show_menu "Functions:" functions 'Function?: ' function_select_handler function_select_entry
+  show_menu "Functions:" functions 'Function?: ' function_select_handler function_select_entry before_functions_menu
 fi
