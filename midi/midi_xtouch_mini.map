@@ -35,10 +35,10 @@
 # VFO selection with 4th knob
 0       note_on  10   3   n   vfo/get_vfo
 0       control  10   4   n   vfo/vfo_toggle
-# Get signal strength, level selection with 6th knob
+# Get signal strength, level selection with 5th knob
 0       note_on  10   4   n   levels/get_strength
 0       control  10   5   n   levels/level_toggle
-# Function selection and toggling with 5th knob
+# Function selection and toggling with 6th knob
 0       note_on  10   5   127 functions/function_toggle
 0       control  10   6   n   functions/function_select
 # Tuning up/down and tuning step selection with 8th knob and keys below knob 7 and 8

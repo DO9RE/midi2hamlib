@@ -565,7 +565,8 @@ DEVICE TYPE CHAN NUM VAL SCRIPT MODE
   - Either 64 if not turned, 63 or less if turned left and 65 or more if turned right,
   - or 0 if not turned, 127 or less if turned left and 1 or more if turned right,
   For note_on and note_off, possible values are:
-  - **key**: Invoke a script without any parameters. This is used for regular keystrokes that just trigger an action.
+  - **key**: Invoke a script with parameter "note_on" or "note_off",
+  depending on key state. This is used for regular keystrokes that just trigger an action.
   - **up**, **down**: Increment or decrement a value or select the previous or next option in a list. This is used whenever keys shall invoke a script that also can be used with a controllerknob or fader.
   - **up_r**, **down_r**: Like **up** and **down**, but with wrap-around.
 
