@@ -75,7 +75,7 @@ internal_get_capabilities() {
     fi
 # Extra functions
     if [[ "$indentation" == "functions" && "$line" =~ ^[[:space:]] ]]; then
-      if [[ ( $rigcap_exclude_extra -ne 1 ) && ( ! "$line" =~ : ) ]]; then
+      if [[ ( ${rigcap_exclude_extra} -ne 1 ) && ( ! "$line" =~ : ) ]]; then
         read -r tmp <<<"$line"
         general["functions_get"]+=" $tmp"
         general["functions_set"]+=" $tmp"
@@ -84,7 +84,7 @@ internal_get_capabilities() {
       continue
 # Extra levels and parameters
     elif [[ "$indentation" =~ levels|parameters && "$line" =~ ^[[:space:]] ]]; then
-      if [[ $rigcap_exclude_extra -eq 1 ]] ; then
+      if [[ ${rigcap_exclude_extra} -eq 1 ]] ; then
         # Do nothing
         true
       elif [[ ! "$line" =~ : ]]; then
@@ -258,7 +258,8 @@ internal_get_capabilities() {
       tmp1="${tmp1//:/}"
       tmp1="${tmp1^^}"
       tmp3="${tmp2//dB/}"
-      bounds[${tmp1}]=mappedvalues
+      bounds[${tmp1}]=mappedvaluesunit
+      bounds[${tmp1}:unit]="dB"
       bounds[${tmp1}:names]="$tmp2"
       bounds[${tmp1}:values]="$tmp3"
       for i in $tmp2 ; do
@@ -537,6 +538,43 @@ get_rig_capabilities() {
   internal_get_capabilities $model rigcap_general rigcap_bounds rigcap_features rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_functions rigcap_levels rigcap_parameters rigcap_warnings
 }
 
+# Seems like output from --dump-caps doesn't permit us to decide between int and float
+# for levels and parameters reliably. So we ned to get a value for each and
+# see if it contains decimal point.
+# Only go from int to float, not vice versa.
+adjust_rig_capabilities() {
+  local type lp cmd v i num numadj
+  local -a cmdarr varr lparr
+  num=0
+  numadj=0
+  for type in level parameter ; do
+    cmd=${type:0:1}
+    cmdarr=( )
+    varr=( )
+    lparr=( )
+    for lp in ${rigcap_general["${type}s_get"]}; do
+      if [[ ${rigcap_bounds[$lp]} =~ int ]]; then
+        (( num++ ))
+        lparr+=( $lp )
+        cmdarr+=( $cmd $lp )
+      fi
+    done
+    ###echo "XXX ${type}s names: ${lparr[*]}"
+    varr=( $(rigctl -m 2 -r "$host:$port" ${cmdarr[@]}) )
+    ###echo "XXX ${type}s values: ${varr[*]}"
+    for i in ${!lparr[@]}; do
+      lp=${lparr[$i]}
+      v=${varr[$i]}
+      if [[ $v =~ \. ]]; then
+        (( numadj++ ))
+        ###echo "XXX adjust $type $lp from int to float"
+        rigcap_bounds["$lp"]="${rigcap_bounds["$lp"]//int/float}"
+      fi
+    done
+  done
+  ###echo "XXX adjusted $numadj of $num int values to float."
+}
+
 # Check if rig can set/get/send/recv/ctrl a feature/function/level/parameter.
 # Parameters:
 # verb: Action that shall be checked, e.g. get, set.
@@ -579,6 +617,7 @@ rig_value_has() {
 # type: Either level or parameter.
 # name: level/parameter name.
 announce_rig_get_lp() {
+  local retval tmp perc
   if ! announce_rig_can get $1 $2 ; then
     return 1
   elif [[ $1 == "parameter" ]] ; then  
@@ -586,8 +625,30 @@ announce_rig_get_lp() {
   else
     retval=$(rigctl -m 2 -r "$host:$port" l "$2")
   fi
-  # ToDo: handle minmaxresint resint mappedvalues string minmaxint minmaxresfloat minmaxintunit int float
-  echo "$2 = $retval"
+  # Handle the following types:
+  # - mappedvalues[unit]
+  # - [minmax][res](float|int)[unit]
+  # - string
+  # int doesn't require special treatment.
+  ###echo "XXX ${rigcap_bounds[$2]}"
+  if [[ ${rigcap_bounds[$2]} =~ mappedvalues ]]; then
+    tmp=${rigcap_bounds[$2:v2n:${retval}]}
+    if [[ -n $tmp ]]; then
+      ###echo "XXX mappedvalue"
+      retval=$tmp
+    fi
+  elif [[ ${rigcap_bounds[$2]} =~ float ]]; then
+    ###echo "XXX float $2 $retval"
+    retval="$(strip_trailing_zeros_float "$retval")"
+    if [[ ( ${rigcap_bounds[$2:min]} -eq 0 ) && ( ${rigcap_bounds[$2:max]} -eq 1 ) ]]; then
+      perc=", $(echo "valuetopercentage(${retval},${rigcap_bounds[$2:min]},${rigcap_bounds[$2:max]})" | $funcdir/levelsandparams.bc)%"
+    fi
+  fi
+  if [[ ( ${rigcap_bounds[$2]} =~ unit ) && ( ! $retval =~ ${rigcap_bounds[$2:unit]}$ ) ]]; then
+    ###echo "XXX unit"
+    retval+="${rigcap_bounds[$2:unit]}"
+  fi
+  echo "$2 = ${retval//_/ }${perc}" # Replace _ with space.
 }
 
 # Send level or parameter to RIG
@@ -597,6 +658,12 @@ announce_rig_get_lp() {
 # midival: MIDI controller value.
 # midicmd: MIDI command, second parameter from MIDI map.
 announce_rig_set_lp() {
-  # ToDo: handle minmaxresint resint mappedvalues string minmaxint minmaxresfloat minmaxintunit int float
-  echo "Not implemented yet."
+  # ToDo: handle mappedvalues[unit]
+  # ToDo: handle [minmax][res](float|int)[unit]
+  # ToDo: handle string
+  if [[ $3 ]]; then # MIDI
+    echo "Not implemented for MIDI yet."
+  else
+    echo "Not implemented for menu yet."
+  fi
 }

@@ -49,8 +49,6 @@ else
   source "$config_file"
 fi
 
-# switch numpad to numbers
-setleds +num
 
 # Check if a rig model was set.
 if [[ $model -lt 1 ]]; then
@@ -64,11 +62,6 @@ get_rig_capabilities
 # Check environment (Operating system)
 check_environment
 
-# Use MIDI devices?
-if [[ $use_midi_device == "TRUE" ]]; then
-  source "$basedir/midi/reader" &
-fi
-
 # Process rigctld options
 declare -a rigctldoptions
 if [[ -v model ]]; then rigctldoptions+=(-m "$model"); fi
@@ -77,6 +70,37 @@ if [[ -v device_path ]]; then rigctldoptions+=(-r "$device_path"); fi
 if [[ -v serial_speed ]]; then rigctldoptions+=(-s "$serial_speed"); fi
 rigctld "${rigctldoptions[@]}" &
 unset rigctldoptions
+
+# Wait for rigctld to start up.
+maxretries=10
+numretries=0
+while true ; do
+  (( numretries++ ))
+  rigctl -m2 -r "$host:$port" "" >/dev/null 2>&1
+  if [[ $? -eq 2 ]]; then
+    if [[ $numretries -lt $maxretries ]]; then
+      sleep 1
+    else
+      echo "Cannot connect to rigctld after trying $numretries times. Exiting."
+      exit 1
+    fi
+  else
+    ###echo "Conected to rigctld after trying $numretries times."
+    break  
+  fi
+done
+unset numretries maxretries
+
+# Adjust rig capabilities, see doc for function.
+adjust_rig_capabilities
+
+# switch numpad to numbers
+setleds +num
+
+# Use MIDI devices?
+if [[ $use_midi_device == "TRUE" ]]; then
+  source "$basedir/midi/reader" &
+fi
 
 declare -a file_menu_entries
 declare -a file_menu_actions

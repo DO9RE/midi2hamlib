@@ -1,0 +1,47 @@
+#!/usr/bin/bc -q
+define void setupforint() {
+  scale=0
+}
+
+define void setupforfloat() {
+  scale=6
+}
+
+define void setscale(min, max, res) {
+  if (scale < scale(min)) scale=scale(min)
+  if (scale < scale(max)) scale=scale(max)
+  if (scale < scale(res)) scale=scale(res)
+}
+
+define isinrange(value, min, max) {
+  ((value >= min) && (value <= max))
+}
+
+define adjustvalueminmax(value, min, max) {
+  if (value <= min) min else if (value >= max) max else value
+}
+
+define percentagetovalue(perc, min, max) {
+  auto value
+  if (perc<=0) {
+    min
+  } else if (perc>=100) {
+    max
+  } else {
+    value=min+(max-min)*perc/100
+    adjustvalueminmax(value,min,max)
+  }
+}
+
+# Converts a value into a percentage relative to min and max.
+# Returns integer part of percentage.
+define valuetopercentage(value, min, max) {
+  auto oldscale, retval
+  oldscale=scale
+  setupforfloat()
+  retval=(value-min)/(max-min)*100
+  scale=0
+  retval=retval/1
+  scale=oldscale
+  return retval
+}

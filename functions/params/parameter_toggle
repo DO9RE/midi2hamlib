@@ -5,7 +5,9 @@ fi
 # Announce parameter with or without value and store it for get_parameter.
 announce_param() {
   last_parameter="${parameters[$1]}"
-  if ! announce_rig_get_lp parameter "${parameters[$1]}" ; then
+  if rig_can get parameter "${parameters[$1]}" ; then
+    announce_rig_get_lp parameter "${parameters[$1]}"
+  else
     echo "${parameters[$1]}"
   fi
   return 0

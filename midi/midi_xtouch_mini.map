@@ -35,9 +35,12 @@
 # VFO selection with 4th knob
 0       note_on  10   3   n   vfo/get_vfo
 0       control  10   4   n   vfo/vfo_toggle
-# Get signal strength, level selection with 5th knob
+# Get signal strength, level selection with 5th knob on layer 1
 0       note_on  10   4   n   levels/get_strength
 0       control  10   5   n   levels/level_toggle
+# Get and select parameters with 5th knob on layer 2
+0       note_on  10   28   n  params/get_parameter
+0       control  10   15  n   params/parameter_toggle
 # Function selection and toggling with 6th knob
 0       note_on  10   5   127 functions/function_toggle
 0       control  10   6   n   functions/function_select
