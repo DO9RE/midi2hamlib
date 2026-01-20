@@ -45,7 +45,7 @@ rigctld_pid=$!
 echo "rigctld PID is ${rigctld_pid}. Sleeping 5s."
 sleep 5
 echo "Accessing RIG remotely through rigctld."
-time do_queries -m2 -r "localhost:${rig_port}" $@ f
+time do_queries -m2 -r "localhost:${rig_port}" f
 echo "Stopping rigctld."
 kill $rigctld_pid
 wait $rigctld_pid

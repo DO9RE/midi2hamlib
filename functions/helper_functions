@@ -290,6 +290,7 @@ on_off_menu=( "On" "Off" )
 # Index shifting is performed transparently, so the selection is again zero-based and can 
 # directly be used to point into the array.
 # parameters:
+# --retvar: See selection_handler.
 # --vartitle: If set as first parameter, the title is interpreted as a 
 #   variable containing the actual menu title text. So you can change the
 #   menu title dynamically on every menu chycle. Used for main menu.
@@ -300,6 +301,8 @@ on_off_menu=( "On" "Off" )
 #   This is called, not sourced, as it is assumed to be a function.
 #   If the function returns 0, the menu keeps displayed and asks for selections.
 #   Otherwise the menu exits.
+#   If --retvar is given (see above), selection_handler is interpreted as the
+#   name of the variable where to store the result and exit the menu.
 # entry_text_handler: Optional handler that gets the zero-based index as
 #   input and shall provide the entry text on stdout.
 # before_menu: Optional function that is called each time before the menu
@@ -317,10 +320,18 @@ show_menu() {
     exit 1
   fi
   local is_vartitle=0
-  if [[ "$1" == "--vartitle" ]]; then
-    is_vartitle=1
+  local is_retvar=0
+  while [[ $1 =~ ^-- ]]; do
+    if [[ "$1" == "--vartitle" ]]; then
+      is_vartitle=1
+    elif [[ "$1" == "--retvar" ]]; then
+      is_retvar=1
+    else
+      echo "Unrecognized option $1 for show_menu."
+      exit 1
+    fi
     shift 1
-  fi
+  done
   if [[ -z $1 ]]; then
     echo "No menu title given in show_menu."
     exit 1
@@ -399,6 +410,14 @@ show_menu() {
     fi
 #   Exit functions menu when 0 is issued or if selection handler returns non-zero.
     if [[ $selection -eq 0 ]]; then
+      if [[ ${is_retvar} -eq 1 ]]; then
+        declare -n retvar=${selection_handler}
+        retvar=""
+      fi
+      break
+    elif [[ ${is_retvar} -eq 1 ]]; then
+      declare -n retvar=${selection_handler}
+      retvar=$((selection-1))
       break
     elif ! ${selection_handler} $((selection-1)) ; then
       break

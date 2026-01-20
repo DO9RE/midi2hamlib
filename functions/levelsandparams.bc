@@ -45,3 +45,12 @@ define valuetopercentage(value, min, max) {
   scale=oldscale
   return retval
 }
+
+define coercevalue(value, isint, hasminmax, hasres, min, max, res) {
+  auto oldscale, retval
+  oldscale=scale
+  if (isint) setupforint() else setupforfloat()
+# ToDo: implement
+  scale=oldscale
+  return retval
+}

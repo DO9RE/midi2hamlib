@@ -254,18 +254,24 @@ internal_get_capabilities() {
 # Preamp, Attenuator
     elif [[ "$line" =~ ^(Preamp|Attenuator): ]]; then
       read -r tmp1 tmp2 <<<"$line"
-      if [[ "$tmp" == "None" ]]; then continue; fi
       tmp1="${tmp1//:/}"
       tmp1="${tmp1^^}"
+      if [[ $tmp1 =~ ^ATTEN ]]; then
+        # Corresponding level for attenuator is just called ATT.
+        tmp1="ATT"
+      fi
+      if [[ "$tmp2" == "None" ]]; then continue; fi
       tmp3="${tmp2//dB/}"
       bounds[${tmp1}]=mappedvaluesunit
       bounds[${tmp1}:unit]="dB"
-      bounds[${tmp1}:names]="$tmp2"
-      bounds[${tmp1}:values]="$tmp3"
+      bounds[${tmp1}:names]="OFF $tmp2"
+      bounds[${tmp1}:values]="0 $tmp3"
       for i in $tmp2 ; do
         bounds[${tmp1}:n2v:$i]="${i//dB/}"
         bounds[${tmp1}:v2n:${i//dB/}]="$i"
       done
+      bounds[${tmp1}:n2v:OFF]="0"
+      bounds[${tmp1}:v2n:0]="OFF"
 # AGC levels
     elif [[ "$line" =~ ^AGC\ levels: ]]; then
       read -r tmp tmp tmp <<<"${line//=/ }"
@@ -644,11 +650,13 @@ announce_rig_get_lp() {
       perc=", $(echo "valuetopercentage(${retval},${rigcap_bounds[$2:min]},${rigcap_bounds[$2:max]})" | $funcdir/levelsandparams.bc)%"
     fi
   fi
-  if [[ ( ${rigcap_bounds[$2]} =~ unit ) && ( ! $retval =~ ${rigcap_bounds[$2:unit]}$ ) ]]; then
+  if [[ ( ${rigcap_bounds[$2]} =~ unit ) && ( $retval =~ ^[-+0-9] ) && ( ! $retval =~ ${rigcap_bounds[$2:unit]}$ ) ]]; then
+    # Add unit if this is a numeric value and dosn't end with a unit although it should.
     ###echo "XXX unit"
     retval+="${rigcap_bounds[$2:unit]}"
   fi
   echo "$2 = ${retval//_/ }${perc}" # Replace _ with space.
+  return 0
 }
 
 # Send level or parameter to RIG
@@ -658,12 +666,57 @@ announce_rig_get_lp() {
 # midival: MIDI controller value.
 # midicmd: MIDI command, second parameter from MIDI map.
 announce_rig_set_lp() {
-  # ToDo: handle mappedvalues[unit]
-  # ToDo: handle [minmax][res](float|int)[unit]
-  # ToDo: handle string
-  if [[ $3 ]]; then # MIDI
+  if ! announce_rig_can set $1 $2 ; then
+    return 1
+  fi
+  local i newval newvaltxt
+  # Prepare and cache menu entries and values. 
+  declare -g last_set_lp last_set_lp_type
+  declare -ag set_lp_names set_lp_values
+  if [[ ( ${last_set_lp_type} != $1 ) || ( ${last_set_lp} != $2 ) ]]; then
+    last_set_lp_type=$1
+    last_set_lp=$2
+    set_lp_names=( )
+    set_lp_values=( )
+    if [[ ${rigcap_bounds[$2]} =~ string ]]; then
+      set_lp_names=( ${rigcap_bounds[$2:strings]} )
+      set_lp_values=( ${rigcap_bounds[$2:strings]} )
+    else
+      set_lp_names=( ${rigcap_bounds[$2:names]} )
+      set_lp_values=( ${rigcap_bounds[$2:values]} )
+    fi
+    for i in ${!set_lp_names[@]} ; do
+      set_lp_names[$i]="${set_lp_names[$i]//_/ }"
+    done
+  fi
+  if [[ ( $3 ) && ( ${#set_lp_names[@]} -ge 0  ) ]]; then
+# ToDo
+    # strings and mappedvalues[unit] for MIDI
     echo "Not implemented for MIDI yet."
+    return 1
+  elif [[ ${#set_lp_names[@]} -ge 0 ]]; then
+    # strings and mappedvalues[unit] for menu
+    show_menu --retvar "$2" set_lp_names "New value?: " i
+    if [[ -n $i ]]; then
+      newvaluetxt=${set_lp_names[$i]}
+      newvalue=${set_lp_values[$i]}
+    else
+      # User didn't want to set a new value
+      return 0
+    fi
+# ToDo: handle [minmax][res](float|int)[unit]
+  elif [[ $3 ]]; then # MIDI
+    echo "Not implemented for MIDI yet."
+    return 1
   else
     echo "Not implemented for menu yet."
+    return 1
   fi
+  # send value to rig
+  i=${last_set_lp_type:0:1}
+  i=${i^^}
+  if ! rigctl -m2 -r "$host:$port" "$i" "$2" "$newvalue" ; then
+    echo "Error while setting $2 to ${newvaluetxt}."
+  fi
+  return 0
 }
