@@ -1,5 +1,63 @@
 #!/bin/bash
+ensure_hamlib_windows_path() {
+case "$(uname -s 2>/dev/null)" in
+MINGW*|MSYS*|CYGWIN*)
+local hamlib_bin_win="C:\\Program Files\\hamlib-w64-4.6.5\\bin"
+local hamlib_bin_posix
+
+hamlib_bin_posix="$(cygpath -u "$hamlib_bin_win" 2>/dev/null)"
+if [ -n "$hamlib_bin_posix" ] && [ -d "$hamlib_bin_posix" ]; then
+case ":$PATH:" in
+*":$hamlib_bin_posix:"*) : ;;
+*) export PATH="$PATH:$hamlib_bin_posix" ;;
+esac
+fi
+;;
+esac
+}
+
+ensure_bc_windowsish() {
+if command -v bc >/dev/null 2>&1; then
+return 0
+fi
+
+echo "bc ist nicht installiert."
+echo -n "Jetzt installieren? [j/N] "
+read -r ans
+case "$ans" in
+j|J|y|Y|yes|YES) ;;
+*) echo "Abgebrochen."; return 1 ;;
+esac
+
+local uname_s
+uname_s="$(uname -s 2>/dev/null || echo "")"
+
+if command -v pacman >/dev/null 2>&1 && [[ "$uname_s" == MSYS* || "$uname_s" == MINGW* ]]; then
+echo "MSYS2 erkannt. Installiere bc mit pacman..."
+pacman -S --needed bc || return 1
+
+elif command -v apt-get >/dev/null 2>&1 && grep -qiE "(microsoft|wsl)" /proc/version 2>/dev/null; then
+echo "WSL erkannt. Installiere bc mit apt-get..."
+sudo apt-get update && sudo apt-get install -y bc || return 1
+
+elif command -v dnf >/dev/null 2>&1 && grep -qiE "(microsoft|wsl)" /proc/version 2>/dev/null; then
+echo "WSL erkannt. Installiere bc mit dnf..."
+sudo dnf install -y bc || return 1
+
+else
+echo "Konnte keine unterstützte Windows-Linux-Umgebung erkennen (MSYS2 oder WSL)."
+echo "Bitte bc manuell installieren."
+return 1
+fi
+
+command -v bc >/dev/null 2>&1
+}
+
+# Check, if BC is installed when we are on Windows
+ensure_bc_windowsish
+
 # First, check if hamlib is available
+ensure_hamlib_windows_path
 if [[ -z "$(command -v rigctl)" || -z "$(command -v rigctld)" ]]; then
   echo "rigctl or rigctld not found. Please install hamlib."
   exit 1
@@ -158,4 +216,5 @@ while true; do
     build_menu_from_files
   fi
 done
+
 
