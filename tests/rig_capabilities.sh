@@ -1,4 +1,25 @@
 #!/bin/bash
+
+ensure_hamlib_windows_path() {
+case "$(uname -s 2>/dev/null)" in
+MINGW*|MSYS*|CYGWIN*)
+local hamlib_bin_win="C:\\Program Files\\hamlib-w64-4.6.5\\bin"
+local hamlib_bin_posix
+
+hamlib_bin_posix="$(cygpath -u "$hamlib_bin_win" 2>/dev/null)"
+if [ -n "$hamlib_bin_posix" ] && [ -d "$hamlib_bin_posix" ]; then
+case ":$PATH:" in
+*":$hamlib_bin_posix:"*) : ;;
+*) export PATH="$PATH:$hamlib_bin_posix" ;;
+esac
+fi
+;;
+esac
+}
+
+ensure_hamlib_windows_path
+
+
 rigctl --version
 
 source "$(dirname "$0")/../functions/helper_functions"
