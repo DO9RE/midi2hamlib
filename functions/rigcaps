@@ -615,17 +615,6 @@ announce_rig_can() {
   fi
 }
 
-# Check if rig value (level or parameter) has a certain property like
-# min, max, res, mappedvalues, values or string.
-# Parameters: name prop
-rig_value_has() {
-  if [[ ${rigcap_bounds[$1]} =~ $2 ]]; then
-    return 0
-  else
-    return 1
-  fi
-}
-
 # Retrieve level or parameter from RIG
 # Parameters:
 # type: Either level or parameter.

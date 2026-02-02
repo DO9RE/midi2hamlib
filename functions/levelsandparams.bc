@@ -46,11 +46,61 @@ define valuetopercentage(value, min, max) {
   return retval
 }
 
-define coercevalue(value, isint, hasminmax, hasres, min, max, res) {
+define percentagetovalue(perc, min, max) {
   auto oldscale, retval
   oldscale=scale
+  setupforfloat()
+  retval=min+perc*(max-min)
+  scale=oldscale
+  return retval
+}
+
+define coercevalue(value, isint, min, max, res) {
+  auto hasminmax, hasres, oldscale, tmp, retval, offset, lower, upper, diffl, diffu
+  hasminmax = ((min!=0) || (max!=0))
+  hasres = (res!=0)
+  if (hasminmax && (min>max)) {
+    tmp=min
+    min=max
+    max=tmp
+  }
+  if (res<0) res = -res
+  if (hasminmax && (value<=min)) value=min
+  if (hasminmax && (value>=max)) value=max
+  oldscale=scale
   if (isint) setupforint() else setupforfloat()
-# ToDo: implement
+  retval=value/1 # to adapt to scale
+  if (hasres) {
+    # In case 0 is not part of the valid value range, shift value to a 
+    # 0-based range. Simplifies handling resolution.
+    if (hasminmax && (min>0)) {
+      offset=min
+    } else if (hasminmax && (max<0)) {
+      offset=max
+    } else {
+      offset=0
+    }
+    retval -= offset
+    tmp=scale
+    setupforint()
+    lower=retval/res
+    if ((lower>=0) && (retval>=0)) {
+      upper=lower+1
+    } else {
+      upper=lower
+      lower=upper-1
+    }
+    scale=tmp
+    lower *= res
+    upper *= res
+    diffl=value-lower
+    diffu=upper-value
+    if (diffu<=diffl) retval=upper else retval=lower
+    # Shift to valid range again.
+    retval += offset
+  }
+  if (hasminmax && (retval<=min)) retval=min/1
+  if (hasminmax && (retval>=max)) retval=max/1
   scale=oldscale
   return retval
 }
