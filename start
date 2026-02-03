@@ -1,56 +1,62 @@
 #!/bin/bash
-ensure_hamlib_windows_path() {
-case "$(uname -s 2>/dev/null)" in
-MINGW*|MSYS*|CYGWIN*)
-local hamlib_bin_win="C:\\Program Files\\hamlib-w64-4.6.5\\bin"
-local hamlib_bin_posix
+# Early initialization of i18n
+funcdir="$(pwd)/functions"
 
-hamlib_bin_posix="$(cygpath -u "$hamlib_bin_win" 2>/dev/null)"
-if [ -n "$hamlib_bin_posix" ] && [ -d "$hamlib_bin_posix" ]; then
-case ":$PATH:" in
-*":$hamlib_bin_posix:"*) : ;;
-*) export PATH="$PATH:$hamlib_bin_posix" ;;
-esac
-fi
-;;
-esac
+# Load i18n early
+source "$funcdir/i18n"
+
+ensure_hamlib_windows_path() {
+  case "$(uname -s 2>/dev/null)" in
+  MINGW*|MSYS*|CYGWIN*)
+    local hamlib_bin_win="C:\\Program Files\\hamlib-w64-4.6.5\\bin"
+    local hamlib_bin_posix
+
+    hamlib_bin_posix="$(cygpath -u "$hamlib_bin_win" 2>/dev/null)"
+    if [ -n "$hamlib_bin_posix" ] && [ -d "$hamlib_bin_posix" ]; then
+      case ":$PATH:" in
+        *":$hamlib_bin_posix:"*) : ;;
+        *) export PATH="$PATH:$hamlib_bin_posix" ;;
+      esac
+    fi
+    ;;
+  esac
 }
 
 ensure_bc_windowsish() {
-if command -v bc >/dev/null 2>&1; then
-return 0
-fi
+  if command -v bc >/dev/null 2>&1; then
+    return 0
+  fi
 
-echo "bc ist nicht installiert."
-echo -n "Jetzt installieren? [j/N] "
-read -r ans
-case "$ans" in
-j|J|y|Y|yes|YES) ;;
-*) echo "Abgebrochen."; return 1 ;;
-esac
+  echo "$(t ERR_BC_NOT_INSTALLED)"
+  echo -n "$(t ERR_INSTALL_NOW)"
+  read -r ans
+  case "$ans" in
+    j|J|y|Y|yes|YES) ;;
+    *) echo "$(t ERR_ABORTED)"; return 1 ;;
+  esac
 
-local uname_s
-uname_s="$(uname -s 2>/dev/null || echo "")"
+  local uname_s
+  uname_s="$(uname -s 2>/dev/null || echo "")"
 
-if command -v pacman >/dev/null 2>&1 && [[ "$uname_s" == MSYS* || "$uname_s" == MINGW* ]]; then
-echo "MSYS2 erkannt. Installiere bc mit pacman..."
-pacman -S --needed bc || return 1
+  if command -v pacman >/dev/null 2>&1 && [[ "$uname_s" == MSYS* || "$uname_s" == MINGW* ]]; then
+    echo "$(t ERR_MSYS2_DETECTED)"
+    pacman -S --needed bc || return 1
 
-elif command -v apt-get >/dev/null 2>&1 && grep -qiE "(microsoft|wsl)" /proc/version 2>/dev/null; then
-echo "WSL erkannt. Installiere bc mit apt-get..."
-sudo apt-get update && sudo apt-get install -y bc || return 1
+  elif command -v apt-get >/dev/null 2>&1 && grep -qiE "(microsoft|wsl)" /proc/version 2>/dev/null; then
+    echo "$(t ERR_WSL_DETECTED)"
+    sudo apt-get update && sudo apt-get install -y bc || return 1
 
-elif command -v dnf >/dev/null 2>&1 && grep -qiE "(microsoft|wsl)" /proc/version 2>/dev/null; then
-echo "WSL erkannt. Installiere bc mit dnf..."
-sudo dnf install -y bc || return 1
+  elif command -v dnf >/dev/null 2>&1 && grep -qiE "(microsoft|wsl)" /proc/version 2>/dev/null; then
+    echo "$(t ERR_WSL_DNF_DETECTED)"
+    sudo dnf install -y bc || return 1
 
-else
-echo "Konnte keine unterstützte Windows-Linux-Umgebung erkennen (MSYS2 oder WSL)."
-echo "Bitte bc manuell installieren."
-return 1
-fi
+  else
+    echo "$(t ERR_NO_WINDOWS_LINUX)"
+    echo "$(t ERR_INSTALL_BC_MANUALLY)"
+    return 1
+  fi
 
-command -v bc >/dev/null 2>&1
+  command -v bc >/dev/null 2>&1
 }
 
 # Check, if BC is installed when we are on Windows
@@ -59,21 +65,20 @@ ensure_bc_windowsish
 # First, check if hamlib is available
 ensure_hamlib_windows_path
 if [[ -z "$(command -v rigctl)" || -z "$(command -v rigctld)" ]]; then
-  echo "rigctl or rigctld not found. Please install hamlib."
+  echo "$(t ERR_RIGCTL_NOT_FOUND)"
   exit 1
 fi
 # We have a few background processes running, exit these when CTRL+C is pressed
 trap 'cleanup' INT TERM
 
 cleanup() {
-  echo "Cleaning up background processes..."
+  echo "$(t MSG_CLEANING_UP)"
   pkill -P $$
-  echo "Script terminated. All background processes have been stopped."
+  echo "$(t MSG_SCRIPT_TERMINATED)"
   exit 1
 }
 
 default_config_file="./settings/settings.conf"
-funcdir="$(pwd)/functions"
 source "$funcdir/rigcaps"
 source "$funcdir/helper_functions"
 # Process command line arguments
@@ -92,7 +97,7 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     *)
-      echo "Unknown option: $1"
+      echo "$(t ERR_UNKNOWN_OPTION "$1")"
       show_help
       exit 1
       ;;
@@ -101,11 +106,14 @@ done
 
 # Check, if config file exists:
 if [[ ! -f "$config_file" ]]; then
-  echo "Error! Configuration file '$config_file' does not exist."
+  echo "$(t ERR_CONFIG_NOT_EXIST "$config_file")"
   exit 1
 else
   source "$config_file"
 fi
+
+# Load language based on config setting
+load_language "$MIDI2HAMLIB_LANG"
 
 
 # Check if a rig model was set.
@@ -139,7 +147,7 @@ while true ; do
     if [[ $numretries -lt $maxretries ]]; then
       sleep 1
     else
-      echo "Cannot connect to rigctld after trying $numretries times. Exiting."
+      echo "$(t ERR_CANNOT_CONNECT_RIGCTLD "$numretries")"
       exit 1
     fi
   else
@@ -165,7 +173,7 @@ declare -a file_menu_actions
 
 # clear
 echo -e "$greeting \\n
-Use 0 to return from a menu."
+$(t MSG_USE_ZERO_TO_RETURN)"
 cd "$menudir"
 
 # Function for Reading Folder Scripts and building Menu 
@@ -176,6 +184,7 @@ build_menu_from_files() {
 # Display the Menu Name from its name file
   # shellcheck disable=SC2034
   file_menu_title=$(cat "$(pwd)/name")
+  eval "file_menu_title=\"$file_menu_title\""
 # Walk through the menu folder and build the menu from line 2 and 3 of each file
   local menu_name
   local file
@@ -204,10 +213,10 @@ file_menu_select() {
 
 build_menu_from_files
 while true; do
-  show_menu --vartitle file_menu_title file_menu_entries 'And now? ' file_menu_select
+  show_menu --vartitle file_menu_title file_menu_entries "$(t MSG_AND_NOW)" file_menu_select
 # Menu was left with 0, so go up one level if possible.
   if [[ $(pwd) == "$menudir" ]]; then
-    echo "Already at top level."
+    echo "$(t MSG_ALREADY_AT_TOP_LEVEL)"
   elif [[ $(pwd) == "$basedir/menus/options" ]]; then
     cd "$menudir"
     build_menu_from_files

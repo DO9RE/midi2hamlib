@@ -1,2 +1,2 @@
-# Other levels
+# $(t MENU_LEVELS)
 source "$funcdir/levels/level_toggle"

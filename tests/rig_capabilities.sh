@@ -1,20 +1,20 @@
 #!/bin/bash
 
 ensure_hamlib_windows_path() {
-case "$(uname -s 2>/dev/null)" in
-MINGW*|MSYS*|CYGWIN*)
-local hamlib_bin_win="C:\\Program Files\\hamlib-w64-4.6.5\\bin"
-local hamlib_bin_posix
+  case "$(uname -s 2>/dev/null)" in
+  MINGW*|MSYS*|CYGWIN*)
+    local hamlib_bin_win="C:\\Program Files\\hamlib-w64-4.6.5\\bin"
+    local hamlib_bin_posix
 
-hamlib_bin_posix="$(cygpath -u "$hamlib_bin_win" 2>/dev/null)"
-if [ -n "$hamlib_bin_posix" ] && [ -d "$hamlib_bin_posix" ]; then
-case ":$PATH:" in
-*":$hamlib_bin_posix:"*) : ;;
-*) export PATH="$PATH:$hamlib_bin_posix" ;;
-esac
-fi
-;;
-esac
+    hamlib_bin_posix="$(cygpath -u "$hamlib_bin_win" 2>/dev/null)"
+    if [ -n "$hamlib_bin_posix" ] && [ -d "$hamlib_bin_posix" ]; then
+      case ":$PATH:" in
+        *":$hamlib_bin_posix:"*) : ;;
+        *) export PATH="$PATH:$hamlib_bin_posix" ;;
+      esac
+    fi
+    ;;
+  esac
 }
 
 ensure_hamlib_windows_path
@@ -35,13 +35,13 @@ get_func_level_params() {
   local cmd=$1
   local getter_list setter_list
   if [[ -n $3 ]]; then
-    getter_list=$(rigctl -m "$3" "${cmd,,}" "?")
-    setter_list=$(rigctl -m "$3" "${cmd^^}" "?")
+    getter_list=$(rigctl -m "$3" "${cmd,,}" "?" 2>&1 | tr -d '\r')
+    setter_list=$(rigctl -m "$3" "${cmd^^}" "?" 2>&1 | tr -d '\r')
   else
     # Host and port are not define here, but can be used when run from within idi2hamlib.
     # shellcheck disable=SC2154
-    getter_list=$(rigctl -m2 -r "$host:$port" "${cmd,,}" "?")
-    setter_list=$(rigctl -m2 -r "$host:$port" "${cmd^^}" "?")
+    getter_list=$(rigctl -m2 -r "$host:$port" "${cmd,,}" "?" 2>&1 | tr -d '\r')
+    setter_list=$(rigctl -m2 -r "$host:$port" "${cmd^^}" "?" 2>&1 | tr -d '\r')
   fi
   local -n map=$2
   for getter in ${getter_list}; do
@@ -115,11 +115,11 @@ get_vfo_list() {
   fi
   local -n result=$1
   if [[ -n $2 ]]; then
-    tmp=$(rigctl -m "$2" V "?")
+    tmp=$(rigctl -m "$2" V "?" 2>&1 | tr -d '\r')
   else
     # Host and port are not define here, but can be used when run from within idi2hamlib.
     # shellcheck disable=SC2154
-    tmp=$(rigctl -m2 -r "$host:$port" V "?")
+    tmp=$(rigctl -m2 -r "$host:$port" V "?" 2>&1 | tr -d '\r')
   fi
   read -r tmp <<<"$tmp" # strip spaces at beginning and end
   if [[ "$checkonly" == "1" ]]; then
@@ -302,7 +302,7 @@ while IFS="" read -r line; do
   fi
   unset rigcap_ctcss rigcap_dcs rigcap_modes rigcap_vfos rigcap_vfo_ops rigcap_scan_ops rigcap_warnings
   unset rigcap_functions rigcap_levels rigcap_parameters rigcap_general rigcap_bounds rigcap_features
-done <<<"$(rigctl --list | sed -n '1!p' | sed -n /Hamlib/!p)"
+done <<<"$(rigctl --list 2>&1 | tr -d '\r' | sed -n '1!p' | sed -n /Hamlib/!p)"
 if [[ -z "$rigmodel" ]]; then
   echo "done."
 fi

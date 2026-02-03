@@ -1,2 +1,2 @@
-# Parameters Menu
+# $(t MENU_PARAMETERS_MENU)
 source "$funcdir/params/parameter_toggle"

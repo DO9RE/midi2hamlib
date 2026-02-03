@@ -1,2 +1,2 @@
-# Get VFO
+# $(t MENU_GET_VFO)
 source "$funcdir/vfo/get_vfo"

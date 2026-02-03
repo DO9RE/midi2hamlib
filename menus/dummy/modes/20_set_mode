@@ -1,2 +1,2 @@
-# Set Mode
+# $(t MENU_SET_MODE)
 source "$funcdir/modes/mode_toggle"

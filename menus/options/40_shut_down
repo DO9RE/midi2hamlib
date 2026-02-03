@@ -1,4 +1,4 @@
-# Shutdown the system
-echo Shutting down. 
+# $(t MENU_SHUT_DOWN)
+echo "$(t MSG_SHUTTING_DOWN)"
 sleep 3
 sudo shutdown -h now

@@ -18,7 +18,7 @@ if [[ $1 ]]; then #Triggered with parameter
     return 0
   fi
 else #Called from keyboard, show modes list and ask for selection.
-  show_menu "Set mode:" modes 'Mode?: ' switch_to_mode
+  show_menu "$(t MSG_SET_MODE)" modes "$(t MSG_MODE_PROMPT)" switch_to_mode
 fi
 if rig_can get feature mode ; then
   source "$funcdir/modes/get_mode"

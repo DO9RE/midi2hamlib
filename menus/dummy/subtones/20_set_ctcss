@@ -1,2 +1,2 @@
-# Set CTCSS Tone
+# $(t MENU_SET_CTCSS)
 source "$funcdir/ctcss/set_ctcss"

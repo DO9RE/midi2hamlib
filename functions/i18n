@@ -1,0 +1,75 @@
+#!/bin/bash
+# Internationalization (i18n) helper functions for midi2hamlib
+
+# Default language
+: ${MIDI2HAMLIB_LANG:=en}
+
+# Language file path
+LANG_DIR="$(dirname "${BASH_SOURCE[0]}")/../lang"
+LANG_FILE="${LANG_DIR}/${MIDI2HAMLIB_LANG}.lang"
+
+# Associative array to store translations
+declare -gA I18N_STRINGS
+
+# Load language file
+load_language() {
+  local lang="${1:-$MIDI2HAMLIB_LANG}"
+  local lang_file="${LANG_DIR}/${lang}.lang"
+  
+  # Check if language file exists
+  if [[ ! -f "$lang_file" ]]; then
+    # Fallback to English if requested language doesn't exist
+    lang="en"
+    lang_file="${LANG_DIR}/${lang}.lang"
+    
+    if [[ ! -f "$lang_file" ]]; then
+      echo "Error: Language file not found: $lang_file" >&2
+      return 1
+    fi
+  fi
+  
+  # Clear existing translations
+  I18N_STRINGS=()
+  
+  # Load translations from file
+  while IFS='=' read -r key value; do
+    # Skip empty lines and comments
+    [[ -z "$key" || "$key" =~ ^[[:space:]]*# ]] && continue
+    
+    # Remove leading/trailing whitespace from key
+    key=$(echo "$key" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+    
+    # Remove quotes from value if present
+    value=$(echo "$value" | sed 's/^[[:space:]]*"//;s/"[[:space:]]*$//')
+    
+    # Store in associative array
+    I18N_STRINGS["$key"]="$value"
+  done < "$lang_file"
+  
+  return 0
+}
+
+# Get translated string
+# Usage: t "KEY" [printf arguments...]
+t() {
+  local key="$1"
+  shift
+  
+  # Get translation from array
+  local translated="${I18N_STRINGS[$key]}"
+  
+  # If not found, return the key itself
+  if [[ -z "$translated" ]]; then
+    translated="[$key]"
+  fi
+  
+  # If additional arguments are provided, use printf for formatting
+  if [[ $# -gt 0 ]]; then
+    printf "$translated" "$@"
+  else
+    echo "$translated"
+  fi
+}
+
+# Initialize with default language (will be reloaded after config is read)
+load_language "$MIDI2HAMLIB_LANG"

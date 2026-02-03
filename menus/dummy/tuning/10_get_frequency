@@ -1,3 +1,3 @@
-# Get frequency
+# $(t MENU_GET_FREQUENCY)
 source "$funcdir/tuning/get_frequency"
 

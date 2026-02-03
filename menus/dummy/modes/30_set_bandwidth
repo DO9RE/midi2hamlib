@@ -1,2 +1,2 @@
-# Set bandwidth
+# $(t MENU_SET_BANDWIDTH)
 source "$funcdir/modes/bandwidth_toggle"

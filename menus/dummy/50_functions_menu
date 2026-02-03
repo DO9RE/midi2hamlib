@@ -1,2 +1,2 @@
-# Functions Menu
+# $(t MENU_FUNCTIONS_MENU)
 source "$funcdir/functions/function_select"

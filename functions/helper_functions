@@ -1,6 +1,66 @@
 # Function for formatting human input frequencies into the hamlib needed format
 # We assume a base of MHz, therefore we multiply with 1000000
 # We switch eventually commas with decimal points, using SED.
+
+# Optional unified OS detection function
+# This can be used but is not required - direct uname checks work fine too
+# Sets global variables:
+# - OS_TYPE: "linux", "macos", "windows", or "unknown"
+# - OS_NAME: output from uname -s (if available)
+# - IS_WINDOWS: 1 if Windows/MSYS/Cygwin, 0 otherwise
+# - IS_MACOS: 1 if macOS, 0 otherwise
+# - IS_LINUX: 1 if Linux, 0 otherwise
+detect_os() {
+  OS_NAME=$(uname -s 2>/dev/null || echo "unknown")
+  
+  case "$OS_NAME" in
+    MINGW*|MSYS*|CYGWIN*)
+      OS_TYPE="windows"
+      IS_WINDOWS=1
+      IS_MACOS=0
+      IS_LINUX=0
+      ;;
+    Darwin*)
+      OS_TYPE="macos"
+      IS_WINDOWS=0
+      IS_MACOS=1
+      IS_LINUX=0
+      ;;
+    Linux*)
+      OS_TYPE="linux"
+      IS_WINDOWS=0
+      IS_MACOS=0
+      IS_LINUX=1
+      ;;
+    *)
+      OS_TYPE="unknown"
+      IS_WINDOWS=0
+      IS_MACOS=0
+      IS_LINUX=0
+      ;;
+  esac
+  
+  # Export for use in subshells
+  export OS_TYPE OS_NAME IS_WINDOWS IS_MACOS IS_LINUX
+}
+
+# Optional wrapper function for rigctl that handles Windows line endings
+# Usage: rigctl_safe [rigctl arguments...]
+rigctl_safe() {
+  local uname_s
+  uname_s="$(uname -s 2>/dev/null || echo "")"
+  
+  # On Windows, strip carriage returns from output
+  case "$uname_s" in
+    MINGW*|MSYS*|CYGWIN*)
+      rigctl "$@" 2>&1 | tr -d '\r'
+      ;;
+    *)
+      rigctl "$@"
+      ;;
+  esac
+}
+
 re_format_frequency() {
   local frequency=$1
   frequency=$(echo "$frequency * 1000000 /1" | sed 's/,/./g' | bc)
@@ -101,7 +161,7 @@ unify_rel_midi() {
 validate_midi_value() {
   local valmidirange=0
   if [[ ($# -lt 4) || ($# -gt 5) ]]; then
-    echo "validate_midi_value must be called with either 4 or 5 parameters. Invalid mapping."
+    echo "$(t ERR_VALIDATE_MIDI_PARAMS)"
     return 1
   fi
   if [[ -v $3 ]]; then
@@ -111,11 +171,11 @@ validate_midi_value() {
     valmidirange=$3
   fi  
   if [[ $valmidirange -lt 1 ]]; then
-    echo "No valid range parameter given to validate_midi_value."
+    echo "$(t ERR_NO_VALID_RANGE)"
     return 1
   fi
   if [[ -z "$4" ]]; then
-    echo "No result variable given to validate_midi_value."
+    echo "$(t ERR_NO_RESULT_VAR)"
     return 1
   fi
   local -n valmidiresult=$4
@@ -158,7 +218,7 @@ validate_midi_value() {
       ;;
   esac
   # shellcheck disable=SC2317
-  echo "validate_midi_value: This code block sould never be executed."
+  echo "$(t ERR_CODE_NEVER_EXECUTED)"
   # shellcheck disable=SC2317
   return 1
 }
@@ -181,11 +241,11 @@ humanize_ctcss() {
 }
 
 show_help() {
-  echo "Usage: $0 [OPTIONS]"
+  echo "$(t HELP_USAGE "$0")"
   echo
-  echo "Options:"
-  echo "  -c, --config-file path_to_alternative_configuration/file.conf"
-  echo "  -h, --help        Show this help"
+  echo "$(t HELP_OPTIONS)"
+  echo "$(t HELP_CONFIG_FILE)"
+  echo "$(t HELP_HELP)"
 }
 
 # Read input and validate it.
@@ -197,15 +257,15 @@ show_help() {
 # Syntax: read_and_validate prompt maxvalue varname
 read_and_validate() {
   if [[ -z "$1" ]] ; then 
-    echo "No prompt given for read_and_validate."
+    echo "$(t ERR_NO_PROMPT)"
     exit 1 
   fi
   if [[ -z "$2" || $2 -lt 0 ]] ; then 
-    echo "No maximum value or negative value given for read_and_validate."
+    echo "$(t ERR_NO_MAX_VALUE)"
     exit 1 
   fi
   if [[ -z "$3" ]] ; then 
-    echo "No varname given for read_and_validate."
+    echo "$(t ERR_NO_VARNAME)"
     exit 1 
   fi
   local -n result=$3
@@ -213,10 +273,10 @@ read_and_validate() {
   if [[ -z "$result" ]]; then
     return 1
   elif ! [[ "$result" =~ ^[0-9]+$ ]] ; then
-    echo "Invalid input. Please enter a number only using digits 0 to 9."
+    echo "$(t ERR_INVALID_INPUT)"
     return 2
   elif [[ $result -lt 0 || $result -gt $2 ]]; then
-    echo "Input out of range. please enter a number between 0 and $2."
+    echo "$(t ERR_INPUT_OUT_OF_RANGE "$2")"
     return 2
   fi
   return 0
@@ -282,8 +342,8 @@ fi
 show_menu_format="%-${show_menu_width}s"
 #echo "SC: $screen_columns; MC: $show_menu_columns; MinW: $show_menu_min_width; MaxW: $show_menu_max_width; MW: $show_menu_width"
 
-# Menu entries for an on/off menu
-on_off_menu=( "On" "Off" )
+# On/Off menu entries
+on_off_menu=( "$(t ON)" "$(t OFF)" )
 
 # Display a menu with title and elements from an array.
 # the elements from the zero-based array are numbered beginning with 1.
@@ -312,11 +372,11 @@ on_off_menu=( "On" "Off" )
 # The function returns when 0 is entered to leave the menu.
 show_menu() {
   if [[ "$show_menu_columns" -lt "1" ]]; then
-    echo "Set show_menu_columns before calling show_menu."
+    echo "$(t ERR_SET_MENU_COLUMNS)"
     exit 1
   fi
   if [[ ! -v show_menu_format ]]; then
-    echo "Set show_menu_format before calling show_menu."
+    echo "$(t ERR_SET_MENU_FORMAT)"
     exit 1
   fi
   local is_vartitle=0
@@ -327,13 +387,13 @@ show_menu() {
     elif [[ "$1" == "--retvar" ]]; then
       is_retvar=1
     else
-      echo "Unrecognized option $1 for show_menu."
+      echo "$(t ERR_UNRECOGNIZED_OPTION "$1")"
       exit 1
     fi
     shift 1
   done
   if [[ -z $1 ]]; then
-    echo "No menu title given in show_menu."
+    echo "$(t ERR_NO_MENU_TITLE)"
     exit 1
   fi
   if [[ $is_vartitle -eq 1 ]]; then
@@ -342,7 +402,7 @@ show_menu() {
     local title="$1"
   fi
   if [[ ! -v $2 ]]; then
-    echo "No variable with menu entries given in show_menu."
+    echo "$(t ERR_NO_MENU_ENTRIES)"
     exit 1
   fi
   local -n show_menu_entries=$2
@@ -351,7 +411,7 @@ show_menu() {
     prompt="And now?: ";
   fi
   if [[ -z $4 ]]; then
-    echo "No selection handler given in show_menu."
+    echo "$(t ERR_NO_SELECTION_HANDLER)"
     exit 1
   fi
   local selection_handler=$4
@@ -364,7 +424,7 @@ show_menu() {
     before_menu_function=$6
   fi
   if [[ $# -gt 6 ]]; then
-    echo "Too many parameters given to show_menu."
+    echo "$(t ERR_TOO_MANY_PARAMS)"
     exit 1
   fi
   # remove all positional parameters to avoid passing them accidentally to sourced scripts or functions.
@@ -425,39 +485,41 @@ show_menu() {
   done
 }
 
-# Check_environment: If we are on Mac OS, prepare the system accordingly
+# Check_environment: Prepare the system based on OS
 check_environment() {
-# Basispfad für mac_midi_monitor
-  midi_monitor_source="$basedir/midi/mac_midi_monitor/mac_midi_monitor.c"
-  midi_monitor_binary="$basedir/midi/mac_midi_monitor/mac_midi_monitor"
-
 # Überprüfen, ob das Skript in Bash ausgeführt wird
   if [ -z "$BASH_VERSION" ]; then
-    echo "Error: This script must be run in Bash."
-    echo "Please restart the script using Bash."
+    echo "$(t ERR_MUST_RUN_IN_BASH)"
+    echo "$(t ERR_RESTART_WITH_BASH)"
     exit 1
   fi
 
 # Betriebssystem erkennen
-  os_name=$(uname -s)
+  local os_name=$(uname -s)
+  
+  # macOS-specific setup
   if [ "$os_name" = "Darwin" ]; then
-    echo "Running on macOS."
+    # Basispfad für mac_midi_monitor
+    midi_monitor_source="$basedir/midi/mac_midi_monitor/mac_midi_monitor.c"
+    midi_monitor_binary="$basedir/midi/mac_midi_monitor/mac_midi_monitor"
+    
+    echo "$(t SYS_RUNNING_ON_MACOS)"
 
 #   Überprüfen, ob Homebrew installiert ist
     if ! command -v brew &>/dev/null; then
-      echo "Homebrew not found. Please install Homebrew first from https://brew.sh/"
+      echo "$(t ERR_HOMEBREW_NOT_FOUND)"
       exit 1
     fi
 
 #   Überprüfen, ob GNU-Grep installiert ist
     if ! brew list grep &>/dev/null; then
-      echo "GNU Grep not found. Installing grep via Homebrew..."
+      echo "$(t SYS_GNU_GREP_NOT_FOUND)"
       brew install grep
     fi
 
 #   Überprüfen, ob GNU-Awk installiert ist
     if ! brew list awk &>/dev/null; then
-      echo "GNU Awk not found. Installing awk via Homebrew..."
+      echo "$(t SYS_GNU_AWK_NOT_FOUND)"
       brew install awk
     fi
 
@@ -467,35 +529,35 @@ check_environment() {
 
 #   Überprüfen, ob die Xcode Command Line Tools installiert sind
     if ! xcode-select -p &>/dev/null; then
-      echo "Xcode Command Line Tools not found. Installing..."
+      echo "$(t ERR_XCODE_TOOLS_NOT_FOUND)"
       xcode-select --install
-      echo "Please rerun this script after the installation is complete."
+      echo "$(t ERR_RERUN_AFTER_INSTALL)"
       exit 1
     fi
 
 #   Überprüfen, ob die mac_midi_monitor-C-Datei vorhanden ist
     if [ ! -f "$midi_monitor_source" ]; then
-      echo "Error: MIDI monitor source file not found at $midi_monitor_source"
+      echo "$(t ERR_MIDI_MONITOR_NOT_FOUND "$midi_monitor_source")"
       exit 1
     fi
 
 #   Überprüfen, ob das Kompilat existiert
     if [ ! -f "$midi_monitor_binary" ]; then
-      echo "MIDI monitor binary not found. Compiling midi_monitor..."
-      if gcc -o "$midi_monitor_binary" "$midi_monitor_source" -framework CoreMIDI -framework CoreFoundation ; then
-        echo "Compilation of midi_monitor failed. Please check the source file."
+      echo "$(t SYS_MIDI_MONITOR_NOT_COMPILED)"
+      if ! gcc -o "$midi_monitor_binary" "$midi_monitor_source" -framework CoreMIDI -framework CoreFoundation ; then
+        echo "$(t ERR_COMPILATION_FAILED)"
         exit 1
       fi
-      echo "Compilation successful. Binary created at $midi_monitor_binary"
+      echo "$(t SYS_COMPILATION_SUCCESS "$midi_monitor_binary")"
     else
-      echo "MIDI monitor binary already exists at $midi_monitor_binary"
+      echo "$(t SYS_MIDI_MONITOR_EXISTS "$midi_monitor_binary")"
 #     Alias für aseqdump erstellen
-      echo "Setting up alias for aseqdump..."
+      echo "$(t SYS_SETTING_ASEQDUMP_ALIAS)"
       export ASEQDUMP_CMD="$midi_monitor_binary"
-      echo "Alias set: 'aseqdump' now points to '$midi_monitor_binary'"
+      echo "$(t SYS_ALIAS_SET "$midi_monitor_binary")"
     fi
   else
-#   use linux native aseqdump
+#   use linux native aseqdump (also works on Windows/MSYS2)
     export ASEQDUMP_CMD="aseqdump"
   fi
 }

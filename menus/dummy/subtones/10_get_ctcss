@@ -1,2 +1,2 @@
-# Get CTCSS Tone
+# $(t MENU_GET_CTCSS)
 source "$funcdir/ctcss/get_ctcss"

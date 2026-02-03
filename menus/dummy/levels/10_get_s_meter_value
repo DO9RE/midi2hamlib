@@ -1,2 +1,2 @@
-# Get S Meter value
+# $(t MENU_GET_S_METER)
 source "$funcdir/levels/get_strength"

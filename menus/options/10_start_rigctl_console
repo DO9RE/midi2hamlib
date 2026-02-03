@@ -1,2 +1,2 @@
-# Start RIGCTL console
+# $(t MENU_START_RIGCTL)
 source "$basedir/additional_scripts/rigctl_console.sh"

@@ -31,6 +31,13 @@ internal_get_capabilities() {
   local -a tmparr tmparr1 tmparr2
   local -A rangeconsistency
   general["rignr"]="$1"
+  
+  # Check if rigctl is available
+  if ! command -v rigctl &>/dev/null; then
+    echo "Error: rigctl not found in PATH. Please install hamlib." >&2
+    return 1
+  fi
+  
   # Read capabilities line by line, to make sure we also can detect unhandled things.
   # If we wold just grep for specific lines, we wouldn't know what we are missing to evaluate.
   while IFS="" read -r line; do
@@ -465,7 +472,7 @@ internal_get_capabilities() {
       fi
       echo "  Unhandled: '$line'"
     fi
-  done <<<"$(rigctl -m "$1" --dump-caps)"
+  done <<<"$(rigctl -m "$1" --dump-caps 2>&1 | tr -d '\r')"
   for i in "${!features[@]}"; do
     if [[ "${features[$i]}" =~ setget ]]; then
       features[$i]=getset
@@ -566,7 +573,8 @@ adjust_rig_capabilities() {
       fi
     done
     ###echo "XXX ${type}s names: ${lparr[*]}"
-    varr=( $(rigctl -m 2 -r "$host:$port" ${cmdarr[@]}) )
+    # Use tr to remove carriage returns on Windows
+    varr=( $(rigctl -m 2 -r "$host:$port" ${cmdarr[@]} 2>&1 | tr -d '\r') )
     ###echo "XXX ${type}s values: ${varr[*]}"
     for i in ${!lparr[@]}; do
       lp=${lparr[$i]}
@@ -627,9 +635,9 @@ announce_rig_get_lp() {
   if ! announce_rig_can get $1 $2 ; then
     return 1
   elif [[ $1 == "parameter" ]] ; then  
-    retval=$(rigctl -m 2 -r "$host:$port" p "$2")
+    retval=$(rigctl -m 2 -r "$host:$port" p "$2" 2>&1 | tr -d '\r')
   else
-    retval=$(rigctl -m 2 -r "$host:$port" l "$2")
+    retval=$(rigctl -m 2 -r "$host:$port" l "$2" 2>&1 | tr -d '\r')
   fi
   # Handle the following types:
   # - mappedvalues[unit]

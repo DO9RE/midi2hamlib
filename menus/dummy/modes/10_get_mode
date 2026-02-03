@@ -1,2 +1,2 @@
-# Get Mode
+# $(t MENU_GET_MODE)
 source "$funcdir/modes/get_mode"

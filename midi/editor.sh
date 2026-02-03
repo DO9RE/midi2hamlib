@@ -4,7 +4,7 @@ file=$midi_mapping_file
 # function to display the midi map linewise
 function show_file {
 # show file with numbered lines from line 2 on
-  echo "file contents:"
+  echo "$(t MIDI_FILE_CONTENTS)"
   tail -n +2 "$file" | nl -w2 -s" "  
 }
 
@@ -22,15 +22,15 @@ function main_menu {
   while true; do
     clear
     show_file
-    echo "midi map editor menu"
-    echo "0 = exit editor."
+    echo "$(t MIDI_EDITOR_MENU)"
+    echo "$(t MIDI_EXIT_EDITOR)"
     read -rp "enter line number to edit: " menu_index
 
     if [[ "$menu_index" == "0" ]]; then
-      echo "leaving editor"
+      echo "$(t MIDI_LEAVING_EDITOR)"
       return 0
     elif ! [[ "$menu_index" =~ ^[0-9]+$ ]] || (( menu_index < 1 )); then
-      echo "invalid line number."
+      echo "$(t MIDI_INVALID_LINE)"
       read -rp "press enter to continue."
       continue
     else
@@ -48,11 +48,11 @@ function edit_menu {
   line=$(sed -n "${line_number}p" "$file")  # read the line
 
   if [[ -z "$line" ]]; then
-    echo "invalid line number."
+    echo "$(t MIDI_INVALID_LINE)"
     read -rp "Press enter to go back."
     return
   elif [[ "$line" =~ ^# ]]; then
-    echo "This line is a comment and cannot be edited."
+    echo "$(t MIDI_COMMENT_NO_EDIT)"
     read -rp "Press enter to go back."
     return
   fi
@@ -61,16 +61,16 @@ function edit_menu {
 
   while true; do
     clear
-    echo "line $((line_number - 1)): $line"
-    echo "edit menu:"
-    echo "0 = back to main menu."
+    echo "$(t MIDI_LINE "$((line_number - 1))" "$line")"
+    echo "$(t MIDI_EDIT_MENU)"
+    echo "$(t MIDI_BACK_MAIN)"
 
 #   display fields, numbered and with headers
     for i in "${!fields[@]}"; do
-      echo "$((i + 1)) = field $((i + 1)) (${headers[i]}: ${fields[i]})"
+      echo "$((i + 1)) = $(t MIDI_FIELD) $((i + 1)) (${headers[i]}: ${fields[i]})"
     done
 
-    echo "$(( ${#fields[@]} + 1 )) = delete whole mapping."
+    echo "$(( ${#fields[@]} + 1 )) $(t MIDI_DELETE_MAPPING)"
     read -rp "Field choice: " field_choice
 
     if [[ "$field_choice" == "0" ]]; then
@@ -83,7 +83,7 @@ function edit_menu {
     fi
 
     if ! [[ "$field_choice" =~ ^[0-9]+$ ]] || (( field_choice < 1 )) || (( field_choice > ${#fields[@]} )); then
-      echo "invalid option."
+      echo "$(t MIDI_INVALID_OPTION)"
       read -rp "press enter to continue..."
       continue
     fi
@@ -101,17 +101,17 @@ function edit_field {
   line=$(sed -n "${line_number}p" "$file") 
   ifs=' ' read -r -a fields <<< "$line"    
 
-  echo "current value of ${headers[field_index]} (field $((field_index + 1))): ${fields[field_index]}"
+  echo "$(t MIDI_CURRENT_VALUE "${headers[field_index]}" "$((field_index + 1))" "${fields[field_index]}")"
 
   # Check for special case: editing "Field 2", TYPE
   if [[ $field_index -eq 1 ]]; then
     while true; do
-      echo "Select a new value for ${headers[field_index]}:"
-      echo "1 = note_on"
-      echo "2 = note_off"
-      echo "3 = control"
+      echo "$(t MIDI_SELECT_NEW_VALUE "${headers[field_index]}")"
+      echo "$(t MIDI_NOTE_ON)"
+      echo "$(t MIDI_NOTE_OFF)"
+      echo "$(t MIDI_CONTROL)"
 #      echo "4 = pitch"
-      echo "0 = go back"
+      echo "$(t MIDI_GO_BACK)"
       read -rp "Your choice: " choice
 
       case $choice in
@@ -120,7 +120,7 @@ function edit_field {
         3) new_value="control"; break ;;
 #       4) new_value="pitch"; break ;;
         0) return ;;
-        *) echo "Invalid option. Please try again." ;;
+        *) echo "$(t MIDI_INVALID_OPTION_TRY_AGAIN)" ;;
       esac
     done
 # Check for special case: editing "Field 6", SCRIPT
@@ -132,21 +132,21 @@ function edit_field {
 # Check for special case: editing "Field 7", MODE
   elif [[ $field_index -eq 6 ]]; then
     while true; do
-      echo "Select a new value for ${headers[field_index]}:"
+      echo "$(t MIDI_SELECT_NEW_VALUE "${headers[field_index]}")"
       if [[ ${fields[1]} == "control" ]]; then
-        echo "1 = absolute mapping"
-        echo "2 = modulo mapping"
-        echo "3 = zone mapping"
-        echo "4 = absolute, control in rel ode"
-        echo "5 = modulo mapping, control in relative mode"
+        echo "$(t MIDI_ABS_MAPPING)"
+        echo "$(t MIDI_MOD_MAPPING)"
+        echo "$(t MIDI_ZONE_MAPPING)"
+        echo "$(t MIDI_ABS_REL)"
+        echo "$(t MIDI_MOD_REL)"
       else
-        echo "1 = key, regular keystroke"
-        echo "2 = up, increment a value or select next option"
-        echo "3 = down, increment a value or select previous option"
-        echo "4 = up_r, like 'up' but with wrap-around"
-        echo "5 = down_r, like 'down' but with wrap-around"
+        echo "$(t MIDI_KEY)"
+        echo "$(t MIDI_UP)"
+        echo "$(t MIDI_DOWN)"
+        echo "$(t MIDI_UP_R)"
+        echo "$(t MIDI_DOWN_R)"
       fi
-      echo "0 = go back"
+      echo "$(t MIDI_GO_BACK)"
       read -rp "Your choice: " choice
 
       if [[ $choice -eq 0 ]]; then
@@ -158,7 +158,7 @@ function edit_field {
           3) new_value="zone"; break ;;
           4) new_value="abs_r"; break ;;
           5) new_value="mod_r"; break ;;
-          *) echo "Invalid option. Please try again." ;;
+          *) echo "$(t MIDI_INVALID_OPTION_TRY_AGAIN)" ;;
         esac
       else
         case $choice in
@@ -167,7 +167,7 @@ function edit_field {
           3) new_value="down"; break ;;
           4) new_value="up_r"; break ;;
           5) new_value="down_r"; break ;;
-          *) echo "Invalid option. Please try again." ;;
+          *) echo "$(t MIDI_INVALID_OPTION_TRY_AGAIN)" ;;
         esac
       fi
     done
@@ -184,7 +184,7 @@ function edit_field {
         # shellcheck disable=SC2076
         if [[ ! " abs mod zone abs_r mod_r " =~ " ${fields[6]} " ]]; then
           fields[6]='abs'
-          echo "${headers[6]} has been set to '${fields[6]}' for consistency with TYPE field."
+          echo "${headers[6]} $(t MIDI_FIELD_CONSISTENCY "${fields[6]}")"
         fi
         ;;
       *)
@@ -192,7 +192,7 @@ function edit_field {
         # shellcheck disable=SC2076
         if [[ ! " key up down up_r down_r " =~ " ${fielda[6]} " ]]; then
           fields[6]='key'
-          echo "${headers[6]} has been set to '${fields[6]}' for consistency with TYPE field."
+          echo "${headers[6]} $(t MIDI_FIELD_CONSISTENCY "${fields[6]}")"
         fi
         ;;
     esac
@@ -203,7 +203,7 @@ function edit_field {
   # Escape slashes for sed
   escaped_new_line=$(printf '%s' "$new_line" | sed 's/[&/\]/\\&/g')
   sed -i "${line_number}s/.*/$escaped_new_line/" "$file" # Write file
-  echo "Field updated."
+  echo "$(t MIDI_FIELD_UPDATED)"
   read -rp "Press enter to continue."
 }
 
@@ -211,7 +211,7 @@ function delete_line {
   local line_number=$1
 
   while true; do
-    echo "delete mapping $((line_number - 1))?"
+    echo "$(t MIDI_DELETE_CONFIRM "$((line_number - 1))")"
     echo "0 = no"
     echo "1 = yes"
     read -r confirm

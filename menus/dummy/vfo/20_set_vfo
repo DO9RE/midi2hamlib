@@ -1,2 +1,2 @@
-# Set VFO
+# $(t MENU_SET_VFO)
 source "$funcdir/vfo/vfo_toggle"
