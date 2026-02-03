@@ -556,8 +556,49 @@ check_environment() {
       export ASEQDUMP_CMD="$midi_monitor_binary"
       echo "$(t SYS_ALIAS_SET "$midi_monitor_binary")"
     fi
+  # Windows-specific setup (MSYS2, MinGW, Cygwin)
+  elif [[ "$os_name" =~ ^(MINGW|MSYS|CYGWIN) ]]; then
+    # Basispfad für windows_midi_monitor
+    midi_monitor_source="$basedir/midi/windows_midi_monitor/windows_midi_monitor.c"
+    midi_monitor_binary="$basedir/midi/windows_midi_monitor/windows_midi_monitor.exe"
+    
+    echo "Running on Windows ($os_name)"
+
+#   Überprüfen, ob GCC installiert ist
+    if ! command -v gcc &>/dev/null; then
+      echo "Error: GCC not found. Please install it using: pacman -S mingw-w64-x86_64-gcc"
+      exit 1
+    fi
+
+#   Überprüfen, ob die windows_midi_monitor-C-Datei vorhanden ist
+    if [ ! -f "$midi_monitor_source" ]; then
+      echo "Error: MIDI monitor source not found: $midi_monitor_source"
+      exit 1
+    fi
+
+#   Überprüfen, ob das Kompilat existiert
+    if [ ! -f "$midi_monitor_binary" ]; then
+      echo "Windows MIDI monitor not compiled. Compiling now..."
+      # Compile with winmm library for MIDI support
+      if ! gcc -o "$midi_monitor_binary" "$midi_monitor_source" -lwinmm ; then
+        echo "Error: Compilation failed"
+        exit 1
+      fi
+      echo "Compilation successful: $midi_monitor_binary"
+    else
+      echo "Windows MIDI monitor exists: $midi_monitor_binary"
+    fi
+    
+#   Create aseqdump alias/wrapper
+    echo "Setting up aseqdump alias for Windows..."
+    export ASEQDUMP_CMD="$midi_monitor_binary"
+    
+#   Also create an alias command for convenience in the current shell
+    alias aseqdump="$midi_monitor_binary"
+    
+    echo "Alias set: aseqdump -> $midi_monitor_binary"
   else
-#   use linux native aseqdump (also works on Windows/MSYS2)
+#   use linux native aseqdump
     export ASEQDUMP_CMD="aseqdump"
   fi
 }

@@ -11,18 +11,43 @@ The primary aim of this project is to provide an accessible control interface fo
 ## How It Works
 
 - A customisable audio menu provides access to rig functions.
-- MIDI input is read via `aseqdump`, a utility that is part of the ALSA (Advanced Linux Sound Architecture) package.
+- MIDI input is read via `aseqdump` (Linux/ALSA), `mac_midi_monitor` (macOS), or `windows_midi_monitor` (Windows).
 - MIDI events are parsed and mapped to Hamlib commands, which can control a connected transceiver.
 - By default, the system can be tested using Hamlib’s built-in **Dummy** transceiver model (Model 1), which simulates a radio without requiring real hardware.
 
+
+## Platform Support
+
+**midi2hamlib** supports multiple platforms:
+
+- **Linux**: Uses native `aseqdump` from ALSA utilities
+- **macOS**: Uses custom `mac_midi_monitor` (automatically compiled)
+- **Windows**: Uses custom `windows_midi_monitor` (automatically compiled on MSYS2/MinGW/Cygwin)
+
+The platform-specific MIDI monitors are automatically detected and configured when you run the start script.
 ## Requirements
 
+### Linux
 - A Linux system (tested on Raspberry Pi OS)
 - A connected MIDI controller, keyboard or numpad
 - `aseqdump` from the ALSA utilities
 - `hamlib` and its utilities
 - `bc` for some math
 - A screen reader in the console (tested with [Fenrir](https://github.com/chrys87/fenrir) for blind users)
+
+### Windows (MSYS2/MinGW/Cygwin)
+- Windows with MSYS2, MinGW, or Cygwin environment
+- GCC compiler (install with: `pacman -S mingw-w64-x86_64-gcc`)
+- A connected MIDI controller, keyboard or numpad
+- `hamlib` binaries for Windows
+- `bc` for some math
+
+### macOS
+- macOS with Xcode Command Line Tools
+- Homebrew with GNU grep and awk
+- A connected MIDI controller, keyboard or numpad
+- `hamlib` (via Homebrew or compiled)
+- `bc` for some math
 
 ## Accessibility
 
