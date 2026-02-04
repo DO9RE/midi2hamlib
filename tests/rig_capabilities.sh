@@ -22,6 +22,7 @@ ensure_hamlib_windows_path
 
 rigctl --version
 
+source "$(dirname "$0")/../functions/i18n"
 source "$(dirname "$0")/../functions/helper_functions"
 source "$(dirname "$0")/../functions/rigcaps"
 

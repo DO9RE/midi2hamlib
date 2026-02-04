@@ -12,7 +12,7 @@ vendorhandler() {
   done <<<"$(for i in "${!rignr[@]}"; do if [[ "${rigvendor[$i]}" == "$selectedvendor" ]]; then echo "${rigmodel[$i]}"; fi; done | sort -u -d)"
   ###echo "${#sortedmodels[@]} models: ${sortedmodels[@]}"
   # Show menu with sorted list of vendors.
-  show_menu "Model menu" sortedmodels "Model: " modelhandler
+  show_menu "$(t MENU_MODELS)" sortedmodels "$(t MSG_MODEL_PROMPT)" modelhandler
   if [[ $model -gt 1 ]]; then
     # A model was selected. Leave menu.
     return 1
@@ -62,7 +62,7 @@ while IFS="" read -r line; do
 done <<<"$(for i in "${rigvendor[@]}"; do echo "$i"; done | sort -u -d)"
 ###echo "Rigs: ${#rignr[@]} ${#rigvendor[@]} ${#rigmodel[@]} ${#sortedvendors[@]} '${sortedvendors[0]}'"
 # Show menu with sorted list of vendors.
-show_menu "Vendor Menu" sortedvendors "Vendor: " vendorhandler
+show_menu "$(t MENU_VENDORS)" sortedvendors "$(t MSG_VENDOR_PROMPT)" vendorhandler
 if [[ $model -le 1 ]]; then
   model=1
   selectedvendor="Hamlib"

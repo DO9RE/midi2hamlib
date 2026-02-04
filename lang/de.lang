@@ -10,6 +10,7 @@ MSG_CLEANING_UP="Räume Hintergrundprozesse auf..."
 MSG_SCRIPT_TERMINATED="Skript beendet. Alle Hintergrundprozesse wurden gestoppt."
 
 # Fehlermeldungen
+ERR_GCC_WIN_NOT_INSTALLED="Fehler: GCC ist nicht installiert. Bitte installieren mit: pacman -S mingw-w64-x86_64-gcc"
 ERR_BC_NOT_INSTALLED="bc ist nicht installiert."
 ERR_INSTALL_NOW="Jetzt installieren? [j/N] "
 ERR_ABORTED="Abgebrochen."
@@ -48,6 +49,7 @@ ERR_COMPILATION_FAILED="Kompilierung von midi_monitor fehlgeschlagen. Bitte übe
 
 # Systemmeldungen
 SYS_RUNNING_ON_MACOS="Läuft auf macOS."
+SYS_RUNNING_ON_WINDOWS="Läuft auf Windows (%s)."
 SYS_GNU_GREP_NOT_FOUND="GNU Grep nicht gefunden. Installiere grep über Homebrew..."
 SYS_GNU_AWK_NOT_FOUND="GNU Awk nicht gefunden. Installiere awk über Homebrew..."
 SYS_MIDI_MONITOR_NOT_COMPILED="MIDI-Monitor-Binary nicht gefunden. Kompiliere midi_monitor..."
@@ -63,6 +65,8 @@ HELP_CONFIG_FILE="  -c, --config-file pfad_zu_alternativer_konfiguration/datei.c
 HELP_HELP="  -h, --help        Diese Hilfe anzeigen"
 
 # Menünamen
+MENU_MODELS="Modelle"
+MENU_VENDORS="Hersteller"
 MENU_OPTIONS="Optionsmenü"
 MENU_TUNING="Abstimmmenü"
 MENU_MODES="Modimenü"
@@ -95,13 +99,28 @@ MENU_START_MIDI_EDITOR="MIDI-Map-Editor starten"
 MENU_SHUT_DOWN="Herunterfahren"
 MENU_GET_S_METER="S-Meter-Wert abrufen"
 MENU_LEVELS="Pegel"
+MENU_GET="Abrufen"
+MENU_SET="Einstellen"
 
 # Funktionsnachrichten
 MSG_SHUTTING_DOWN="Fahre herunter."
 MSG_MIDI_MAPPER_ON="Midi-Mapper an, bitte drücken Sie eine Taste oder bewegen Sie ein Bedienelement auf Ihrem MIDI-Gerät."
 MSG_PRESS_ENTER_FINISH="Drücken Sie Enter, wenn Sie fertig sind"
-MSG_SET_MODE="Modus setzen:"
+MSG_SET_MODE="Modus setzen: "
 MSG_MODE_PROMPT="Modus?: "
+MSG_FUNCTION_PROMPT="Funktion?: "
+MSG_FUNCSTATE_PROMPT="Zustand?: "
+MSG_SELECT_VFO="VFO auswählen:"
+MSG_VFO_PROMPT="VFO?: "
+MSG_NEW_VALUE_PROMPT="Neuer Wert?: "
+MSG_LEVELS="Pegel:"
+MSG_LEVEL_PROMPT="Pegel?: "
+MSG_PARAMETERS="Parameter:"
+MSG_PARAMETER_PROMPT="Parameter?: "
+MSG_MODEL_PROMPT="Modell?: "
+MSG_VENDOR_PROMPT="Hersteller?: "
+MSG_SET_BANDWIDTH_FOR="Bandbreite für %s:"
+MSG_SET_BANDWIDTH_PROMPT="Bandbreite?: "
 
 # Ein/Aus
 ON="Ein"

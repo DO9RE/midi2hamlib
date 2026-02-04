@@ -9,7 +9,7 @@ if [[ ! -v functions ]]; then
 fi
 
 before_functions_menu() {
-  function_states=( $(rigctl -m 2 -r "$host:$port" $(for f in ${functions_get}; do echo "u $f"; done)) )
+  function_states=( $(rigctl -m 2 -r "$host:$port" $(for f in ${functions_get}; do echo "u $f "; done)) )
 }
 
 function_select_entry() {
@@ -41,5 +41,5 @@ if [[ $1 ]]; then #Triggered with parameter
     fi
   fi
 else # Called from keyboard, show functions list and ask for selection.
-  show_menu "Functions:" functions 'Function?: ' function_select_handler function_select_entry before_functions_menu
+  show_menu "Functions:" functions "$(t MSG_FUNCTION_PROMPT)" function_select_handler function_select_entry before_functions_menu
 fi

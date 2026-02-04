@@ -52,6 +52,6 @@ if [[ $1 ]]; then # called with midi parameter
   fi
 else # Called from keyboard
 # Show the bandwidths menu
-  show_menu "Bandwith selection; $(get_current_mode)" bandwidths 'Bandwidth?: ' set_bandwidth
+  show_menu "$(t MSG_SET_BANDWIDTH_FOR "$(get_current_mode)")" bandwidths "$(t MSG_SET_BANDWIDTH_PROMPT)" set_bandwidth
 fi
 source "$funcdir/modes/get_mode"

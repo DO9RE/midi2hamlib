@@ -19,7 +19,9 @@ if [[ $1 ]]; then #Triggered with parameter
     return 0 # stop here
   fi
 else #Called from keyboard, show tuning steps list
-  show_menu "Tuning step:" tuning_steps tuning_step_select tuing_step_entry
+  # This should not be called from menu. Frequency is entered directly, not
+  # by stepping up and down.
+  show_menu "Tuning step:" tuning_steps 'Step?: ' tuning_step_select tuing_step_entry
 fi
 # Display tuning step
 format_frequency "$tuning_step"

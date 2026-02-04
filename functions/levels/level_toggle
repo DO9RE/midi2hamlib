@@ -14,7 +14,7 @@ announce_level() {
 }
 
 do_level_action() {
-  if [[ ${level_menu[$1]} =~ Set ]] ; then
+  if [[ "${level_menu[$1]}" == "$(t MENU_SET)" ]] ; then
     announce_rig_set_lp level "$last_level"
   else
     source "${funcdir}/levels/get_level"
@@ -27,12 +27,12 @@ select_level() {
   announce_level $1
   level_menu=( )
   if rig_can get level "${levels[$1]}" ; then
-    level_menu+=( "Get" )
+    level_menu+=( "$(t MENU_GET)" )
   fi
   if rig_can set level "${levels[$1]}" ; then
-    level_menu+=( "Set" )
+    level_menu+=( "$(t MENU_SET)" )
   fi
-  show_menu "${levels[$1]}" level_menu 'And now? ' do_level_action
+  show_menu "${levels[$1]}" level_menu "$(t MSG_AND_NOW)" do_level_action
 }
 
 if [[ ! -v levels ]]; then
@@ -51,6 +51,6 @@ if [[ $1 ]]; then #Triggered with parameter
     announce_level "$level_midi_result"
   fi
 else #Called from keyboard, show modes list and ask for selection.
-  show_menu "Other levels:" levels 'Level?: ' select_level
+  show_menu "$(t MSG_LEVELS)" levels "$(t MSG_LEVEL_PROMPT)" select_level
 fi
 

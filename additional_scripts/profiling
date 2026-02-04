@@ -1,0 +1,14 @@
+# Write an entry to the logfile specified by MIDI2HAMLIB_LOGFILE.
+# If this variable is not set or is an empty string, do not do anything.
+# Please note that you should set MIDI2HAMLIB_LOGFILE in a way that is robust against
+# changing the working directory. As we are changing the current working 
+# directory while walking through the main menu of midi2hamlib, a relative 
+# pathname would result in multiple files created in different folder.
+# Use something like ~/logfile.txt.
+write_to_log() {
+  local ds
+  if [[ -n "$MIDI2HAMLIB_LOGFILE" ]]; then
+    ds="$(date '+%Y_%m_%d %H:%M:%S.%N')"
+    echo "${ds:0:23}: $*" >>"$MIDI2HAMLIB_LOGFILE"
+  fi
+}

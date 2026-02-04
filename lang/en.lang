@@ -10,6 +10,7 @@ MSG_CLEANING_UP="Cleaning up background processes..."
 MSG_SCRIPT_TERMINATED="Script terminated. All background processes have been stopped."
 
 # Error messages
+ERR_GCC_WIN_NOT_INSTALLED="Error: GCC not found. Please install it using: pacman -S mingw-w64-x86_64-gcc"
 ERR_BC_NOT_INSTALLED="bc is not installed."
 ERR_INSTALL_NOW="Install now? [y/N] "
 ERR_ABORTED="Aborted."
@@ -48,6 +49,7 @@ ERR_COMPILATION_FAILED="Compilation of midi_monitor failed. Please check the sou
 
 # System messages
 SYS_RUNNING_ON_MACOS="Running on macOS."
+SYS_RUNNING_ON_WINDOWS="Running on Windows (%s)."
 SYS_GNU_GREP_NOT_FOUND="GNU Grep not found. Installing grep via Homebrew..."
 SYS_GNU_AWK_NOT_FOUND="GNU Awk not found. Installing awk via Homebrew..."
 SYS_MIDI_MONITOR_NOT_COMPILED="MIDI monitor binary not found. Compiling midi_monitor..."
@@ -63,6 +65,8 @@ HELP_CONFIG_FILE="  -c, --config-file path_to_alternative_configuration/file.con
 HELP_HELP="  -h, --help        Show this help"
 
 # Menu names
+MENU_MODELS="Models Menu"
+MENU_VENDORS="Vendors Menu"
 MENU_OPTIONS="Options Menu"
 MENU_TUNING="Tuning Menu"
 MENU_MODES="Modes Menu"
@@ -95,6 +99,8 @@ MENU_START_MIDI_EDITOR="Start MIDI Map Editor"
 MENU_SHUT_DOWN="Shutdown"
 MENU_GET_S_METER="Get S-Meter Value"
 MENU_LEVELS="Levels"
+MENU_GET="Get"
+MENU_SET="Set"
 
 # Function messages
 MSG_SHUTTING_DOWN="Shutting down."
@@ -102,6 +108,19 @@ MSG_MIDI_MAPPER_ON="Midi Mapper on, please press a button or move a control on Y
 MSG_PRESS_ENTER_FINISH="Press enter when finish"
 MSG_SET_MODE="Set mode:"
 MSG_MODE_PROMPT="Mode?: "
+MSG_FUNCTION_PROMPT="Function?: "
+MSG_FUNCSTATE_PROMPT="State?: "
+MSG_SELECT_VFO="Select VFO:"
+MSG_VFO_PROMPT="VFO?: "
+MSG_NEW_VALUE_PROMPT="New value?: "
+MSG_LEVELS="Levels:"
+MSG_LEVEL_PROMPT="Level?: "
+MSG_PARAMETERS="Parameters:"
+MSG_PARAMETER_PROMPT="Parameter?: "
+MSG_MODEL_PROMPT="Model?: "
+MSG_VENDOR_PROMPT="Vendor?: "
+MSG_SET_BANDWIDTH_FOR="Select bandwidth for %s:"
+MSG_SET_BANDWIDTH_PROMPT="Bandwidth?: "
 
 # On/Off
 ON="On"

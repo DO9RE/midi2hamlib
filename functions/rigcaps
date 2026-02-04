@@ -702,9 +702,9 @@ announce_rig_set_lp() {
     # strings and mappedvalues[unit] for MIDI
     echo "Not implemented for MIDI yet."
     return 1
-  elif [[ ${#set_lp_names[@]} -ge 0 ]]; then
+  elif [[ ${#set_lp_names[@]} -gt 0 ]]; then
     # strings and mappedvalues[unit] for menu
-    show_menu --retvar "$2" set_lp_names "New value?: " i
+    show_menu --retvar "$2" set_lp_names "$(t MSG_NEW_VALUE_PROMPT)" i
     if [[ -n $i ]]; then
       newvaluetxt=${set_lp_names[$i]}
       newvalue=${set_lp_values[$i]}

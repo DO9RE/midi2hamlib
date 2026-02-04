@@ -1,9 +1,11 @@
 #!/bin/bash
-# Early initialization of i18n
+source "$(pwd)/additional_scripts/profiling"
 funcdir="$(pwd)/functions"
-
+# Early initialization of i18n
 # Load i18n early
+write_to_log "Start init i18n"
 source "$funcdir/i18n"
+write_to_log "End init i18n"
 
 ensure_hamlib_windows_path() {
   case "$(uname -s 2>/dev/null)" in
@@ -113,7 +115,9 @@ else
 fi
 
 # Load language based on config setting
+write_to_log "Start load_language after config file."
 load_language "$MIDI2HAMLIB_LANG"
+write_to_log "End load_language after config file."
 
 
 # Check if a rig model was set.

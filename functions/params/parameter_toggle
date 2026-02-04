@@ -14,7 +14,7 @@ announce_param() {
 }
 
 do_param_action() {
-  if [[ ${param_menu[$1]} =~ Set ]] ; then
+  if [[ "${param_menu[$1]}" == "$(t MENU_SET)" ]] ; then
     announce_rig_set_lp parameter "$last_parameter"
   else
     source "${funcdir}/params/get_parameter"
@@ -27,12 +27,12 @@ select_param() {
   announce_param $1
   param_menu=( )
   if rig_can get parameter "${parameters[$1]}" ; then
-    param_menu+=( "Get" )
+    param_menu+=( "$(t MENU_GET)" )
   fi
   if rig_can set parameter "${parameters[$1]}" ; then
-    param_menu+=( "Set" )
+    param_menu+=( "$(t MENU_SET)" )
   fi
-  show_menu "${parameters[$1]}" param_menu 'And now? ' do_param_action
+  show_menu "${parameters[$1]}" param_menu "$(t MSG_AND_NOW)" do_param_action
 }
 
 if [[ ! -v parameters ]]; then
@@ -44,6 +44,6 @@ if [[ $1 ]]; then #Triggered with parameter
     announce_param "$param_midi_result"
   fi
 else #Called from keyboard, show modes list and ask for selection.
-  show_menu "Parameters:" parameters 'Parameter?: ' select_param
+  show_menu "$(t MSG_PARAMETERS)" parameters "$(t MSG_PARAMETER_PROMPT)" select_param
 fi
 

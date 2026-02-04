@@ -231,8 +231,13 @@ get_current_mode() {
 # Function for use with the transceiver functions.
 # Convert the status_last_function into human friendly on of texts
 humanize_status() {
-  local status=$1
-  echo "$status" | sed -e 's/0/off/g' -e 's/1/on/g'
+  if [[ "$1" == "1" ]] ; then
+    echo "$(t ON)"
+  elif [[ "$1" == "0" ]] ; then
+    echo "$(t OFF)"
+  else
+    echo ""
+  fi
 }
 
 humanize_ctcss() {
@@ -523,7 +528,7 @@ check_environment() {
       brew install awk
     fi
 
-#   Aliase für GNU-Tools setzen
+#   Pfade für GNU-Tools setzen
     export PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"
     export PATH="/usr/local/opt/gawk/libexec/gnubin:$PATH"
 
@@ -562,41 +567,41 @@ check_environment() {
     midi_monitor_source="$basedir/midi/windows_midi_monitor/windows_midi_monitor.c"
     midi_monitor_binary="$basedir/midi/windows_midi_monitor/windows_midi_monitor.exe"
     
-    echo "Running on Windows ($os_name)"
+    echo "$(t SYS_RUNNING_ON_WINDOWS "$os_name")"
 
 #   Überprüfen, ob GCC installiert ist
     if ! command -v gcc &>/dev/null; then
-      echo "Error: GCC not found. Please install it using: pacman -S mingw-w64-x86_64-gcc"
+      echo "$(t ERR_GCC_WIN_NOT_INSTALLED)"
       exit 1
     fi
 
 #   Überprüfen, ob die windows_midi_monitor-C-Datei vorhanden ist
     if [ ! -f "$midi_monitor_source" ]; then
-      echo "Error: MIDI monitor source not found: $midi_monitor_source"
+      echo "$(t ERR_MIDI_MONITOR_NOT_FOUND "$midi_monitor_source")"
       exit 1
     fi
 
 #   Überprüfen, ob das Kompilat existiert
     if [ ! -f "$midi_monitor_binary" ]; then
-      echo "Windows MIDI monitor not compiled. Compiling now..."
+      echo "$(t SYS_MIDI_MONITOR_NOT_COMPILED)"
       # Compile with winmm library for MIDI support
       if ! gcc -o "$midi_monitor_binary" "$midi_monitor_source" -lwinmm ; then
-        echo "Error: Compilation failed"
+        echo "$(t ERR_COMPILATION_FAILED)"
         exit 1
       fi
-      echo "Compilation successful: $midi_monitor_binary"
+      echo "$(t SYS_COMPILATION_SUCCESS "$midi_monitor_binary")"
     else
-      echo "Windows MIDI monitor exists: $midi_monitor_binary"
+      echo "$(t SYS_MIDI_MONITOR_EXISTS "$midi_monitor_binary")"
     fi
     
 #   Create aseqdump alias/wrapper
-    echo "Setting up aseqdump alias for Windows..."
+    echo "$(t SYS_SETTING_ASEQDUMP_ALIAS)"
     export ASEQDUMP_CMD="$midi_monitor_binary"
     
 #   Also create an alias command for convenience in the current shell
     alias aseqdump="$midi_monitor_binary"
     
-    echo "Alias set: aseqdump -> $midi_monitor_binary"
+    echo "$(t SYS_ALIAS_SET "$midi_monitor_binary")"
   else
 #   use linux native aseqdump
     export ASEQDUMP_CMD="aseqdump"

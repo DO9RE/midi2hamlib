@@ -22,7 +22,7 @@ elif ! announce_rig_can set function "$last_function" ; then
   return 0
 elif [[ ( -z $1 ) && ( "${rigcap_functions[$last_function]}" == "set" ) ]] ; then
   # We are not invoked from MIDI and have a setonly function.
-  show_menu "${last_function}:" on_off_menu "State?: " set_setonly_function_state
+  show_menu "${last_function}:" on_off_menu "$(t MSG_FUNCSTATE_PROMPT)" set_setonly_function_state
 else # MIDI or not a setonly function
   if rig_can get function "$last_function" ; then
     status_last_function=$(rigctl -m 2 -r "$host:$port" u "$last_function")
