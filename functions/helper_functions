@@ -344,7 +344,6 @@ fi
 if [[ $show_menu_width -lt $show_menu_min_width ]]; then
   show_menu_width=$show_menu_min_width
 fi
-show_menu_format="%-${show_menu_width}s"
 #echo "SC: $screen_columns; MC: $show_menu_columns; MinW: $show_menu_min_width; MaxW: $show_menu_max_width; MW: $show_menu_width"
 
 # On/Off menu entries
@@ -378,10 +377,6 @@ on_off_menu=( "$(t ON)" "$(t OFF)" )
 show_menu() {
   if [[ "$show_menu_columns" -lt "1" ]]; then
     echo "$(t ERR_SET_MENU_COLUMNS)"
-    exit 1
-  fi
-  if [[ ! -v show_menu_format ]]; then
-    echo "$(t ERR_SET_MENU_FORMAT)"
     exit 1
   fi
   local is_vartitle=0
@@ -441,6 +436,7 @@ show_menu() {
   local idx
   local last_was_printf=0
   local counter=0
+  local padding
   while true; do
     if [[ -n "$before_menu_function" ]]; then
       ${before_menu_function} "$((counter++))"
@@ -462,8 +458,12 @@ show_menu() {
         echo "$entry_text"
         last_was_printf=0
       else
+        padding=$(( show_menu_width - ${#entry_text} ))
+        if [[ $padding -lt 0 ]]; then
+          padding=0
+        fi
         # shellcheck disable=SC2059
-        printf "$show_menu_format" "$entry_text"
+        printf "%s%*s" "$entry_text" "$padding" ""
         last_was_printf=1
       fi
     done

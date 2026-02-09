@@ -33,7 +33,6 @@ ERR_NO_VALID_RANGE="Kein gültiger Bereichsparameter für validate_midi_value an
 ERR_NO_RESULT_VAR="Keine Ergebnisvariable für validate_midi_value angegeben."
 ERR_CODE_NEVER_EXECUTED="validate_midi_value: Dieser Codeblock sollte niemals ausgeführt werden."
 ERR_SET_MENU_COLUMNS="Setze show_menu_columns vor dem Aufruf von show_menu."
-ERR_SET_MENU_FORMAT="Setze show_menu_format vor dem Aufruf von show_menu."
 ERR_UNRECOGNIZED_OPTION="Unbekannte Option %s für show_menu."
 ERR_NO_MENU_TITLE="Kein Menütitel in show_menu angegeben."
 ERR_NO_MENU_ENTRIES="Keine Variable mit Menüeinträgen in show_menu angegeben."
