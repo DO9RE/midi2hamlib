@@ -5,7 +5,6 @@
 
 # Language file path
 LANG_DIR="$(dirname "${BASH_SOURCE[0]}")/../lang"
-LANG_FILE="${LANG_DIR}/${MIDI2HAMLIB_LANG}.lang"
 
 # Associative array to store translations
 declare -gA I18N_STRINGS
@@ -31,19 +30,7 @@ load_language() {
   I18N_STRINGS=()
   
   # Load translations from file
-  while IFS='=' read -r key value; do
-    # Skip empty lines and comments
-    [[ -z "$key" || "$key" =~ ^[[:space:]]*# ]] && continue
-    
-    # Remove leading/trailing whitespace from key
-    key=$(echo "$key" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-    
-    # Remove quotes from value if present
-    value=$(echo "$value" | sed 's/^[[:space:]]*"//;s/"[[:space:]]*$//')
-    
-    # Store in associative array
-    I18N_STRINGS["$key"]="$value"
-  done < "$lang_file"
+  eval "$(sed -e 's/^\([^#"]\+\)=/I18N_STRINGS[\1]=/g' "$lang_file")"
   
   return 0
 }
