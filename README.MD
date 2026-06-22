@@ -664,7 +664,7 @@ Firstly, the font in the console can be adjusted using the tool DPKG-RECONFIGURE
 
 **Caution!** Not all fonts are compatible with Braille output and the screen reader Fenrir. The font **Terminus Bold** has been successfully tested.
 
-Furthermore, it is advisable to reduce the overall pixel count, i.e., the screen resolution, which greatly enlarges everything. This can be done using options in the file `/boot/firmware/cmdline.txt`. In the **Additional Scripts** directory, there is a file named `set_screen_resolution_to_640x480.sh`, which automatically sets the necessary entries after creating a backup of `cmdline.txt`.
+Furthermore, it is advisable to reduce the overall pixel count, i.e., the screen resolution, which greatly enlarges everything. This can be done using options in the file `/boot/firmware/cmdline.txt`. In the **Additional Scripts** directory, there is a file named `set_screen_resolution_to_640x480.sh` and `reset_screen_resolution.sh`, which automatically set the necessary entries after creating a backup of `cmdline.txt`, or remove any video options from cmdline.txt respectively.
 
 ## License
 
