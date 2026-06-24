@@ -51,8 +51,8 @@
 0       note_on  10   23  n   tuning/tuning_step/tuning_step_tune_down
 0       note_on  10   22  n   tuning/get_frequency
 # Test MIDI mapping for fader and keys
-0       control  10   9   n   test_midi_mapping zone
-0       note_on  10   8   n   test_midi_mapping up
-0       note_on  10   16  n   test_midi_mapping down
-0       note_on  10   9   n   test_midi_mapping up_r
-0       note_on  10   17  n   test_midi_mapping down_r
+#0       control  10   9   n   test_midi_mapping zone
+#0       note_on  10   8   n   test_midi_mapping up
+#0       note_on  10   16  n   test_midi_mapping down
+#0       note_on  10   9   n   test_midi_mapping up_r
+#0       note_on  10   17  n   test_midi_mapping down_r
