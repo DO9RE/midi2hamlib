@@ -50,3 +50,8 @@ echo "Testing strip_trailing_zeros and strip_trailing_zeros_float:"
 for i in 1.0 1.00 +1,123000 -1.0100 100 ; do
   echo "$i --> $(strip_trailing_zeros $i), $(strip_trailing_zeros_float $i)"
 done
+echo "Testing strip_leading_zeros"
+for i in 01.00 0100 +1,12300 -01 0.1 -0.1 ; do
+  echo "$i --> $(strip_leading_zeros $i)"
+done
+echo "strip_leading_zeros("Hello") --> $(strip_leading_zeros "Hello")"

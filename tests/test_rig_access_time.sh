@@ -24,7 +24,7 @@ do_queries() {
   local first_rig_result i
   first_rig_result=""
   for ((i=1; i<=num_iterations; i++)); do
-    retval=$(rigctl $@)
+    retval=$(rigctl $@ | sed '/^rigctld:/d')
     echo "$i: rigctl $*: $retval"
     if [[ -z "$first_rig_result" ]]; then
       first_rig_result="$retval"

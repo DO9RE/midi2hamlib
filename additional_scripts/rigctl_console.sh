@@ -7,6 +7,6 @@ while [[ ! $command == "quit" ]]; do
   else
     # word splitting is OK here, we may want to enter more than one parameter.
     # shellcheck disable=SC2086
-    rigctl -m 2 -r "$host:$port" $command
+    rigctl -m 2 -r "$host:$port" $command | sed '/^rigctld:/d'
   fi
 done

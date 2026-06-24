@@ -1,7 +1,7 @@
 if announce_rig_can set feature frequency ; then
   # Set frequency from keyboard input
   read -rp 'Frequency?: ' freq
-  rigctl -m 2 -r "$host:$port" F "$(re_format_frequency "$freq")"
+  rigctlext -m 2 -r "$host:$port" F "$(re_format_frequency "$freq")"
 fi
 if rig_can get feature frequency ; then
   source "${funcdir}/tuning/get_frequency"

@@ -9,7 +9,7 @@ if [[ ! -v functions ]]; then
 fi
 
 before_functions_menu() {
-  function_states=( $(rigctl -m 2 -r "$host:$port" $(for f in ${functions_get}; do echo "u $f "; done)) )
+  function_states=( $(rigctlext -m 2 -r "$host:$port" $(for f in ${functions_get}; do echo "u $f "; done)) )
 }
 
 function_select_entry() {
@@ -34,7 +34,7 @@ if [[ $1 ]]; then #Triggered with parameter
   if validate_midi_value "$@" functions func_midi_result; then
     last_function=${functions[$func_midi_result]}
     if rig_can get function "$last_function" ; then
-      status_last_function=$(rigctl -m 2 -r "$host:$port" u "$last_function")
+      status_last_function=$(rigctlext -m 2 -r "$host:$port" u "$last_function")
       echo "$last_function is $(humanize_status "$status_last_function")"
     else
       echo "$last_function"

@@ -1,4 +1,14 @@
 #!/usr/bin/bc -q
+define void prettyprint(v) {
+  if (0<v && v<1) {
+    print 0
+  } else if (-1<v && v<0) {
+    print "-0"
+    v*=-1
+  }
+  print v, "\n"
+}
+
 define void setupforint() {
   scale=0
 }
@@ -55,6 +65,10 @@ define percentagetovalue(perc, min, max) {
   return retval
 }
 
+define comparevalues(v1,v2) {
+  return (v1==v2)
+}
+
 define coercevalue(value, isint, min, max, res) {
   auto hasminmax, hasres, oldscale, tmp, retval, offset, lower, upper, diffl, diffu
   hasminmax = ((min!=0) || (max!=0))
@@ -102,5 +116,75 @@ define coercevalue(value, isint, min, max, res) {
   if (hasminmax && (retval<=min)) retval=min/1
   if (hasminmax && (retval>=max)) retval=max/1
   scale=oldscale
+  return retval
+}
+
+minstep=0.000001
+maxstep=1000000000
+
+define initstep(min, max, res) {
+  auto retval, hasminmax, hasres
+  hasminmax = ((min!=0) || (max!=0))
+  hasres = (res!=0)
+  if (hasres && res>minstep) minv=res else minv=minstep
+  if (hasminmax && (max-min)<maxstep) maxv=(max-min) else maxv=maxstep
+  retval=1
+  if (minv>retval) retval=minv
+  while (retval>maxv && retval>minv) {
+    retval*=0.1
+    if (retval<minv) {
+      retval=minv
+      break
+    }
+  }
+  while (retval<minv && retval*10<maxv) {
+    retval*=10
+  }
+  if (retval>maxv || retval<minv) retval=1
+  return retval
+}
+
+define incstep(step, min, max, res) {
+  auto retval, hasminmax, hasres
+  if (step==0) return initstep(min,max,res)
+  hasminmax = ((min!=0) || (max!=0))
+  hasres = (res!=0)
+  if (hasres && res>minstep) minv=res else minv=minstep
+  if (hasminmax && (max-min)<maxstep) maxv=(max-min) else maxv=maxstep
+  retval=1
+  while (retval>10*step && retval*0.1>=minv) {
+    retval*=0.1
+    if (retval<minv) {
+      retval=minv
+      break
+    }
+  }
+  while (retval<=step && retval*10<maxv) {
+    retval*=10
+  }
+  if (retval<step || retval>maxv || retval<minv) retval=step
+  return retval
+}
+
+define decstep(step, min, max, res) {
+  auto retval, hasminmax, hasres
+  if (step==0) return initstep(min,max,res)
+  hasminmax = ((min!=0) || (max!=0))
+  hasres = (res!=0)
+  if (hasres && res>minstep) minv=res else minv=minstep
+  if (hasminmax && (max-min)<maxstep) maxv=(max-min) else maxv=maxstep
+  retval=1
+  while (retval<step*0.1 && retval*10<maxv) {
+    retval*=10
+  }
+  while (retval>=step && retval*0.1>=minv) {
+    retval*=0.1
+    if (retval<minv) {
+      retval=minv
+      break
+    }
+  }
+  if (minv>retval) retval=minv
+  if (retval>=step || retval<minv) retval=minv
   return retval
 }

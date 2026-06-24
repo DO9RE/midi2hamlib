@@ -1,3 +1,6 @@
+rigctlext() {
+  rigctl $@ | sed '/^rigctld:/d'
+}
 # only use this from within this file or for testing.
 # See get_rig_capabilities() ad other functions below.
 # Parameters:
@@ -472,7 +475,7 @@ internal_get_capabilities() {
       fi
       echo "  Unhandled: '$line'"
     fi
-  done <<<"$(rigctl -m "$1" --dump-caps 2>&1 | tr -d '\r')"
+  done <<<"$(rigctlext -m "$1" --dump-caps 2>&1 | tr -d '\r')"
   for i in "${!features[@]}"; do
     if [[ "${features[$i]}" =~ setget ]]; then
       features[$i]=getset
@@ -574,7 +577,7 @@ adjust_rig_capabilities() {
     done
     ###echo "XXX ${type}s names: ${lparr[*]}"
     # Use tr to remove carriage returns on Windows
-    varr=( $(rigctl -m 2 -r "$host:$port" ${cmdarr[@]} 2>&1 | tr -d '\r') )
+    varr=( $(rigctlext -m 2 -r "$host:$port" ${cmdarr[@]} 2>&1 | tr -d '\r') )
     ###echo "XXX ${type}s values: ${varr[*]}"
     for i in ${!lparr[@]}; do
       lp=${lparr[$i]}
@@ -605,6 +608,33 @@ rig_can() {
   fi
 }
 
+# Extract parameter/level properties for numeric input processing.
+# Parameters:
+# name: Name of the function/level/parameter/feature.
+# Return variables: isint, hasminmax, hasres, min, max, res, unit
+rig_extract() {
+  declare -n ii="$2" hmm="$3" hr="$4" mn="$5" mx="$6" r="$7" u="$8"
+  if [[ ${rigcap_bounds[$1]} =~ int ]]; then
+    ii=1
+  else
+    ii=0
+  fi
+  if [[ ${rigcap_bounds[$1]} =~ minmax ]]; then
+    hmm=1
+  else
+    hmm=0
+  fi
+  if [[ ${rigcap_bounds[$1]} =~ res ]]; then
+    hr=1
+  else
+    hr=0
+  fi
+  mn="${rigcap_bounds[$1:min]:-0}"
+  mx="${rigcap_bounds[$1:max]:-0}"
+  r="${rigcap_bounds[$1:res]:-0}"
+  u="${rigcap_bounds[$1:unit]}"
+}
+
 # Like rig_can, but print message if action is not possible.
 announce_rig_can() {
   if rig_can "$@" ; then
@@ -624,9 +654,9 @@ announce_rig_get_lp() {
   if ! announce_rig_can get $1 $2 ; then
     return 1
   elif [[ $1 == "parameter" ]] ; then  
-    retval=$(rigctl -m 2 -r "$host:$port" p "$2" 2>&1 | tr -d '\r')
+    retval=$(rigctlext -m 2 -r "$host:$port" p "$2" 2>&1 | tr -d '\r')
   else
-    retval=$(rigctl -m 2 -r "$host:$port" l "$2" 2>&1 | tr -d '\r')
+    retval=$(rigctlext -m 2 -r "$host:$port" l "$2" 2>&1 | tr -d '\r')
   fi
   # Handle the following types:
   # - mappedvalues[unit]
@@ -670,6 +700,7 @@ announce_rig_set_lp() {
   # Prepare and cache menu entries and values. 
   declare -g last_set_lp last_set_lp_type
   declare -ag set_lp_names set_lp_values
+  declare -g set_lp_isint set_lp_hasminmax set_lp_hasres set_lp_min set_lp_max set_lp_res set_lp_unit
   if [[ ( ${last_set_lp_type} != $1 ) || ( ${last_set_lp} != $2 ) ]]; then
     last_set_lp_type=$1
     last_set_lp=$2
@@ -685,6 +716,7 @@ announce_rig_set_lp() {
     for i in ${!set_lp_names[@]} ; do
       set_lp_names[$i]="${set_lp_names[$i]//_/ }"
     done
+    rig_extract "$2" set_lp_isint set_lp_hasminmax set_lp_hasres set_lp_min set_lp_max set_lp_res set_lp_unit
   fi
   if [[ ( $3 ) && ( ${#set_lp_names[@]} -ge 0  ) ]]; then
 # ToDo
@@ -706,14 +738,67 @@ announce_rig_set_lp() {
     echo "Not implemented for MIDI yet."
     return 1
   else
-    echo "Not implemented for menu yet."
-    return 1
+    local showhint
+    while true ; do
+      read -rp "$(t MSG_SET_LP_PROMPT $2)" newvalue
+      newvalue="$(strip_leading_zeros "$newvalue")"
+      if [[ ( "$newvalue" == "*" ) || ( "$newvalue" == "/" ) ]] ; then
+        return 0
+      elif [[ -z "$newvalue" ]] ; then
+        showhint=1
+      elif [[ ( "$set_lp_isint" -eq 1 ) && ! ( "$newvalue" =~ ^[-+]?[0-9]+$ ) ]] ; then
+        showhint=1
+      elif [[ ! ( "$newvalue" =~ ^[-+]?[0-9]+(\.[0-9]+)?$ ) ]] ; then
+        showhint=1
+      else
+        showhint=0
+      fi
+      if [[ "$showhint" -eq 1 ]] ; then
+        local hintunit hintminmax hintres
+        if [[ "$set_lp_hasminmax" -eq 1 ]]; then
+          hintminmax="$(t MSG_SET_LP_HINT_MINMAX "$set_lp_min" "$set_lp_max")"
+        else
+          hintminmax=""
+        fi
+        if [[ "$set_lp_hasres" -eq 1 ]]; then
+          hintres="$(t MSG_SET_LP_HINT_RES "$set_lp_res")"
+        else
+          hintres=""
+        fi
+        if [[ -n "$set_lp_unit" ]]; then
+          hintunit="$(t MSG_SET_LP_HINT_UNIT "$set_lp_unit")"
+        else
+          hintunit=""
+        fi
+        if [[ "$set_lp_isint" -eq 1 ]] ; then
+          echo "$(t MSG_SET_LP_HINT_INT "$hintminmax" "$hintres" "$hintunit")"
+        else
+          echo "$(t MSG_SET_LP_HINT_FLOAT "$hintminmax" "$hintres" "$hintunit")"
+        fi
+        echo "$(t MSG_SET_LP_HINT_ABORT)"
+      else
+        break
+      fi
+    done
+    ###echo "XXX prettyprint(coercevalue(${newvalue},${set_lp_isint},${set_lp_min},${set_lp_max},${set_lp_res}))"
+    newvaluetxt="$(echo "prettyprint(coercevalue(${newvalue},${set_lp_isint},${set_lp_min},${set_lp_max},${set_lp_res}))" | "$funcdir/levelsandparams.bc")"
+    newvaluetxt="$(strip_trailing_zeros "$newvaluetxt")"
+    ###echo "XXX prettyprint($newvalue)"
+    newvalue="$(echo "prettyprint($newvalue)" | "$funcdir/levelsandparams.bc")"
+    newvalue="$(strip_trailing_zeros "$newvalue")"
+    ###echo "XXX new value: $newvalue $newvaluetxt"
+    ###echo "XXX comparison result: $(echo "comparevalues(${newvalue},${newvaluetxt})" | "$funcdir/levelsandparams.bc")"
+    if [[ $(echo "comparevalues(${newvalue},${newvaluetxt})" | "$funcdir/levelsandparams.bc") -ne 1 ]]; then
+      echo "$(t MSG_SET_LP_ADJUSTED_VALUE $newvaluetxt)"
+    fi
+    newvalue="$newvaluetxt"
   fi
   # send value to rig
   i=${last_set_lp_type:0:1}
   i=${i^^}
-  if ! rigctl -m2 -r "$host:$port" "$i" "$2" "$newvalue" ; then
+  if ! rigctlext -m2 -r "$host:$port" "$i" "$2" "$newvalue" ; then
     echo "Error while setting $2 to ${newvaluetxt}."
+    return 1
   fi
   return 0
 }

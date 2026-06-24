@@ -36,13 +36,13 @@ get_func_level_params() {
   local cmd=$1
   local getter_list setter_list
   if [[ -n $3 ]]; then
-    getter_list=$(rigctl -m "$3" "${cmd,,}" "?" 2>&1 | tr -d '\r')
-    setter_list=$(rigctl -m "$3" "${cmd^^}" "?" 2>&1 | tr -d '\r')
+    getter_list=$(rigctlext -m "$3" "${cmd,,}" "?" 2>&1 | tr -d '\r')
+    setter_list=$(rigctlext -m "$3" "${cmd^^}" "?" 2>&1 | tr -d '\r')
   else
     # Host and port are not define here, but can be used when run from within idi2hamlib.
     # shellcheck disable=SC2154
-    getter_list=$(rigctl -m2 -r "$host:$port" "${cmd,,}" "?" 2>&1 | tr -d '\r')
-    setter_list=$(rigctl -m2 -r "$host:$port" "${cmd^^}" "?" 2>&1 | tr -d '\r')
+    getter_list=$(rigctlext -m2 -r "$host:$port" "${cmd,,}" "?" 2>&1 | tr -d '\r')
+    setter_list=$(rigctlext -m2 -r "$host:$port" "${cmd^^}" "?" 2>&1 | tr -d '\r')
   fi
   local -n map=$2
   for getter in ${getter_list}; do
@@ -116,11 +116,11 @@ get_vfo_list() {
   fi
   local -n result=$1
   if [[ -n $2 ]]; then
-    tmp=$(rigctl -m "$2" V "?" 2>&1 | tr -d '\r')
+    tmp=$(rigctlext -m "$2" V "?" 2>&1 | tr -d '\r')
   else
     # Host and port are not define here, but can be used when run from within idi2hamlib.
     # shellcheck disable=SC2154
-    tmp=$(rigctl -m2 -r "$host:$port" V "?" 2>&1 | tr -d '\r')
+    tmp=$(rigctlext -m2 -r "$host:$port" V "?" 2>&1 | tr -d '\r')
   fi
   read -r tmp <<<"$tmp" # strip spaces at beginning and end
   if [[ "$checkonly" == "1" ]]; then
@@ -271,9 +271,9 @@ while IFS="" read -r line; do
   fi
   ###echo "$vendor $model, $rignr:"
   # preamp, attenuator
-  ###rigctl -m "$rignr" --dump-caps | grep '^\(Preamp\)\|\(Attenuator\)'
+  ###rigctlext -m "$rignr" --dump-caps | grep '^\(Preamp\)\|\(Attenuator\)'
   # AGC levels
-  ###rigctl -m "$rignr" --dump-caps | grep '^AGC levels'
+  ###rigctlext -m "$rignr" --dump-caps | grep '^AGC levels'
   ###rigctl -m "$rignr" --dump-caps | awk '{i=index($0,"AGC("); if (i>0) { $0=substr($0,i); i=index($0,")"); print substr($0,1,i) }}'
   ###echo
   # shellcheck disable=SC2034

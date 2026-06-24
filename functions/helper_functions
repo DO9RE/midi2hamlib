@@ -75,7 +75,12 @@ strip_trailing_zeros() {
 strip_trailing_zeros_float() {
 	echo "$1" | sed 's/,/./g; s/\(\.[0-9]\+[1-9]\)0*$/\1/g; s/^[^.]\+[0-9]*$/&.0/g; s/\.0\+$/.0/g'
 }
- 
+
+# Strip leading zeros, replace , with . and and remove leading + sign from numbers.
+strip_leading_zeros() {
+  strip_trailing_zeros "$(echo "$1" | sed -e 's/,/./g' -e 's/^\+//g' -e 's/^\(-\?\)0\+\([0-9]\)/\1\2/g')"
+}
+
 # Function for formatting frequencies output more human friendly
 format_frequency() {
   local frequency=$1
@@ -164,7 +169,7 @@ validate_midi_value() {
     echo "$(t ERR_VALIDATE_MIDI_PARAMS)"
     return 1
   fi
-  if [[ -v $3 ]]; then
+  if [[ ( "$3" =~ ^[A-Za-z] ) && ( -v $3 ) ]]; then
     local -n valmidiarr=$3
     valmidirange=${#valmidiarr[@]}
   else
@@ -225,7 +230,7 @@ validate_midi_value() {
 
 get_current_mode() {
 # Return only the mode name without the passband
-  rigctl -m 2 -r "$host:$port" m | head -n 1
+  rigctlext -m 2 -r "$host:$port" m | head -n 1
 }
 
 # Function for use with the transceiver functions.

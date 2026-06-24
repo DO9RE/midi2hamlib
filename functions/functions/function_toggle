@@ -3,10 +3,10 @@ declare -A setonly_function_state
 
 set_setonly_function_state() {
   if [[ $1 -eq 0 ]]; then
-    rigctl -m 2 -r "$host:$port" U "$last_function" 1
+    rigctlext -m 2 -r "$host:$port" U "$last_function" 1
     status_last_function=1
   else
-    rigctl -m 2 -r "$host:$port" U "$last_function" 0
+    rigctlext -m 2 -r "$host:$port" U "$last_function" 0
     status_last_function=0
   fi
   setonly_function_state[$last_function]="$status_last_function"
@@ -25,20 +25,20 @@ elif [[ ( -z $1 ) && ( "${rigcap_functions[$last_function]}" == "set" ) ]] ; the
   show_menu "${last_function}:" on_off_menu "$(t MSG_FUNCSTATE_PROMPT)" set_setonly_function_state
 else # MIDI or not a setonly function
   if rig_can get function "$last_function" ; then
-    status_last_function=$(rigctl -m 2 -r "$host:$port" u "$last_function")
+    status_last_function=$(rigctlext -m 2 -r "$host:$port" u "$last_function")
   else
     status_last_function=${setonly_function_state[$last_function]}
   fi
   if [[ $status_last_function -eq 0 ]]; then
-    rigctl -m 2 -r "$host:$port" U "$last_function" 1
+    rigctlext -m 2 -r "$host:$port" U "$last_function" 1
     status_last_function=1
   else
-    rigctl -m 2 -r "$host:$port" U "$last_function" 0
+    rigctlext -m 2 -r "$host:$port" U "$last_function" 0
     status_last_function=0
   fi
   # Show function and its status, the 0 and 1 converted to human friendly off and on.
   if rig_can get function "$last_function" ; then
-    status_last_function=$(rigctl -m 2 -r "$host:$port" u "$last_function")
+    status_last_function=$(rigctlext -m 2 -r "$host:$port" u "$last_function")
   else
     setonly_function_state[$last_function]="$status_last_function"
   fi

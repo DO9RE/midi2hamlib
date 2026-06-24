@@ -4,12 +4,12 @@ fi
 
 switch_to_mode() {
 # Switch transceiver to selected mode, passing 0 as second parameter, device default bandwidth
-  rigctl -m 2 -r "$host:$port" M "${modes[$1]}" 0
+  rigctlext -m 2 -r "$host:$port" M "${modes[$1]}" 0
   return 1 # leave menu
 }
 # Build an array from the transceiver models supported modes, using the --dump-caps flag.
 if [[ ! -v modes ]]; then
-  modes=($(rigctl -m "$model" --dump-caps | grep "Mode list:" | head -n 1 | sed 's/Mode list://g'))
+  modes=($(rigctlext -m "$model" --dump-caps | grep "Mode list:" | head -n 1 | sed 's/Mode list://g'))
 fi
 if [[ $1 ]]; then #Triggered with parameter
   if validate_midi_value "$@" modes mode_midi_result; then
